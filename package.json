@@ -1,0 +1,13 @@
+{
+  "name": "riscv-assembly-lab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "serve": "python3 -m http.server 4220 --directory site",
+    "test": "node --test tests/*.test.js",
+    "test:browser": "playwright test",
+    "check:assets": "node tools/check-assets.js"
+  },
+  "devDependencies": { "@playwright/test": "1.56.1" }
+}

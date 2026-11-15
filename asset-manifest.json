@@ -1,0 +1,33 @@
+{
+  "binutils": {
+    "upstream": "racerxdl/riscv-online-asm",
+    "commit": "0bc309eb8da8c2573e8f122067c52b815f13090c",
+    "version": "2.46.0.20260210",
+    "source": "site/sources/binutils-2.46.0.tar.xz"
+  },
+  "xv6Lab": {
+    "commit": "021d59ebe9112af3ebd1fd7823c3d70e94b85895",
+    "upstream": "snowch/xv6-lab"
+  },
+  "riscvRust": {
+    "commit": "8ee69d7a5dc7ef6d8b2bda96bf86d2923f2cf176"
+  },
+  "sha256": {
+    "site/images/fs.img": "90397a946f1a5d458361df39e54056512f083b2a3fb3ecf750889a4eed6d0d4b",
+    "site/images/kernel": "4a0a1555faa8160bf5e445cbb95af73d6cff28f1a45257db98e30417dc4507af",
+    "site/sources/binutils-2.46.0.tar.xz": "d75a94f4d73e7a4086f7513e67e439e8fcdcbb726ffe63f4661744e6256b2cf2",
+    "site/sources/build-binutils.sh": "a1c0e63c70ed7820b76bc77b34b8a52f49869d0b6437857f440418ff4594023c",
+    "site/sources/xv6-lab-guest.tar.gz": "1f163ef85195b20becc521892791bfcf3551bcaa7f243200b2b554de7230f927",
+    "site/vendor/LICENSE-xv6-lab": "2a61524172bf2e36c6ea77975adbc373fbf5ef226f4bdf44920273a1810e3679",
+    "site/vendor/binutils/COPYING3": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+    "site/vendor/binutils/LICENSE-riscv-online-asm": "cdb0dfebeaec18c75390cfe4d44a45988d9f42c9e69cdcdde1fe6915d16df90d",
+    "site/vendor/binutils/as-new.wasm": "42153e6788cfb8bd93353bd3d86a18ad7e7a9565e259784f42949a321963a2fb",
+    "site/vendor/binutils/ld-new.wasm": "6f6931033fdbb4d4c19274e138d88fa7b89a3f65f5febd9e4597037385dc20fc",
+    "site/vendor/binutils/riscv64-linux-gnu-as.js": "4802227f1e3e53f9500f4fbc4d49ee5cafeef3bf7423bf8caea4b098bb8f5804",
+    "site/vendor/binutils/riscv64-linux-gnu-ld.js": "d7f070c408969f00e5ea2627c75cfc80942b6a74050737e69da2542795217e9f",
+    "site/vendor/runtime/LICENSE-riscv-rust": "8acf4083ad9a498e4a10554ea52814a414e5f4401a3f9cf6db59b9aa6640a95b",
+    "site/vendor/runtime/LICENSE-xv6": "677302f30c9882c1f81b9be8ceda6efd4edff5576b9e02963b6114cf70c3162c",
+    "site/vendor/runtime/riscv_emu_rust_wasm.js": "b51a13f2be49a8286e96e5c6d51dd677950fbdf4675b7fa80ff356da76878d05",
+    "site/vendor/runtime/riscv_emu_rust_wasm_bg.wasm": "e1804062b8a40bfe27af9a393bee291b0e8228435ebbc47a19d45a1faa8e3f65"
+  }
+}
