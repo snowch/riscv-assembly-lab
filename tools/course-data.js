@@ -62,20 +62,26 @@ export const MODULES = [
     "Pass arguments, preserve values and keep nested returns working.",
   ],
   [
-    "c",
+    "debugging",
     "10",
+    "Debugging working code",
+    "Set breakpoints, watch actual state and repair boundary, width and return mistakes.",
+  ],
+  [
+    "c",
+    "11",
     "C and real instructions",
     "Compile small C functions locally and inspect their real machine instructions.",
   ],
   [
     "c-edges",
-    "11",
+    "12",
     "C at the boundaries",
     "Separate language guarantees, target widths and explicit overflow checks.",
   ],
   [
     "xv6",
-    "12",
+    "13",
     "Working programs in xv6",
     "Connect ELF entry, system calls, memory protection and a complete trip calculation.",
   ],
@@ -90,6 +96,7 @@ const files = [
   "state-arithmetic",
   "control-memory",
   "products-functions",
+  "debugging",
   "c-xv6-appendices",
 ];
 export async function loadLessons() {

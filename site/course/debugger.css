@@ -1,0 +1,242 @@
+/* Copyright © 2026 Christopher Snow */
+.debugger {
+  margin: 1.5rem 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  min-width: 0;
+}
+.debugger > summary {
+  font-size: 0.95rem;
+}
+.debugger-body {
+  padding: 0 1.2rem 1.2rem;
+  min-width: 0;
+  font-size: 0.88rem;
+}
+.debugger-body > p {
+  max-width: 80ch;
+}
+.debugger section {
+  border-top: 1px solid var(--border);
+  padding: 1rem 0;
+  min-width: 0;
+}
+.debugger h3 {
+  font-size: 1rem;
+  margin: 0 0 0.6rem;
+}
+.debugger h4 {
+  font-size: 0.85rem;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.debugger p {
+  margin: 0.5rem 0;
+}
+.debugger .debug-note {
+  color: var(--muted);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+.debug-form {
+  display: flex;
+  gap: 0.65rem;
+  align-items: end;
+  flex-wrap: wrap;
+  margin: 0.8rem 0;
+}
+.debug-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  font-size: 0.8rem;
+}
+.debug-form input,
+.debug-form select {
+  width: 100%;
+  max-width: 12rem;
+  min-height: 44px;
+}
+.debug-form input {
+  max-width: 9rem;
+}
+.debugger button {
+  min-height: 44px;
+  font-size: 0.8rem;
+}
+.debugger input:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+.debug-chip-list {
+  list-style: none;
+  margin: 0.5rem 0;
+  padding: 0;
+}
+.debug-chip-list li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  margin: 0.4rem 0;
+  border-radius: 8px;
+  background: var(--soft);
+  overflow-wrap: anywhere;
+}
+.debug-remove {
+  background: transparent;
+  border: 0;
+  color: var(--accent);
+  padding: 0.3rem 0.4rem;
+}
+.debug-instructions {
+  max-height: 22rem;
+  overflow: auto;
+  padding: 0.2rem;
+}
+.debug-instruction {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  text-align: left;
+  align-items: center;
+  margin: 0.2rem 0;
+  background: var(--code);
+  font-weight: 400;
+}
+.debug-instruction code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: none;
+  padding: 0;
+  font-size: 0.8rem;
+}
+.debug-instruction-address {
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+.debug-instruction-line {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.debug-instruction[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--notice);
+}
+.debug-instruction[aria-pressed="true"]::before {
+  content: "●";
+  color: var(--accent);
+  grid-column: 1 / -1;
+  line-height: 0.7;
+}
+.debug-instruction[aria-current="step"] {
+  box-shadow: inset 4px 0 var(--accent);
+}
+.debug-register-watches,
+.debug-memory-watches {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 0.6rem;
+}
+.debug-watch-card {
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 0.7rem 0.8rem;
+  min-width: 0;
+  background: var(--code);
+}
+.debug-watch-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.debugger .debug-value {
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+.debug-watch-card.changed {
+  border-color: var(--accent);
+  background: var(--notice);
+}
+.debugger .debug-change {
+  font-size: 0.78rem;
+  color: var(--accent);
+  overflow-wrap: anywhere;
+}
+.debug-stack-registers {
+  font-family: ui-monospace, monospace;
+  overflow-wrap: anywhere;
+  font-size: 0.8rem;
+}
+.debug-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0.25rem 0;
+}
+#debug-stack {
+  border-collapse: collapse;
+  min-width: 650px;
+  width: 100%;
+  font-size: 0.78rem;
+  text-align: left;
+}
+#debug-stack th,
+#debug-stack td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem 0.6rem;
+}
+#debug-stack td:nth-child(2),
+#debug-stack td:nth-child(3) {
+  font-family: ui-monospace, monospace;
+  white-space: nowrap;
+}
+@media (max-width: 520px) {
+  .debugger-body {
+    padding: 0 0.8rem 0.8rem;
+    font-size: 0.85rem;
+  }
+  .debugger > summary {
+    padding: 0.8rem;
+  }
+  .debug-form {
+    gap: 0.5rem;
+  }
+  .debug-form label {
+    flex: 1 1 90px;
+  }
+  .debug-form button {
+    flex: 1 1 100%;
+  }
+  .debugger .debug-form input,
+  .debugger .debug-form select {
+    max-width: none;
+    font-size: 16px;
+  }
+  .debug-instruction {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.1rem;
+    padding: 0.5rem;
+  }
+  .debugger .debug-note,
+  .debug-instruction-address,
+  .debug-instruction-line {
+    font-size: 12px;
+  }
+  .debug-watch-heading {
+    align-items: start;
+  }
+}
+
+@media (max-width: 520px) {
+  #debug-memory-form label:first-child {
+    flex-basis: 100%;
+  }
+}

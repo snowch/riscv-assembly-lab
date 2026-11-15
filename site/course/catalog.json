@@ -200,6 +200,26 @@
     "title": "Make progress towards the base case"
   },
   {
+    "id": "debug-loop-boundary",
+    "module": "debugging",
+    "title": "Stop before the extra iteration"
+  },
+  {
+    "id": "debug-load-width",
+    "module": "debugging",
+    "title": "Find the wrong byte reading"
+  },
+  {
+    "id": "debug-return-address",
+    "module": "debugging",
+    "title": "Follow the saved return address"
+  },
+  {
+    "id": "debug-memory-boundary",
+    "module": "debugging",
+    "title": "Stop an access before it leaves the range"
+  },
+  {
     "id": "c-return-values",
     "module": "c",
     "title": "Follow a C return value"

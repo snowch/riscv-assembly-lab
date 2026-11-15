@@ -63,6 +63,15 @@ export class Session {
       this.worker.postMessage(payload);
     });
   }
+  setBreakpoints(selection) {
+    this.worker?.postMessage({ action: "breakpoints", selection });
+  }
+  setWatches(watches) {
+    this.worker?.postMessage({ action: "watches", watches });
+  }
+  inspect() {
+    this.worker?.postMessage({ action: "inspect" });
+  }
   step() {
     this.worker?.postMessage({ action: "step" });
   }
