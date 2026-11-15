@@ -815,7 +815,7 @@
     ],
     "before": [
       "A user process has an address space: the addresses xv6 allows it to use. A load from an unmapped or forbidden address can trap into the kernel, which can terminate the process. The CPU\u2019s load instruction does not promise that every possible address is usable.",
-      "The safe starting fragment reads one byte from lesson_data, then adjusts that value. The supplied data region is mapped and contains the byte shown below the editor. The memory view displays actual bytes after execution. You can compare the address used by the load with the base of that region.",
+      "The safe starting fragment reads one byte from lesson_data, then adjusts that value. The supplied data region is mapped. In the Memory tab, Before shows the supplied bytes. After shows bytes observed at a pause or when the code completes. You can compare the address used by the load with the base of that region.",
       "An application often has a smaller boundary than the mapped memory region. A three-byte sensor record may sit inside a much larger mapped page. Reading its fourth byte can violate the record\u2019s contract without causing an operating-system fault. Your code must check the record\u2019s capacity before it performs the load."
     ],
     "starter": "la t0, lesson_data\nlbu t1, 0(t0)\naddi t2, t1, 1\n",

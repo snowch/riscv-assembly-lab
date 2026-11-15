@@ -2,6 +2,10 @@
 
 The interface and new worker harness are [MIT licensed](LICENSE). Third-party components retain their own licences. All build and execution assets are served from this site; no CDN or compilation service is used. Source archives are optional downloads, not part of starting the lab.
 
+## Source editor
+
+The source editor uses locally bundled [CodeMirror 6](https://codemirror.net/) and its C/C++ language support. The original RISC-V highlighting rules colour assembly notation; they do not validate instructions or replace GNU assembler diagnostics. Exact package versions are pinned in the repository lockfile and recorded in `asset-manifest.json`. The bundle and third-party licences are available at [codemirror.js](vendor/editor/codemirror.js) and [LICENSES.txt](vendor/editor/LICENSES.txt). Rebuild with `npm ci` followed by `npm run build:editor`.
+
 ## GNU assembler and linker
 
 The assembler, linker and disassembler JavaScript/WebAssembly files in `vendor/binutils/` are from [Lucas Teske’s riscv-online-asm](https://github.com/racerxdl/riscv-online-asm/tree/0bc309eb8da8c2573e8f122067c52b815f13090c), commit `0bc309eb8da8c2573e8f122067c52b815f13090c`. They report **GNU binutils 2.46.0.20260210**, targeting `riscv64-linux-gnu`. This lab assembles RV64GC / LP64D and links freestanding xv6 user programs, not Linux programs.

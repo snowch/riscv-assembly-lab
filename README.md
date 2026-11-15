@@ -10,6 +10,8 @@ The learner edits the relevant code. Supplied entry, capture and exit code stays
 
 GNU `as` and `ld`, compiled to WebAssembly, produce real ELF64 executables. The CPU boots a real xv6 kernel and executes each program in a fresh filesystem copy. The target is RV64GC / LP64D. C lessons use the pinned RV64 TinyCC compiler locally, then link and execute its actual object. Compiler output is disassembled by real GNU `objdump`; no invented C source-line mapping is shown.
 
+- A locally bundled CodeMirror editor for assembly and C, with syntax highlighting, indentation, bracket matching, find and undo.
+- One execution toolbar, a resizable code area, fullscreen workspace and tabbed register, memory, output, diagnostic and debugger views.
 - **Build & Run**, **Start debugging**, **Start stepping**, **Step instruction**, **Continue** and **Stop**.
 - Actual relevant register values, signed/unsigned/hex readings, bit views and byte-addressed data or stack views.
 - Exact assembly-line and actual instruction-address breakpoints. Continue revisits selected loop breakpoints; C uses real addresses without invented source mappings.
@@ -20,7 +22,7 @@ GNU `as` and `ld`, compiled to WebAssembly, produce real ELF64 executables. The 
 - Phone/desktop layouts, light/dark/system themes, course navigation and source downloads.
 - Complete assembly downloads; C functions and their supplied assembly/linker script download together as ZIP.
 
-There is no compiler server, account, CDN dependency, SharedArrayBuffer or special hosting-header requirement. Everything builds and executes in a disposable browser worker. The initial arithmetic lessons keep the focused three-line editor; explanations and optional tooling grow when needed.
+There is no compiler server, account, CDN dependency, SharedArrayBuffer or special hosting-header requirement. Everything builds and executes in a disposable browser worker. The first arithmetic examples use three focused lines. The same editor supports longer assembly and C programs.
 
 ## Course and authoring
 
@@ -34,6 +36,7 @@ The course reuses Assembly Lab’s predict/run/inspect/change method, short-unit
 
 ```sh
 npm ci
+npm run build:editor
 npm run build:course
 npm run serve
 # http://localhost:4220
@@ -42,6 +45,8 @@ npm run serve
 Run the same checks used by CI:
 
 ```sh
+npm run build:editor
+git diff --exit-code -- site/vendor/editor/ asset-manifest.json
 npm run check:assets
 npm run build:course
 git diff --exit-code -- site/index.html site/lessons/ site/course/catalog.json

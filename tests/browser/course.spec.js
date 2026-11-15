@@ -1,4 +1,5 @@
 // Copyright © 2026 Christopher Snow
+import { fillSource, selectedSource } from "./editor-helpers.js";
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { loadLessons } from "../../tools/course-data.js";
@@ -75,7 +76,7 @@ test("step, continue, challenge feedback and case inspection use actual observat
     "reporting checkpoint",
   );
   await page.locator("#start-challenge").click();
-  await page.locator("#source").fill("sub t2,t0,t1");
+  await fillSource(page, "sub t2,t0,t1");
   await page.locator("#check-cases").click();
   await expect(page.locator("#state-badge")).toHaveText("Try again", {
     timeout: 45000,
@@ -96,7 +97,7 @@ test("step, continue, challenge feedback and case inspection use actual observat
   await expect(page.locator("#register-note")).toContainText(
     "last challenge check",
   );
-  await page.locator("#source").fill("add t2,t0,t1\naddi t2,t2,1");
+  await fillSource(page, "add t2,t0,t1\naddi t2,t2,1");
   await expect(page.locator("#snapshot-note")).toBeVisible();
 });
 
@@ -104,6 +105,7 @@ test("byte views identify decimal offsets and preserve before/after observations
   page,
 }, info) => {
   await go(page, "loads-and-stores");
+  await page.getByRole("tab", { name: "Memory", exact: true }).click();
   await expect(page.locator(".memory-offset").nth(2)).toHaveText("+16");
   await expect(page.locator("#memory-note")).toContainText("decimal");
   await page.locator("#run").click();
@@ -159,20 +161,17 @@ test("C really compiles, exports complete source and reports source-line errors"
   expect(files["lesson.c"]).toBe(await page.locator("#source").inputValue());
   expect(files["support.s"]).toContain("call lesson");
   expect(files["user.ld"]).toContain("0x10000");
-  await page
-    .locator("#source")
-    .fill("long lesson(long a,long b) {\n return missing_name;\n}");
+  await fillSource(
+    page,
+    "long lesson(long a,long b) {\n return missing_name;\n}",
+  );
   await page.locator("#run").click();
   await expect(page.locator("#state-badge")).toHaveText("Error", {
     timeout: 30000,
   });
   await expect(page.locator("#diagnostic-lines")).toContainText("lesson.c:2:");
   await page.locator(".diagnostic-link").first().click();
-  expect(
-    await page
-      .locator("#source")
-      .evaluate((el) => el.value.slice(el.selectionStart, el.selectionEnd)),
-  ).toContain("missing_name");
+  expect(await selectedSource(page)).toContain("missing_name");
   await expect(page.locator("#a0-decimal")).toHaveText("—");
 });
 
@@ -198,7 +197,7 @@ test("completion and independent drafts survive navigation without forcing progr
   await expect(contents).toHaveJSProperty("open", false);
   await expect(page.locator("#reading")).not.toBeVisible();
   await expect(page.locator("#bit-view")).not.toBeVisible();
-  await page.locator("#source").fill("li t0,8\nli t1,9\nadd t2,t0,t1");
+  await fillSource(page, "li t0,8\nli t1,9\nadd t2,t0,t1");
   await page.locator("#lesson-complete").check();
   await page.locator(".brand").click();
   await expect(page.locator("#course-progress")).toContainText(
@@ -257,7 +256,7 @@ test("fixture controls stay locked while paused and restoring code starts a fres
   page,
 }) => {
   await go(page, "addition");
-  await page.locator("#source").fill("li t0,99\nli t1,5\nadd t2,t0,t1");
+  await fillSource(page, "li t0,99\nli t1,5\nadd t2,t0,t1");
   await page.locator("#step").click();
   await expect(page.locator("#state-badge")).toHaveText("Paused", {
     timeout: 45000,
@@ -316,7 +315,7 @@ test("compiler warnings and download failures remain visible, tab drafts survive
   });
   await go(page, "c-return-values");
   const code = "long lesson(long a,long b){long *p=a;return a+b;}";
-  await page.locator("#source").fill(code);
+  await fillSource(page, code);
   await page.locator("#challenge-mode").click();
   await page.locator("#explore-mode").click();
   await expect(page.locator("#source")).toHaveValue(code);

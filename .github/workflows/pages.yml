@@ -22,6 +22,8 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - name: Verify bundled editor
+        run: npm run build:editor && git diff --exit-code -- site/vendor/editor/ asset-manifest.json
       - run: npm run check:assets
       - name: Verify generated course pages
         run: npm run build:course && git diff --exit-code -- site/index.html site/lessons/ site/course/catalog.json

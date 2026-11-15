@@ -7,10 +7,10 @@
   <meta name="theme-color" content="#087e72">
   <title>Hello, RISC-V! · RISC-V Assembly Lab</title>
   <link rel="icon" href="../../icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="../../style.css">
+  <link rel="stylesheet" href="../../style.css"><link rel="stylesheet" href="../../course/workbench.css">
   <script type="module" src="../../app.js"></script>
 </head>
-<body>
+<body class="hello-page">
   <a class="skip" href="#main">Skip to workspace</a>
   <header>
     <a class="brand" href="../../"><span class="logo" aria-hidden="true">≋</span> RISC-V Assembly Lab</a>
@@ -34,7 +34,7 @@
       <section class="panel editor-panel" aria-labelledby="source-heading">
         <div class="panel-heading"><div><span class="eyebrow">01 · Edit</span><h2 id="source-heading">hello.s</h2></div><span class="tag">RV64GC · xv6</span></div>
         <p id="source-help" class="panel-note">Try replacing <code>Hello, RISC-V!</code> with your own message.</p>
-        <div class="editor"><div id="line-numbers" aria-hidden="true">1</div><textarea id="source" aria-label="Assembly source: hello.s" aria-describedby="source-help save-state" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" disabled></textarea></div>
+        <div class="editor hello-editor"><textarea id="source" aria-label="Assembly source: hello.s" aria-describedby="source-help save-state" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" disabled></textarea></div>
         <div class="editor-footer"><span id="save-state">Loading starter…</span><div><button id="restore" class="text-button" disabled>Restore starter</button><button id="download" class="text-button" disabled>Download .s</button></div></div>
       </section>
       <section class="panel run-panel" aria-labelledby="console-heading">
