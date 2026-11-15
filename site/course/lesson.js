@@ -129,6 +129,19 @@ function lineNumbers() {
   if (focused)
     $("line-numbers").children[focused - 1]?.focus({ preventScroll: true });
 }
+function sizeEditor() {
+  const style = getComputedStyle(source);
+  const height =
+    source.value.split("\n").length * parseFloat(style.lineHeight) +
+    parseFloat(style.paddingTop) +
+    parseFloat(style.paddingBottom) +
+    2;
+  source.parentElement.style.setProperty(
+    "--editor-content-height",
+    `${Math.ceil(height)}px`,
+  );
+  $("line-numbers").scrollTop = source.scrollTop;
+}
 function stale() {
   $("snapshot-note").hidden =
     builtFingerprint === null || fingerprint() === builtFingerprint;
@@ -138,6 +151,7 @@ function completeSource() {
   $("complete-source").textContent = program.source;
   if ($("complete-c-source")) $("complete-c-source").textContent = source.value;
   if ($("c-intent-assembly")) $("c-intent-assembly").textContent = source.value;
+  sizeEditor();
   lineNumbers();
   stale();
 }
@@ -360,7 +374,7 @@ function startingState() {
   if (!Object.keys(values).length) {
     const note = document.createElement("p");
     note.textContent =
-      "Working registers start at zero. Your code loads its starting values.";
+      "Fresh machine each run. Working registers start at zero.";
     $("starting-state").append(note);
   }
   for (const [name, value] of Object.entries(values)) {
@@ -368,12 +382,18 @@ function startingState() {
     code.textContent = `${name} = ${value}`;
     $("starting-state").append(code);
   }
-  const note = document.createElement("p");
-  note.textContent =
-    lesson.memory === "stack"
-      ? "The lab supplies a 16-byte-aligned stack pointer with 64 mapped inspection bytes."
-      : "Each run starts a fresh machine.";
-  $("starting-state").append(note);
+  if (Object.keys(values).length) {
+    const note = document.createElement("p");
+    note.textContent =
+      "Fresh machine each run. Other working registers start at zero.";
+    $("starting-state").append(note);
+  }
+  if (lesson.memory === "stack") {
+    const note = document.createElement("p");
+    note.textContent =
+      "The lab supplies a 16-byte-aligned stack pointer with 64 mapped inspection bytes.";
+    $("starting-state").append(note);
+  }
 }
 function diagnostics(message, error = false) {
   $("diagnostic-lines").replaceChildren();
@@ -749,6 +769,19 @@ source.addEventListener("input", () => {
 source.addEventListener("scroll", () => {
   $("line-numbers").scrollTop = source.scrollTop;
 });
+$("expand-editor").addEventListener("click", () => {
+  const expanded = source.parentElement.classList.toggle("expanded");
+  $("expand-editor").setAttribute("aria-expanded", String(expanded));
+  $("expand-editor").textContent = expanded
+    ? "Collapse editor"
+    : "Expand editor";
+  $("line-numbers").scrollTop = source.scrollTop;
+});
+document.querySelector(".lab-help a").addEventListener("click", () => {
+  $("complete-program").open = true;
+});
+window.addEventListener("resize", sizeEditor);
+document.fonts.ready.then(sizeEditor);
 document.addEventListener("keydown", (event) => {
   if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
     event.preventDefault();
