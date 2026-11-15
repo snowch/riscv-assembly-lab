@@ -747,7 +747,7 @@ $("expand-editor").addEventListener("click", () => {
     : "Expand editor";
 });
 document
-  .querySelector(".lab-help a")
+  .querySelector('.lab-help a[href="#complete-program"]')
   .addEventListener("click", async (event) => {
     event.preventDefault();
     await workbench.close();

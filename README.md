@@ -28,6 +28,8 @@ There is no compiler server, account, CDN dependency, SharedArrayBuffer or speci
 
 `content/*.json` holds the canonical prose, code, predictions, fixtures, hints and exercises. `tools/build-course.js` validates it and generates the static course overview and every lesson page. Module lists, routes and published counts are generated from actual data. The original Hello World remains an optional complete-program example, rather than recurring setup in every lesson.
 
+The optional [Using the workbench](https://snowch.github.io/riscv-assembly-lab/using-the-workbench/) guide is generated from `content/guides/workbench.json` and displays addition's canonical starter. It is linked from the home page, first lesson and editor help, and stays outside lesson progression and completion.
+
 The course reuses Assembly Lab’s predict/run/inspect/change method, short-unit pacing, trip-computer examples and local qualifications. RISC-V has no NZCV flags: carry, overflow checks, comparisons, 32-bit W extension, division edges and the calling convention are adapted to its architecture. The ending follows xv6 system calls, ELF entry, protection and a bounded trip-computer capstone; it does not republish Arm-specific Raspberry Pi procedures as RISC-V instructions.
 
 `docs/course-authoring.md` records the checked-fact contract. Separate drafting and independent technical/learner reviews are recorded under `docs/`. The source course’s content copyright is preserved; it is not silently relicensed as MIT.
@@ -49,7 +51,7 @@ npm run build:editor
 git diff --exit-code -- site/vendor/editor/ asset-manifest.json
 npm run check:assets
 npm run build:course
-git diff --exit-code -- site/index.html site/lessons/ site/course/catalog.json
+git diff --exit-code -- site/index.html site/lessons/ site/using-the-workbench/ site/course/catalog.json
 npm test
 # Install qemu-user for qemu-riscv64, or set RISCV_QEMU to its path.
 npm run test:course
