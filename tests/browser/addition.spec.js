@@ -1,59 +1,102 @@
-import { test, expect } from '@playwright/test';
-import { readFile } from 'node:fs/promises';
+import { test, expect } from "@playwright/test";
+import { readFile } from "node:fs/promises";
 
-test('focused lesson executes three editable lines and exposes the complete program', async ({ page }, info) => {
-  const errors = []; page.on('pageerror', error => errors.push(error.message));
-  await page.goto('/lessons/addition/');
-  await expect(page.locator('#run')).toBeEnabled();
-  await expect(page.locator('#run')).toBeInViewport();
-  await expect(page.locator('#source')).toHaveValue('li t0, 7\nli t1, 5\nadd t2, t0, t1\n');
-  await expect(page.locator('#t2-decimal')).toHaveText('—');
-  await expect(page.locator('#complete-source')).not.toBeVisible();
-  await page.locator('#run').click();
-  await expect(page.locator('#state-badge')).toHaveText('Finished', { timeout: 45000 });
-  await expect(page.locator('#t0-decimal')).toHaveText('7');
-  await expect(page.locator('#t1-decimal')).toHaveText('5');
-  await expect(page.locator('#t2-decimal')).toHaveText('12');
-  await expect(page.locator('#t2-hex')).toHaveText('0x000000000000000c');
-  await page.screenshot({ path: `.artifacts/${info.project.name}-addition-light.png`, fullPage: true, animations: 'disabled' });
-  await page.locator('#complete-program > summary').click();
-  await expect(page.locator('#complete-source')).toContainText('add t2, t0, t1');
-  await expect(page.locator('#complete-source')).toContainText('sd t2, 16(a0)');
-  const downloadEvent = page.waitForEvent('download');
-  await page.locator('#download-complete').click();
+test("focused lesson executes three editable lines and exposes the complete program", async ({
+  page,
+}, info) => {
+  const errors = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/lessons/addition/");
+  await expect(page.locator("#run")).toBeEnabled();
+  await expect(page.locator("#run")).toBeInViewport();
+  await expect(page.locator("#source")).toHaveValue(
+    "li t0, 7\nli t1, 5\nadd t2, t0, t1\n",
+  );
+  await expect(page.locator("#t2-decimal")).toHaveText("—");
+  await expect(page.locator("#complete-source")).not.toBeVisible();
+  await page.locator("#run").click();
+  await expect(page.locator("#state-badge")).toHaveText("Finished", {
+    timeout: 45000,
+  });
+  await expect(page.locator("#t0-decimal")).toHaveText("7");
+  await expect(page.locator("#t1-decimal")).toHaveText("5");
+  await expect(page.locator("#t2-decimal")).toHaveText("12");
+  await expect(page.locator("#t2-hex")).not.toBeVisible();
+  await page.screenshot({
+    path: `.artifacts/${info.project.name}-addition-light.png`,
+    fullPage: true,
+    animations: "disabled",
+  });
+  await page.locator("#complete-program > summary").click();
+  await expect(page.locator("#complete-source")).toContainText(
+    "add t2, t0, t1",
+  );
+  await expect(page.locator("#complete-source")).toContainText("sd t2, 56(sp)");
+  const downloadEvent = page.waitForEvent("download");
+  await page.locator("#download-complete").click();
   const download = await downloadEvent;
-  expect(download.suggestedFilename()).toBe('addition-complete.s');
-  expect(await readFile(await download.path(), 'utf8')).toBe(await page.locator('#complete-source').textContent());
-  await page.locator('#complete-program > summary').click();
-  await page.locator('#source').fill('li t0, 19\nli t1, 23\nadd t2, t0, t1');
-  await expect(page.locator('#snapshot-note')).toBeVisible();
-  await expect(page.locator('#complete-source')).toContainText('li t0, 19');
-  await page.locator('#run').click();
-  await expect(page.locator('#t2-decimal')).toHaveText('42', { timeout: 45000 });
-  await page.locator('#source').fill('li t0, 19\nli t1, 23\nsub t2, t0, t1');
-  await page.locator('#run').click();
-  await expect(page.locator('#t2-decimal')).toHaveText('-4', { timeout: 45000 });
-  await page.locator('#theme').selectOption('dark');
-  await page.screenshot({ path: `.artifacts/${info.project.name}-addition-dark.png`, fullPage: true, animations: 'disabled' });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(download.suggestedFilename()).toBe("addition-complete.s");
+  expect(await readFile(await download.path(), "utf8")).toBe(
+    await page.locator("#complete-source").textContent(),
+  );
+  await page.locator("#complete-program > summary").click();
+  await page.locator("#source").fill("li t0, 19\nli t1, 23\nadd t2, t0, t1");
+  await expect(page.locator("#snapshot-note")).toBeVisible();
+  await expect(page.locator("#complete-source")).toContainText("li t0, 19");
+  await page.locator("#run").click();
+  await expect(page.locator("#t2-decimal")).toHaveText("42", {
+    timeout: 45000,
+  });
+  await page.locator("#source").fill("li t0, 19\nli t1, 23\nsub t2, t0, t1");
+  await page.locator("#run").click();
+  await expect(page.locator("#t2-decimal")).toHaveText("-4", {
+    timeout: 45000,
+  });
+  await page.locator("#theme").selectOption("dark");
+  await page.screenshot({
+    path: `.artifacts/${info.project.name}-addition-dark.png`,
+    fullPage: true,
+    animations: "disabled",
+  });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
   expect(errors).toEqual([]);
 });
 
-test('lesson errors point to the editable line and missing reports stay empty', async ({ page }) => {
-  await page.goto('/lessons/addition/');
-  await expect(page.locator('#run')).toBeEnabled();
-  await page.locator('#source').fill('li t0, 7\nli t1, 5\nwrong_instruction t2, t0, t1');
-  await page.locator('#run').click();
-  await expect(page.locator('#state-badge')).toHaveText('Error', { timeout: 30000 });
-  await expect(page.locator('#diagnostic-lines')).toContainText('lesson.s:3: Error');
-  await page.locator('.diagnostic-link').click();
-  expect(await page.locator('#source').evaluate(el => el.value.slice(el.selectionStart, el.selectionEnd))).toBe('wrong_instruction t2, t0, t1');
-  await expect(page.locator('#t2-decimal')).toHaveText('—');
-  await page.locator('#source').fill('li a0, 0\nli a7, 2\necall');
-  await page.locator('#run').click();
-  await expect(page.locator('#state-badge')).toHaveText('Finished', { timeout: 45000 });
-  await expect(page.locator('#register-note')).toContainText('No register snapshot was produced');
-  await expect(page.locator('#t2-decimal')).toHaveText('—');
-  await page.goto('/');
-  await expect(page.locator('#source')).toHaveValue(/Hello, RISC-V!/);
+test("lesson errors point to the editable line and missing reports stay empty", async ({
+  page,
+}) => {
+  await page.goto("/lessons/addition/");
+  await expect(page.locator("#run")).toBeEnabled();
+  await page
+    .locator("#source")
+    .fill("li t0, 7\nli t1, 5\nwrong_instruction t2, t0, t1");
+  await page.locator("#run").click();
+  await expect(page.locator("#state-badge")).toHaveText("Error", {
+    timeout: 30000,
+  });
+  await expect(page.locator("#diagnostic-lines")).toContainText(
+    "lesson.s:3: Error",
+  );
+  await page.locator(".diagnostic-link").click();
+  expect(
+    await page
+      .locator("#source")
+      .evaluate((el) => el.value.slice(el.selectionStart, el.selectionEnd)),
+  ).toBe("wrong_instruction t2, t0, t1");
+  await expect(page.locator("#t2-decimal")).toHaveText("—");
+  await page.locator("#source").fill("li a0, 0\nli a7, 2\necall");
+  await page.locator("#run").click();
+  await expect(page.locator("#state-badge")).toHaveText("No snapshot", {
+    timeout: 45000,
+  });
+  await expect(page.locator("#register-note")).toContainText(
+    "No register snapshot was produced",
+  );
+  await expect(page.locator("#t2-decimal")).toHaveText("—");
+  await page.goto("/lessons/hello-world/");
+  await expect(page.locator("#source")).toHaveValue(/Hello, RISC-V!/);
 });

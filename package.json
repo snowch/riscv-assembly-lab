@@ -7,7 +7,11 @@
     "serve": "python3 -m http.server 4220 --directory site",
     "test": "node --test tests/*.test.js",
     "test:browser": "playwright test",
-    "check:assets": "node tools/check-assets.js"
+    "check:assets": "node tools/check-assets.js",
+    "build:course": "node tools/build-course.js",
+    "test:course": "node tools/check-course.js"
   },
-  "devDependencies": { "@playwright/test": "1.56.1" }
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
 }

@@ -1,53 +1,69 @@
 # RISC-V Assembly Lab
 
-[Open the lab](https://snowch.github.io/riscv-assembly-lab/) · [All labs](https://snowch.github.io/labs/)
+[Open the course](https://snowch.github.io/riscv-assembly-lab/) · [Start with addition](https://snowch.github.io/riscv-assembly-lab/lessons/addition/) · [Hello World](https://snowch.github.io/riscv-assembly-lab/lessons/hello-world/)
 
-A first working example: edit **Hello, RISC-V!**, assemble and link it in the browser, and run the actual executable inside a disposable xv6 guest. This is a small prototype, not a complete course or debugger.
+A complete core course in reading, writing and running RISC-V assembly, adapted with the author's permission from [Assembly Lab](https://snowch.github.io/assembly-lab/). The 54 short lessons cover first instructions, register readings, range checks, masks, branches, loops, memory, arrays, multiplication, functions, C and real xv6 programs, followed by three further readings.
 
-- Real WebAssembly GNU `as` and `ld`, accepting standard GNU RISC-V assembly, labels and pseudo-instructions.
-- Real ELF64 RISC-V executables running on the same WebAssembly CPU and pinned xv6 images as [xv6 Lab](https://snowch.github.io/xv6-lab/).
-- Editable source, source-line diagnostics, Build & Run, Stop, console and full serial log.
-- Browser draft storage with a tab-only fallback; source download and undoable starter restore.
-- Responsive light/dark/system themes, keyboard shortcut (Ctrl/Cmd + Enter), accessible plain-text editor.
-- No backend, account, SharedArrayBuffer or special hosting headers. GitHub Pages serves all assets, including corresponding sources and licences.
+The learner edits the relevant code. Supplied entry, capture and exit code stays behind **View complete program**. Predictions are checked against executed results; each programming challenge runs the same submitted code on fresh cases. No source interpreter or scripted result substitutes for machine execution.
 
-The starter targets **RV64GC / LP64D**, defines `_start`, and uses **xv6** system calls: `write = 16`, `exit = 2`. These are not Linux or RARS system call numbers. First-run assets total approximately 8 MB; source archives are downloaded only on request.
+## What runs
 
-## Focused lesson preview
+GNU `as` and `ld`, compiled to WebAssembly, produce real ELF64 executables. The CPU boots a real xv6 kernel and executes each program in a fresh filesystem copy. The target is RV64GC / LP64D. C lessons use the pinned RV64 TinyCC compiler locally, then link and execute its actual object. Compiler output is disassembled by real GNU `objdump`; no invented C source-line mapping is shown.
 
-[Try the addition lesson](https://snowch.github.io/riscv-assembly-lab/lessons/addition/). The editor contains only three lines: load two values and add them. A supplied assembly wrapper provides `_start`, captures `t0`, `t1` and `t2` immediately after the fragment, prints their saved 64-bit bit patterns through xv6 `write`, and exits. The interface displays signed decimal and hexadecimal readings of that actual report; it does not interpret the fragment or calculate the sum in JavaScript.
+- **Build & Run**, **Start stepping**, **Step instruction**, **Continue** and **Stop**.
+- Actual relevant register values, signed/unsigned/hex readings, bit views and byte-addressed data or stack views.
+- Real breakpoint snapshots and instruction paths. A source line can expand into several instructions.
+- Multi-case challenges, specific hints, reference solutions and case inspection.
+- Source-line diagnostics, separate exploration/challenge drafts, completion marks and an explicit tab-only fallback when storage is unavailable.
+- Phone/desktop layouts, light/dark/system themes, course navigation and source downloads.
+- Complete assembly downloads; C functions and their supplied assembly/linker script download together as ZIP.
 
-“View complete program” shows the exact current source passed to the assembler, including entry and reporting code, and offers a self-contained `.s` download. Diagnostics from the fragment link back to its editable line. Source edited after a build is marked as newer than the displayed register snapshot. The lesson has a separate saved draft from Hello World; unavailable storage keeps both usable in the current tab. Programs that exit early or fail before reporting leave the register cards empty.
+There is no compiler server, account, CDN dependency, SharedArrayBuffer or special hosting-header requirement. Everything builds and executes in a disposable browser worker. The initial arithmetic lessons keep the focused three-line editor; explanations and optional tooling grow when needed.
 
-This page is a working preview of how later lessons can keep supplied startup and reporting code out of the main teaching flow. It is not a full curriculum or instruction debugger. The wrapper observes these three registers and uses other working registers while reporting, all visible in the complete program.
+## Course and authoring
 
-## Develop
+`content/*.json` holds the canonical prose, code, predictions, fixtures, hints and exercises. `tools/build-course.js` validates it and generates the static course overview and every lesson page. Module lists, routes and published counts are generated from actual data. The original Hello World remains an optional complete-program example, rather than recurring setup in every lesson.
+
+The course reuses Assembly Lab’s predict/run/inspect/change method, short-unit pacing, trip-computer examples and local qualifications. RISC-V has no NZCV flags: carry, overflow checks, comparisons, 32-bit W extension, division edges and the calling convention are adapted to its architecture. The ending follows xv6 system calls, ELF entry, protection and a bounded trip-computer capstone; it does not republish Arm-specific Raspberry Pi procedures as RISC-V instructions.
+
+`docs/course-authoring.md` records the checked-fact contract. Separate drafting and independent technical/learner reviews are recorded under `docs/`. The source course’s content copyright is preserved; it is not silently relicensed as MIT.
+
+## Develop and check
 
 ```sh
 npm ci
+npm run build:course
 npm run serve
 # http://localhost:4220
 ```
 
-The static site is `site/`; there is no frontend build step. After edits:
+Run the same checks used by CI:
 
 ```sh
 npm run check:assets
+npm run build:course
+git diff --exit-code -- site/index.html site/lessons/ site/course/catalog.json
 npm test
+# Install qemu-user for qemu-riscv64, or set RISCV_QEMU to its path.
+npm run test:course
 npx playwright install --with-deps chromium
 npm run test:browser
 ```
 
-Unit integration tests invoke the actual vendored GNU assembler/linker and execute both the starter and edited messages in real xv6 guests. Browser tests exercise the actual worker pipeline, source diagnostics, storage, error recovery, stop/restart, snapshot freshness and phone/desktop themes. The Pages workflow runs these checks before deployment on `main`.
+`npm test` covers actual GNU/TinyCC compilation, byte and register captures, source diagnostics, real stepping, C aggregate initialisation and guard read/write faults. `test:course` runs every worked example in xv6 and checks the portable challenge corpus against independent QEMU user-mode execution. xv6 system-call exercises are checked with their actual xv6 ABI, not passed off as Linux programs. It also verifies incomplete challenge starters fail a case. Browser checks cover the entire catalogue in both themes at phone/desktop widths plus the actual editor, stepping, grading, C compilation, source downloads, persistence and error recovery flows.
 
-## Scope and limits
+## Runtime correction
 
-One assembly file, no C preprocessor, external libraries, interactive console input or stepping. Source ≤64 KiB, linked executable ≤256 KiB, serial output ≤64 KiB, execution ≤30 seconds. Compilation/linking have a separate 15-second deadline; asset loading can take up to two minutes and is cancellable. Each run starts a new worker and a fresh filesystem copy. Stop terminates the worker even for a guest loop or a busy assembler. Program output is actual UART output; no source substitutions simulate execution.
+The inherited CPU ignored the PTE U bit and incorrectly let user programs read supervisor-only guard pages. The distributed CPU is rebuilt with a targeted permission/cache correction. Independent integration checks now observe actual xv6 load/store page faults at the guard boundary while the safe reference succeeds. Locked source and build records are included; a clean rebuild produces the same WASM bytes. The patch does not claim complete privileged-ISA compliance.
 
-The shell completion marker reports that execution returned to the shell; it does not grade the program or report its numeric exit status. Guest faults can be inspected in the full serial log. This prototype has no persistent guest filesystem or performance claims.
+## Scope
 
-Next steps can build on this vertical slice: console input, instruction stepping and registers, then a first lesson. The Arm [Assembly Lab](https://snowch.github.io/assembly-lab/) stays a separate project.
+Programs are xv6 user processes. Its `write = 16` and `exit = 2` are not Linux or RARS syscall numbers. The guest retains the 16 MiB debugger compatibility workaround. Default supplied assembly disables compressed encodings for simpler instruction paths; this choice is visible in full source.
 
-## Third-party source and licences
+Source is limited to 64 KiB; C prepared source to 7500 bytes and its object to 8192 bytes. Executables are at most 256 KiB, console output 64 KiB, builds 15 seconds and active runs 30 seconds; asset loading has a separate cancellable two-minute limit. Stepping is functional emulation, not hardware timing. A state report or passed finite test set is not a proof for every possible program. Guest filesystem changes are discarded. Console input and physical-board execution are not supplied by this course.
 
-See [the distributed notice](site/NOTICE.md) for exact revisions, licences, build instructions and corresponding source archives. GNU binutils is GPL-3.0-or-later. The CPU, xv6 guest and interface retain their MIT licences. Vendored artifacts remain unchanged; `asset-manifest.json` records their checksums. Source archives are included in the deployed site alongside the tools.
+Optional floating-point material interprets binary32 representations with integer instructions and an explicitly labelled numeric bit interpretation. The guest does not provide floating-point process-state management, and the course does not claim it executes floating-point instructions.
+
+## Source and licences
+
+[Distributed provenance and licences](site/NOTICE.md) records exact revisions, complete GNU/TinyCC sources, the patched CPU source, guest sources and all notices. `asset-manifest.json` pins distributed assets with SHA-256 checksums. GNU binutils is GPL-3.0-or-later; TinyCC is LGPL-2.1-or-later; CPU/xv6 and interface integration retain their stated MIT licences. Lesson prose/exercises adapted from Assembly Lab remain © 2026 Christopher Snow, all rights reserved, under [the content licence](content/LICENSE).

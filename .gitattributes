@@ -1,0 +1,3 @@
+# Preserve unified-diff context and verbatim third-party licence text.
+site/sources/*.patch -whitespace
+site/vendor/compiler/COPYING-LGPL-2.1.txt -whitespace

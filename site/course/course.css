@@ -1,0 +1,866 @@
+/* Copyright © 2026 Christopher Snow */
+.course-layout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  max-width: 1600px;
+  margin: auto;
+}
+.course-layout main {
+  padding: 2.2rem 2rem;
+  min-width: 0;
+  width: 100%;
+}
+.course-sidebar {
+  padding: 2rem 0.5rem 2rem 1rem;
+  border-right: 1px solid var(--border);
+}
+.course-sidebar > details {
+  position: sticky;
+  top: 0.7rem;
+  max-height: calc(100vh - 1.4rem);
+  overflow: auto;
+  border: 0;
+}
+.course-sidebar > details > summary {
+  font-size: 0.9rem;
+}
+.course-sidebar nav {
+  display: block;
+  font-size: 0.8rem;
+}
+.course-sidebar nav details {
+  border: 0;
+}
+.course-sidebar nav summary {
+  padding: 0.65rem 0.5rem;
+  font-size: 0.78rem;
+}
+.course-sidebar ol {
+  list-style: none;
+  padding: 0 0.4rem 0 0.7rem;
+  margin: 0.2rem 0 0.7rem;
+}
+.course-sidebar li {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+.course-sidebar li a {
+  display: block;
+  padding: 0.45rem 0.5rem;
+  color: var(--muted);
+  white-space: normal;
+  line-height: 1.4;
+  border-left: 2px solid transparent;
+  font-weight: 400;
+  width: 100%;
+  text-decoration: none;
+}
+.course-sidebar li a[aria-current] {
+  border-left-color: var(--accent);
+  background: var(--notice);
+  color: var(--accent);
+  font-weight: 650;
+  border-radius: 0 6px 6px 0;
+}
+.course-sidebar li span {
+  color: var(--accent);
+}
+.course-layout .intro {
+  margin-bottom: 1.2rem;
+  max-width: 850px;
+}
+.course-layout .intro h1 {
+  font-size: clamp(1.9rem, 3vw, 2.7rem);
+}
+.course-layout .intro > p:not(.eyebrow) {
+  font-size: 1rem;
+}
+.lesson-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg);
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.lesson-guide {
+  max-width: 850px;
+  font-size: 0.94rem;
+}
+.lesson-guide p {
+  margin: 1rem 0;
+}
+.prediction-block {
+  background: var(--notice);
+  border-radius: 12px;
+  padding: 1.1rem 1.3rem;
+  margin: 1.5rem 0;
+}
+.prediction-block h2 {
+  font-size: 1rem;
+}
+.prediction-block p {
+  font-size: 0.85rem;
+  margin: 0.6rem 0;
+}
+.prediction-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+.prediction-entry label {
+  font-size: 0.8rem;
+}
+.prediction-entry label span {
+  color: var(--muted);
+}
+input:not([type="checkbox"]) {
+  font: inherit;
+  min-height: 44px;
+  min-width: 0;
+  max-width: 100%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+}
+.prediction-entry input {
+  flex: 1;
+  min-width: 160px;
+  font-size: 0.85rem;
+}
+.course-layout .workspace {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+}
+.course-layout .editor {
+  height: clamp(180px, 32vh, 330px);
+}
+.course-layout textarea,
+.course-layout #line-numbers {
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+.mode-tabs {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.6rem 1.1rem;
+}
+.mode-tabs button {
+  flex: 1;
+  font-size: 0.8rem;
+}
+.mode-tabs [aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+.starting-state {
+  padding: 0.3rem 1.2rem 0.6rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.starting-state p {
+  margin: 0.2rem 0;
+}
+.starting-state code {
+  display: inline-block;
+  margin: 0.15rem 0.2rem 0.15rem 0;
+}
+.stepping-help {
+  padding: 0 1.2rem 0.9rem;
+  margin: 0.3rem 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.reading-select {
+  padding: 0.3rem 1.2rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.reading-select label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+.reading-select select {
+  font-size: 0.8rem;
+}
+.registers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  padding: 0.6rem 1.1rem;
+}
+.register {
+  min-width: 0;
+  background: var(--soft);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.8rem;
+}
+.register h3 {
+  margin: 0;
+  font-size: 0.85rem;
+}
+.register h3 span {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 400;
+  margin-left: 0.4rem;
+}
+.register-value {
+  font:
+    650 1.6rem/1.3 ui-monospace,
+    monospace;
+  margin: 0.4rem 0;
+  overflow-wrap: anywhere;
+}
+.register-hex {
+  font:
+    0.7rem/1.5 ui-monospace,
+    monospace;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+.register.destination {
+  grid-column: 1/-1;
+  background: var(--notice);
+  border-color: var(--accent);
+}
+.destination .register-value {
+  font-size: 1.95rem;
+  color: var(--accent);
+}
+.register.changed {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.memory-section {
+  border-top: 1px solid var(--border);
+  padding: 0.9rem 0;
+}
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0 1.1rem;
+}
+.section-heading h3 {
+  font-size: 0.95rem;
+  margin: 0;
+}
+.section-heading button {
+  font-size: 0.72rem;
+  min-height: 40px;
+  padding: 0.4rem;
+}
+.section-heading [aria-pressed="true"] {
+  background: var(--notice);
+  border-color: var(--accent);
+}
+.memory-grid {
+  padding: 0.5rem 1.1rem;
+  display: grid;
+  gap: 0.25rem;
+}
+.memory-row {
+  display: grid;
+  grid-template-columns: 40px repeat(8, minmax(0, 1fr));
+  gap: 3px;
+  align-items: center;
+}
+.memory-offset {
+  font:
+    11px ui-monospace,
+    monospace;
+  color: var(--muted);
+}
+.memory-byte {
+  font:
+    12px ui-monospace,
+    monospace;
+  padding: 0.3rem 0;
+  border-radius: 4px;
+  min-width: 0;
+  min-height: 34px;
+}
+.memory-byte.changed {
+  background: var(--notice);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+.memory-byte[aria-pressed="true"] {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.memory-label {
+  font-size: 0.72rem;
+  color: var(--accent);
+  margin-top: 0.25rem;
+}
+.course-layout .panel-note {
+  font-size: 0.77rem;
+}
+.lesson-explanation {
+  max-width: 850px;
+  padding: 1.2rem 0;
+  font-size: 0.94rem;
+}
+.lesson-explanation h2 {
+  font-size: 1.2rem;
+}
+.lesson-explanation p {
+  margin: 0.9rem 0;
+}
+.next-step details {
+  border: 0;
+}
+.next-step summary {
+  padding: 0.5rem 0;
+}
+.challenge-section {
+  margin: 1.5rem 0;
+  padding: 1.3rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 14px;
+  font-size: 0.9rem;
+}
+.challenge-section h2 {
+  font-size: 1.2rem;
+}
+.challenge-section #case-picker {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+.challenge-section #case-picker button {
+  font-size: 0.8rem;
+}
+.challenge-section #case-picker [aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--notice);
+}
+#case-results {
+  padding-left: 1.3rem;
+}
+#case-results li {
+  padding: 0.5rem 0.2rem;
+  border-bottom: 1px solid var(--border);
+}
+#case-results .passed {
+  color: var(--accent);
+}
+#case-results .failed {
+  color: var(--error);
+}
+#challenge-status {
+  font-weight: 600;
+}
+.hint-controls {
+  margin: 0.8rem 0;
+}
+#challenge-hints li {
+  padding: 0.3rem 0;
+}
+#reference-solution {
+  margin-top: 1rem;
+}
+#reference-solution summary {
+  padding-left: 0;
+}
+.step-observations {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.1rem;
+  margin: 1.5rem 0;
+  background: var(--surface);
+}
+#current-instruction {
+  font:
+    600 0.95rem/1.6 ui-monospace,
+    monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--accent);
+}
+#step-location {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+#trace-list {
+  max-height: 280px;
+  overflow: auto;
+  padding-left: 1.5rem;
+}
+#trace-list li {
+  font:
+    0.78rem/1.7 ui-monospace,
+    monospace;
+  padding: 0.3rem;
+  overflow-wrap: anywhere;
+}
+#trace-list li:last-child {
+  background: var(--notice);
+}
+#line-numbers span {
+  display: block;
+  height: 1.8em;
+}
+#line-numbers .active-line {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-radius: 3px;
+}
+.bit-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.7rem 0;
+  font-size: 0.83rem;
+}
+#bit-reading {
+  font:
+    13px/1.7 ui-monospace,
+    monospace;
+  overflow-wrap: anywhere;
+}
+#bits-scroller {
+  overflow: auto;
+  max-width: 100%;
+  padding: 0.5rem 0 1rem;
+}
+#bit-view #bits {
+  display: flex;
+  gap: 0.7rem;
+  width: max-content;
+}
+.bit-group {
+  display: grid;
+  grid-template-columns: repeat(4, 24px);
+  gap: 2px;
+}
+.bit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font:
+    13px ui-monospace,
+    monospace;
+  padding: 5px 2px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+}
+.bit small {
+  font-size: 11px;
+  color: var(--muted);
+}
+.bit.one {
+  background: var(--notice);
+  border-color: var(--accent);
+}
+.paired-listing {
+  display: flex;
+  gap: 1rem;
+  overflow: auto;
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  margin: 1rem 0;
+}
+.paired-listing > div {
+  flex: 1 0 340px;
+  min-width: 340px;
+}
+.paired-listing h3 {
+  font-size: 0.8rem;
+  margin: 0.8rem 1rem;
+}
+.paired-listing pre {
+  white-space: pre;
+  overflow: visible;
+  max-height: none;
+  font-size: 0.78rem;
+  padding: 1rem;
+}
+.complete-program {
+  max-width: none;
+}
+.complete-program pre {
+  white-space: pre;
+  overflow-wrap: normal;
+  background: var(--code);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-height: 500px;
+}
+.complete-program .explanation-body {
+  padding-left: 0;
+  font-size: 0.85rem;
+}
+#elf-layout {
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  padding: 0.8rem 0;
+}
+#elf-layout .segment {
+  border: 1px solid var(--accent);
+  background: var(--notice);
+  padding: 1rem;
+  font:
+    12px/1.8 ui-monospace,
+    monospace;
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+  flex: 1;
+  min-width: 180px;
+}
+.lesson-completion {
+  border-top: 1px solid var(--border);
+  margin-top: 1.5rem;
+  padding: 1.2rem 0;
+  font-size: 0.9rem;
+}
+.lesson-completion label {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 44px;
+}
+.lesson-completion input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--accent);
+}
+.lesson-completion p {
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin: 0.2rem 0;
+}
+.lesson-navigation {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.lesson-navigation a {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  background: var(--surface);
+  text-decoration: none;
+  white-space: normal;
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+.lesson-navigation a:last-child {
+  text-align: right;
+}
+.lesson-navigation span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 400;
+  margin-bottom: 0.4rem;
+}
+.course-home {
+  max-width: 1100px;
+}
+.course-home .intro {
+  max-width: 850px;
+}
+.home-start {
+  display: inline-block;
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 0.8rem 1.1rem;
+  margin: 1.2rem 1rem 0 0;
+  font-weight: 650;
+}
+.secondary-link {
+  font-size: 0.9rem;
+}
+.course-introduction {
+  max-width: 850px;
+  font-size: 0.95rem;
+  margin: 2rem 0;
+}
+.course-introduction h2 {
+  font-size: 1.25rem;
+  margin-top: 1.5rem;
+}
+.course-module {
+  border-top: 1px solid var(--border);
+  padding: 1.6rem 0;
+}
+.module-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.module-number {
+  display: grid;
+  place-items: center;
+  background: var(--notice);
+  color: var(--accent);
+  font-weight: 700;
+  border-radius: 50%;
+  min-width: 42px;
+  height: 42px;
+}
+.module-heading h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+.module-heading p {
+  margin: 0.4rem 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.course-module ol {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+.course-module li {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  gap: 1rem;
+}
+.course-module li a {
+  display: block;
+  text-decoration: none;
+  padding: 0.9rem 0.5rem;
+  width: 100%;
+}
+.course-module strong {
+  display: block;
+  font-size: 1rem;
+}
+.course-module li a span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 0.2rem;
+}
+.completion-mark {
+  font-size: 0.75rem;
+  color: var(--accent);
+  white-space: nowrap;
+}
+@media (min-width: 951px) {
+  .course-sidebar > details > summary {
+    display: none;
+  }
+}
+@media (max-width: 1150px) {
+  .course-layout {
+    grid-template-columns: 210px minmax(0, 1fr);
+  }
+  .course-layout main {
+    padding: 1.8rem 1.2rem;
+  }
+  .course-layout .workspace {
+    grid-template-columns: 1fr;
+  }
+  .memory-byte {
+    min-height: 40px;
+  }
+}
+@media (max-width: 950px) {
+  .course-layout {
+    display: block;
+  }
+  .course-sidebar {
+    padding: 0.4rem 0.8rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .course-sidebar > details {
+    position: static;
+    max-height: none;
+  }
+  .course-sidebar > details:not([open]) nav {
+    display: none;
+  }
+  .course-sidebar nav {
+    max-height: 60vh;
+    overflow: auto;
+  }
+  .course-layout main {
+    padding: 1.6rem 1rem;
+  }
+  .course-layout .intro h1 {
+    font-size: 2rem;
+  }
+  .lesson-toolbar {
+    top: 0;
+  }
+  .lesson-toolbar .run-actions {
+    gap: 0.4rem;
+  }
+  .lesson-toolbar button {
+    font-size: 0.8rem;
+  }
+  .lesson-navigation {
+    font-size: 0.8rem;
+  }
+  .course-sidebar nav a {
+    min-height: 44px;
+  }
+}
+@media (max-width: 520px) {
+  .course-layout main {
+    padding: 1.2rem 0.8rem;
+  }
+  .course-layout .intro h1 {
+    font-size: 1.8rem;
+  }
+  .course-layout .intro > p:not(.eyebrow) {
+    font-size: 0.9rem;
+  }
+  .lesson-toolbar {
+    gap: 0.4rem;
+    padding: 0.6rem 0;
+  }
+  .lesson-toolbar .run-actions {
+    width: 100%;
+  }
+  .lesson-toolbar button {
+    flex: 1;
+    padding: 0.5rem 0.4rem;
+    font-size: 0.75rem;
+    min-width: 0;
+  }
+  .lesson-toolbar #run-status {
+    font-size: 0.72rem;
+  }
+  .lesson-guide {
+    font-size: 0.88rem;
+  }
+  .prediction-block {
+    padding: 0.9rem;
+  }
+  .prediction-entry {
+    gap: 0.5rem;
+  }
+  .prediction-entry label {
+    width: 100%;
+  }
+  .course-layout textarea,
+  .course-layout #line-numbers {
+    font-size: 16px;
+  }
+  .course-layout .editor {
+    height: 220px;
+  }
+  .starting-state {
+    padding: 0.3rem 0.9rem;
+  }
+  .stepping-help {
+    padding: 0 0.9rem 0.8rem;
+  }
+  .reading-select {
+    padding: 0.3rem 0.9rem;
+  }
+  .registers {
+    padding: 0.6rem 0.9rem;
+  }
+  .register {
+    padding: 0.7rem;
+  }
+  .register-value {
+    font-size: 1.45rem;
+  }
+  .register-hex {
+    font-size: 0.68rem;
+  }
+  .section-heading {
+    padding: 0 0.9rem;
+  }
+  .memory-grid {
+    padding: 0.5rem 0.9rem;
+  }
+  .memory-row {
+    grid-template-columns: 36px repeat(8, minmax(0, 1fr));
+    gap: 2px;
+  }
+  .memory-byte {
+    font-size: 11px;
+    min-height: 40px;
+  }
+  .lesson-explanation {
+    font-size: 0.9rem;
+  }
+  .challenge-section {
+    padding: 1rem;
+  }
+  .lesson-navigation {
+    gap: 0.6rem;
+  }
+  .lesson-navigation a {
+    padding: 0.8rem;
+    font-size: 0.83rem;
+  }
+  .course-module strong {
+    font-size: 0.95rem;
+  }
+  .course-home .intro h1 {
+    font-size: 2.2rem;
+  }
+  .course-home .intro > p:not(.eyebrow) {
+    font-size: 1rem;
+  }
+}
+.course-page .intro .eyebrow {
+  font-size: 0.72rem;
+}
+.course-page .editor-footer {
+  font-size: 11px;
+}
+.course-page header nav > a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.course-page footer a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.editor-panel {
+  scroll-margin-top: 140px;
+}
+@media (max-width: 520px) {
+  .register-hex {
+    font-size: 11px;
+  }
+}
+#sticky-operation {
+  flex: 1 0 100%;
+  margin: 0;
+  font:
+    12px/1.6 ui-monospace,
+    monospace;
+  color: var(--accent);
+  overflow-wrap: anywhere;
+  padding: 0.3rem 0;
+}
+.course-module {
+  min-width: 0;
+}
+.module-heading > div {
+  min-width: 0;
+}

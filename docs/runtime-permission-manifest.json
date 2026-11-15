@@ -1,0 +1,39 @@
+{
+  "upstream": "https://github.com/takahirox/riscv-rust",
+  "upstreamCommit": "8ee69d7a5dc7ef6d8b2bda96bf86d2923f2cf176",
+  "rust": "1.85.1 (4eb161250 2025-03-15)",
+  "target": "wasm32-unknown-unknown",
+  "profile": "release",
+  "wasmBindgen": "0.2.100",
+  "wasmBindgenCliSource": "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.100/wasm-bindgen-0.2.100-x86_64-unknown-linux-musl.tar.gz",
+  "tests": {
+    "nativePassed": 29,
+    "nativeFailed": 0,
+    "upstreamIgnored": 11,
+    "newPermissionTests": 10
+  },
+  "sha256": {
+    "permissions.patch": "1da2839b6458e4a6453daedbdd14299f7802174b7e55132de30fc41b268a3709",
+    "Cargo.lock": "8643a233cc62830cc9b1f0096551c3723f30f706d2f8b18879a9b5ab845874e9",
+    "rebuild.sh": "17e2873f556268778ae4e0b8564fe26b76ae6b22f7f4f6a2e5fd780d745af6a7",
+    "THIRD_PARTY_NOTICES.txt": "a4922e0710b39d5361624edfb858a0a2350e3efea657af50de731431c5845d96",
+    "web-final/riscv_emu_rust_wasm.js": "f18ff9cce28f75bae6673d99ea52d164dfc50ed1d5e29eb53a1e0aca99a7c694",
+    "web-final/riscv_emu_rust_wasm_bg.wasm": "acecbb32bb10570246f74889001c06f85d307fa4a24395e1bf85cfb2eb34b5c7",
+    "riscv-rust-permissions-source.tar.gz": "5559f947b5483a6e85d02acd5141551e56a9dd3c21cf3e6aaac97c899e1df226",
+    "README.md": "103eee765f5736934afbc349470db0686d9bd44d85c138f45aee49ec73a53c08",
+    "guard-smoke.mjs": "00755dde6da10b01436db091008aa73305808e066042d391ef97143b7fe0c964",
+    "guard-smoke.log": "b23c5de0601fcd21ba2c5ecb52d59fff1da2917c83192c93651461ed0565200c",
+    "tests.log": "58de680b5b57c0a9ac831953b3e28cc33da5f9358a8c4238ca00e76c1d0eeb52",
+    "source-archive-build.log": "bf5f2f832f1b3004bb772387238a18f071b5248fde9b5348c2a56490fe43fbfd"
+  },
+  "integrationSmoke": {
+    "validProgram": "passed",
+    "xv6LoadPageFault13": "passed",
+    "xv6StorePageFault15": "passed"
+  },
+  "sourceArchiveVerification": {
+    "cleanExtractBuild": "passed",
+    "regeneratedWasmMatches": true,
+    "sha256": "acecbb32bb10570246f74889001c06f85d307fa4a24395e1bf85cfb2eb34b5c7"
+  }
+}

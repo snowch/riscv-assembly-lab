@@ -1,0 +1,316 @@
+diff --git a/src/cpu.rs b/src/cpu.rs
+index aa20266..4ff3bb2 100644
+--- a/src/cpu.rs
++++ b/src/cpu.rs
+@@ -3038,8 +3038,9 @@ const INSTRUCTIONS: [Instruction; INSTRUCTION_NUM] = [
+ 		mask: 0xfe007fff,
+ 		data: 0x12000073,
+ 		name: "SFENCE.VMA",
+-		operation: |_cpu, _word, _address| {
+-			// Do nothing?
++		operation: |cpu, _word, _address| {
++			// Flushing all entries is valid even for an address/ASID-specific fence.
++			cpu.mmu.clear_page_cache();
+ 			Ok(())
+ 		},
+ 		disassemble: dump_empty
+diff --git a/src/mmu.rs b/src/mmu.rs
+index 82104ae..36f6a06 100644
+--- a/src/mmu.rs
++++ b/src/mmu.rs
+@@ -20,7 +20,6 @@ use terminal::Terminal;
+ /// devices, maps address to them, and accesses them depending on address.
+ /// It also manages virtual-physical address translation and memoty protection.
+ /// It may also be said Bus.
+-/// @TODO: Memory protection is not implemented yet. We should support.
+ pub struct Mmu {
+ 	clock: u64,
+ 	xlen: Xlen,
+@@ -161,7 +160,7 @@ impl Mmu {
+ 	}
+ 
+ 	/// Clears page cache entries
+-	fn clear_page_cache(&mut self) {
++	pub(crate) fn clear_page_cache(&mut self) {
+ 		self.fetch_page_cache.clear();
+ 		self.load_page_cache.clear();
+ 		self.store_page_cache.clear();
+@@ -200,6 +199,11 @@ impl Mmu {
+ 	/// # Arguments
+ 	/// * `mstatus`
+ 	pub fn update_mstatus(&mut self, mstatus: u64) {
++		// MPRV/MPP select effective data privilege; SUM/MXR change leaf access.
++		const TRANSLATION_STATUS: u64 = (1 << 17) | (3 << 11) | (1 << 18) | (1 << 19);
++		if (self.mstatus ^ mstatus) & TRANSLATION_STATUS != 0 {
++			self.clear_page_cache();
++		}
+ 		self.mstatus = mstatus;
+ 	}
+ 
+@@ -666,7 +670,7 @@ impl Mmu {
+ 							_ => match (self.mstatus >> 17) & 1 {
+ 								0 => Ok(address),
+ 								_ => {
+-									let privilege_mode = get_privilege_mode((self.mstatus >> 9) & 3);
++									let privilege_mode = get_privilege_mode((self.mstatus >> 11) & 3);
+ 									match privilege_mode {
+ 										PrivilegeMode::Machine => Ok(address),
+ 										_ => {
+@@ -695,7 +699,7 @@ impl Mmu {
+ 							_ => match (self.mstatus >> 17) & 1 {
+ 								0 => Ok(address),
+ 								_ => {
+-									let privilege_mode = get_privilege_mode((self.mstatus >> 9) & 3);
++									let privilege_mode = get_privilege_mode((self.mstatus >> 11) & 3);
+ 									match privilege_mode {
+ 										PrivilegeMode::Machine => Ok(address),
+ 										_ => {
+@@ -764,7 +768,7 @@ impl Mmu {
+ 		let d = (pte >> 7) & 1;
+ 		let a = (pte >> 6) & 1;
+ 		let _g = (pte >> 5) & 1;
+-		let _u = (pte >> 4) & 1;
++		let u = (pte >> 4) & 1;
+ 		let x = (pte >> 3) & 1;
+ 		let w = (pte >> 2) & 1;
+ 		let r = (pte >> 1) & 1;
+@@ -785,16 +789,22 @@ impl Mmu {
+ 
+ 		// Leaf page found
+ 
+-		if a == 0 || (match access_type { MemoryAccessType::Write => d == 0, _ => false }) {
+-			let new_pte = pte | (1 << 6) | (match access_type {
+-				MemoryAccessType::Write => 1 << 7,
+-				_ => 0
+-			});
+-			match self.addressing_mode {
+-				AddressingMode::SV32 => self.store_word_raw(pte_address, new_pte as u32),
+-				_ => self.store_doubleword_raw(pte_address, new_pte)
+-			};
+-		}
++		// The PTE U bit is a permission, not just page metadata. SUM never
++		// permits supervisor instruction fetches from user pages. DontCare
++		// is used only by the debugger's physical-range validation; the
++		// subsequent architectural read still checks its own permissions.
++		match access_type {
++			MemoryAccessType::DontCare => {},
++			_ => match self.privilege_mode {
++				PrivilegeMode::User if u == 0 => return Err(()),
++				PrivilegeMode::Supervisor if u != 0 => {
++					if matches!(access_type, MemoryAccessType::Execute) || (self.mstatus & (1 << 18)) == 0 {
++						return Err(());
++					}
++				},
++				_ => {}
++			}
++		};
+ 
+ 		match access_type {
+ 			MemoryAccessType::Execute => {
+@@ -803,7 +813,8 @@ impl Mmu {
+ 				}
+ 			},
+ 			MemoryAccessType::Read => {
+-				if r == 0 {
++				// MXR permits data loads from execute-only pages, not stores.
++				if r == 0 && !((self.mstatus & (1 << 19)) != 0 && x != 0) {
+ 					return Err(());
+ 				}
+ 			},
+@@ -815,6 +826,18 @@ impl Mmu {
+ 			_ => {}
+ 		};
+ 
++		// Accessed/dirty bits must not be changed by a denied access.
++		if a == 0 || (match access_type { MemoryAccessType::Write => d == 0, _ => false }) {
++			let new_pte = pte | (1 << 6) | (match access_type {
++				MemoryAccessType::Write => 1 << 7,
++				_ => 0
++			});
++			match self.addressing_mode {
++				AddressingMode::SV32 => self.store_word_raw(pte_address, new_pte as u32),
++				_ => self.store_doubleword_raw(pte_address, new_pte)
++			};
++		}
++
+ 		let offset = v_address & 0xfff; // [11:0]
+ 		// @TODO: Optimize
+ 		let p_address = match self.addressing_mode {
+@@ -933,3 +956,164 @@ impl MemoryWrapper {
+ 		self.memory.validate_address(address - DRAM_BASE)
+ 	}
+ }
++
++#[cfg(test)]
++mod permission_tests {
++	use super::*;
++	use terminal::DummyTerminal;
++
++	const V: u64 = 1;
++	const R: u64 = 1 << 1;
++	const W: u64 = 1 << 2;
++	const X: u64 = 1 << 3;
++	const U: u64 = 1 << 4;
++	const A: u64 = 1 << 6;
++	const D: u64 = 1 << 7;
++	const SUM: u64 = 1 << 18;
++	const MXR: u64 = 1 << 19;
++	const VA: u64 = 0x4000;
++	const PA: u64 = DRAM_BASE + 0x3000;
++
++	fn mapped(mode: AddressingMode, flags: u64, privilege: PrivilegeMode, cached: bool) -> Mmu {
++		let mut mmu = Mmu::new(Xlen::Bit64, Box::new(DummyTerminal::new()));
++		mmu.init_memory(0x10000);
++		match mode {
++			AddressingMode::SV32 => {
++				mmu.store_word_raw(DRAM_BASE, ((((DRAM_BASE + 0x1000) >> 12) << 10) | V) as u32);
++				mmu.store_word_raw(DRAM_BASE + 0x1000 + 4 * 4, (((PA >> 12) << 10) | flags) as u32);
++			},
++			_ => {
++				mmu.store_doubleword_raw(DRAM_BASE, (((DRAM_BASE + 0x1000) >> 12) << 10) | V);
++				mmu.store_doubleword_raw(DRAM_BASE + 0x1000, (((DRAM_BASE + 0x2000) >> 12) << 10) | V);
++				mmu.store_doubleword_raw(DRAM_BASE + 0x2000 + 4 * 8, ((PA >> 12) << 10) | flags);
++			}
++		};
++		mmu.update_addressing_mode(mode);
++		mmu.update_ppn(DRAM_BASE >> 12);
++		mmu.update_privilege_mode(privilege);
++		mmu.enable_page_cache(cached);
++		mmu
++	}
++
++	#[test]
++	fn user_cannot_read_write_or_execute_supervisor_pages() {
++		for cached in [false, true].iter() {
++			for mode in [AddressingMode::SV32, AddressingMode::SV39].iter() {
++				let mode = match mode { AddressingMode::SV32 => AddressingMode::SV32, _ => AddressingMode::SV39 };
++				let mut mmu = mapped(mode, V | R | W | X | A | D, PrivilegeMode::User, *cached);
++				for access in [MemoryAccessType::Read, MemoryAccessType::Write, MemoryAccessType::Execute].iter() {
++					assert!(mmu.translate_address(VA, access).is_err());
++				}
++			}
++		}
++	}
++
++	#[test]
++	fn user_page_permissions_allow_valid_user_accesses() {
++		let mut mmu = mapped(AddressingMode::SV39, V | U | R | W | X | A | D, PrivilegeMode::User, true);
++		for access in [MemoryAccessType::Read, MemoryAccessType::Write, MemoryAccessType::Execute].iter() {
++			assert_eq!(mmu.translate_address(VA, access), Ok(PA));
++		}
++	}
++
++	#[test]
++	fn supervisor_sum_allows_user_data_but_never_user_execution() {
++		let mut mmu = mapped(AddressingMode::SV39, V | U | R | W | X | A | D, PrivilegeMode::Supervisor, true);
++		assert!(mmu.translate_address(VA, &MemoryAccessType::Read).is_err());
++		assert!(mmu.translate_address(VA, &MemoryAccessType::Write).is_err());
++		mmu.update_mstatus(SUM);
++		assert_eq!(mmu.translate_address(VA, &MemoryAccessType::Read), Ok(PA));
++		assert_eq!(mmu.translate_address(VA, &MemoryAccessType::Write), Ok(PA));
++		assert!(mmu.translate_address(VA, &MemoryAccessType::Execute).is_err());
++		mmu.update_mstatus(0);
++		assert!(mmu.translate_address(VA, &MemoryAccessType::Read).is_err());
++		assert!(mmu.translate_address(VA, &MemoryAccessType::Write).is_err());
++	}
++
++	#[test]
++	fn mxr_allows_execute_only_reads_without_granting_writes() {
++		let mut mmu = mapped(AddressingMode::SV39, V | U | X | A | D, PrivilegeMode::User, true);
++		assert!(mmu.translate_address(VA, &MemoryAccessType::Read).is_err());
++		mmu.update_mstatus(MXR);
++		assert_eq!(mmu.translate_address(VA, &MemoryAccessType::Read), Ok(PA));
++		assert!(mmu.translate_address(VA, &MemoryAccessType::Write).is_err());
++		mmu.update_mstatus(0);
++		assert!(mmu.translate_address(VA, &MemoryAccessType::Read).is_err());
++	}
++
++	#[test]
++	fn sum_and_mxr_do_not_let_user_mode_access_a_guard_page() {
++		let mut mmu = mapped(AddressingMode::SV39, V | R | W | X | A | D, PrivilegeMode::User, true);
++		mmu.update_mstatus(SUM | MXR);
++		assert!(mmu.translate_address(VA, &MemoryAccessType::Read).is_err());
++		assert!(mmu.translate_address(VA, &MemoryAccessType::Write).is_err());
++		assert!(mmu.translate_address(VA, &MemoryAccessType::Execute).is_err());
++	}
++
++	#[test]
++	fn privilege_transition_discards_supervisor_cached_access() {
++		let mut mmu = mapped(AddressingMode::SV39, V | R | W | X | A | D, PrivilegeMode::Supervisor, true);
++		assert_eq!(mmu.translate_address(VA, &MemoryAccessType::Read), Ok(PA));
++		mmu.update_privilege_mode(PrivilegeMode::User);
++		assert!(mmu.translate_address(VA, &MemoryAccessType::Read).is_err());
++	}
++
++	#[test]
++	fn mprv_uses_current_mpp_bits_and_does_not_affect_instruction_fetch() {
++		let mut mmu = mapped(AddressingMode::SV39, V | U | R | W | X | A | D, PrivilegeMode::Machine, true);
++		// MPRV=1, MPP=U: data uses U permissions and page translation.
++		mmu.update_mstatus(1 << 17);
++		assert_eq!(mmu.translate_address(VA, &MemoryAccessType::Read), Ok(PA));
++		assert_eq!(mmu.translate_address(VA, &MemoryAccessType::Execute), Ok(VA));
++		// MPP=S is bit 11, not bit 9. SUM=0 denies the same user data page.
++		mmu.update_mstatus((1 << 17) | (1 << 11));
++		assert!(mmu.translate_address(VA, &MemoryAccessType::Read).is_err());
++		mmu.update_mstatus((1 << 17) | (1 << 11) | SUM);
++		assert_eq!(mmu.translate_address(VA, &MemoryAccessType::Read), Ok(PA));
++		// Disabling MPRV discards the prior translated-data cache entry.
++		mmu.update_mstatus(0);
++		assert_eq!(mmu.translate_address(VA, &MemoryAccessType::Read), Ok(VA));
++	}
++
++	#[test]
++	fn denied_access_does_not_set_accessed_or_dirty_bits() {
++		let flags = V | R | W | X;
++		let mut mmu = mapped(AddressingMode::SV39, flags, PrivilegeMode::User, false);
++		let at = DRAM_BASE + 0x2000 + 4 * 8;
++		let before = mmu.load_doubleword_raw(at);
++		assert!(mmu.translate_address(VA, &MemoryAccessType::Write).is_err());
++		assert_eq!(before, mmu.load_doubleword_raw(at));
++	}
++
++
++	#[test]
++	fn sfence_instruction_flushes_a_cached_translation() {
++		use cpu::Cpu;
++		let mut mmu = mapped(AddressingMode::SV39, V | U | R | A, PrivilegeMode::Machine, true);
++		mmu.update_mstatus(1 << 17); // Machine data uses MPP=U while fetch remains physical.
++		assert_eq!(mmu.translate_address(VA, &MemoryAccessType::Read), Ok(PA));
++		let at = DRAM_BASE + 0x2000 + 4 * 8;
++		let pte = mmu.load_doubleword_raw(at);
++		mmu.store_doubleword_raw(at, pte & !U);
++		// Until a translation fence, this experimental cache may retain the old PTE.
++		assert_eq!(mmu.translate_address(VA, &MemoryAccessType::Read), Ok(PA));
++		mmu.store_word_raw(DRAM_BASE + 0x4000, 0x12000073); // sfence.vma zero,zero
++		let mut cpu = Cpu::new(Box::new(DummyTerminal::new()));
++		*cpu.get_mut_mmu() = mmu;
++		cpu.update_pc(DRAM_BASE + 0x4000);
++		cpu.tick();
++		assert_eq!(cpu.read_pc(), DRAM_BASE + 0x4004);
++		assert!(cpu.get_mut_mmu().translate_address(VA, &MemoryAccessType::Read).is_err());
++	}
++
++	#[test]
++	fn explicit_translation_flush_rechecks_changed_pte_permissions() {
++		let mut mmu = mapped(AddressingMode::SV39, V | U | R | A, PrivilegeMode::User, true);
++		assert_eq!(mmu.translate_address(VA, &MemoryAccessType::Read), Ok(PA));
++		let at = DRAM_BASE + 0x2000 + 4 * 8;
++		let pte = mmu.load_doubleword_raw(at);
++		mmu.store_doubleword_raw(at, pte & !U);
++		mmu.clear_page_cache();
++		assert!(mmu.translate_address(VA, &MemoryAccessType::Read).is_err());
++	}
++}
+diff --git a/wasm/Cargo.toml b/wasm/Cargo.toml
+index 98c1182..eb7e7c1 100644
+--- a/wasm/Cargo.toml
++++ b/wasm/Cargo.toml
+@@ -4,7 +4,7 @@ version = "0.1.0"
+ authors = ["Takahiro"]
+ 
+ [dependencies]
+-wasm-bindgen = "0.2.55"
++wasm-bindgen = "=0.2.100"
+ riscv_emu_rust = {path = "../"}
+ 
+ [lib]

@@ -1,0 +1,1522 @@
+[
+  {
+    "id": "compare-values",
+    "module": "branches",
+    "title": "Turn a comparison into a value",
+    "summary": "Use a signed comparison to produce a zero-or-one result.",
+    "objectives": [
+      "Read the source order of slt.",
+      "Distinguish strict comparison from equality."
+    ],
+    "before": [
+      "The trip computer must decide whether a road is descending. A comparison can leave an ordinary integer result: zero means no and one means yes. This is useful when a later calculation needs the answer as data. A zero-or-one answer like this is called a Boolean value. In the accompanying C intent, `long` and `unsigned long` each use 64 bits on this target.",
+      "`slt t2, t0, t1` means set less than. It reads `t0` and `t1` as signed 64-bit integers. It writes one into `t2` when the first input is less than the second, and zero otherwise. Equal inputs produce zero. The source registers keep their values.",
+      "The first two lines supply a negative gradient and the comparison value zero. Predict `t2` after all three lines. RISC-V does not leave an Arm-style condition flag for a later instruction to read; this instruction writes its answer into the named destination."
+    ],
+    "starter": "li t0, -3\nli t1, 0\nslt t2, t0, t1\n",
+    "observe": ["t0", "t1", "t2"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "After the signed comparison, what value is stored in t2?",
+      "register": "t2",
+      "reading": "signed",
+      "hint": "Decide whether the first input is strictly less than the second; the result is a Boolean integer."
+    },
+    "explanation": [
+      "The comparison interprets the same register bits using the signed reading you met earlier. A negative input is below zero even though its top bit is one. The instruction does not subtract into either source register or retain a mathematical difference.",
+      "A strict comparison excludes equality. Changing the gradient to zero therefore changes the question from \u201cbelow zero\u201d to a comparison of equal values. This boundary is easy to miss when a warning rule really means at or below a threshold.",
+      "Keep the result register separate from the inputs while you investigate. Then try using one input as the destination. The comparison still reads both old input values before writing its answer, just as addition did."
+    ],
+    "experiment": {
+      "task": "Test a negative gradient, zero and a positive gradient. Then compare against a nonzero threshold.",
+      "hint": "Separate the direction of the comparison from the result location: the first source is tested against the second."
+    },
+    "challenge": {
+      "task": "The fresh signed values arrive in t0 and t1. Set t2 to one exactly when t0 is strictly less than t1. Preserve both input registers.",
+      "starter": "li t2, 0\n",
+      "reference": "slt t2, t0, t1\n",
+      "hints": [
+        "The result must be a zero-or-one value, not the difference between the inputs.",
+        "Use the signed comparison because the inputs can be negative.",
+        "Name t2 as the destination and keep t0 before t1 in the source operands."
+      ],
+      "cases": [
+        {
+          "name": "Negative below zero",
+          "inputs": {
+            "t0": "-5",
+            "t1": "0"
+          },
+          "expect": {
+            "t2": "1",
+            "t0": "-5",
+            "t1": "0"
+          }
+        },
+        {
+          "name": "Equal inputs",
+          "inputs": {
+            "t0": "8",
+            "t1": "8"
+          },
+          "expect": {
+            "t2": "0",
+            "t0": "8",
+            "t1": "8"
+          }
+        },
+        {
+          "name": "First input above second",
+          "inputs": {
+            "t0": "12",
+            "t1": "4"
+          },
+          "expect": {
+            "t2": "0",
+            "t0": "12",
+            "t1": "4"
+          }
+        }
+      ]
+    },
+    "references": ["integer", "rv64"],
+    "sourceLessons": ["compare-and-choose"],
+    "originalityNote": "The road-gradient decision becomes an explicit RISC-V Boolean result, replacing the source course\u2019s flag-reading instruction.",
+    "c": "long below(long first, long second) {\n    return first < second;\n}\n"
+  },
+  {
+    "id": "signed-unsigned-comparison",
+    "module": "branches",
+    "title": "Compare the same bits two ways",
+    "summary": "Choose signed or unsigned comparison without changing the input bits.",
+    "objectives": [
+      "Select signed or unsigned ordering from the data contract.",
+      "Keep interpretation distinct from stored bits."
+    ],
+    "before": [
+      "A register does not carry a signed or unsigned type. The comparison instruction chooses the reading. Keep the input bits fixed while you compare the two choices, rather than changing both the inputs and the instruction at once.",
+      "`sltu t3, t0, t1` is the unsigned counterpart of `slt`. It writes one when the unsigned value in `t0` is below the unsigned value in `t1`. Here `t3` is another temporary register, used to keep that answer beside the signed result in `t2`.",
+      "The example loads a negative signed value and a small positive value. Run both comparisons on those same bits. Predict the unsigned answer in `t3` before looking at either result. The hexadecimal reading helps you see that the inputs themselves did not change.",
+      "The C intent shows the signed and unsigned rules as separate functions. The handwritten assembly keeps both answers at once; it is not a compiler listing of those functions."
+    ],
+    "starter": "li t0, -2\nli t1, 1\nslt t2, t0, t1\nsltu t3, t0, t1\n",
+    "observe": ["t0", "t1", "t2", "t3"],
+    "result": "t3",
+    "prediction": {
+      "prompt": "What does the unsigned comparison leave in t3?",
+      "register": "t3",
+      "reading": "unsigned",
+      "hint": "Read all 64 bits as a nonnegative number for sltu; a set top bit then contributes a large positive weight."
+    },
+    "explanation": [
+      "A set top bit has different roles in the two readings. Under the signed reading it contributes the negative weight of two\u2019s complement. Under the unsigned reading it contributes a large positive weight. The comparison results can therefore differ without any change to the stored pattern.",
+      "Equality is different from ordering: two identical patterns are equal under both readings. When both inputs fit the nonnegative signed range, their signed and unsigned order also agrees. The useful counterexample is an input whose top bit is set.",
+      "Choose the comparison from the meaning of your data. A road gradient can be negative; an unsigned count cannot. Looking only at the displayed decimal value, or choosing signed comparison by habit, can reverse a warning decision at the top of the unsigned range."
+    ],
+    "experiment": {
+      "task": "Replace the first input with 0x8000000000000000, then try two equal inputs with the top bit set.",
+      "hint": "Compare the same unchanged inputs with both instructions and inspect each Boolean destination."
+    },
+    "challenge": {
+      "task": "Inputs t0 and t1 are fresh 64-bit patterns. Write the signed less-than result to t2 and the unsigned less-than result to t3. Preserve t0 and t1.",
+      "starter": "li t2, 0\nli t3, 0\n",
+      "reference": "slt t2, t0, t1\nsltu t3, t0, t1\n",
+      "hints": [
+        "Two interpretations require two comparisons; neither one changes the input bits.",
+        "Use slt for the signed answer and sltu for the unsigned answer.",
+        "Keep t2 and t3 separate so the second comparison does not overwrite the first answer."
+      ],
+      "cases": [
+        {
+          "name": "Top bit separates readings",
+          "inputs": {
+            "t0": "-1",
+            "t1": "1"
+          },
+          "expect": {
+            "t2": "1",
+            "t3": "0",
+            "t0": "-1",
+            "t1": "1"
+          }
+        },
+        {
+          "name": "Ordinary positive order",
+          "inputs": {
+            "t0": "3",
+            "t1": "9"
+          },
+          "expect": {
+            "t2": "1",
+            "t3": "1",
+            "t0": "3",
+            "t1": "9"
+          }
+        },
+        {
+          "name": "Identical all-ones patterns",
+          "inputs": {
+            "t0": "-1",
+            "t1": "-1"
+          },
+          "expect": {
+            "t2": "0",
+            "t3": "0",
+            "t0": "-1",
+            "t1": "-1"
+          }
+        }
+      ]
+    },
+    "references": ["integer", "rv64"],
+    "sourceLessons": ["compare-and-choose"],
+    "originalityNote": "The source course\u2019s same-bits comparison is retained while RISC-V writes both decisions directly into registers.",
+    "c": "long signed_below(long first, long second) {\n    return first < second;\n}\n\nunsigned long unsigned_below(unsigned long first, unsigned long second) {\n    return first < second;\n}\n"
+  },
+  {
+    "id": "branch-paths",
+    "module": "branches",
+    "title": "Choose which instructions run",
+    "summary": "Use a label and a conditional branch to select a warning path.",
+    "objectives": [
+      "Read labels as code locations.",
+      "Follow taken and not-taken branch paths.",
+      "Order overlapping conditions deliberately."
+    ],
+    "before": [
+      "A fuel warning should change only when the remaining fuel is below the reserve. Executing every instruction in sequence would make it difficult to keep the normal and warning outcomes separate. A branch can change which instruction runs next.",
+      "A label is a name followed by a colon, such as `safe:`. It names a place in the code; it is not an instruction. `bgeu t0, t1, safe` continues at `safe` when the unsigned value in `t0` is greater than or equal to `t1`. Otherwise, execution continues with the next instruction. A branch that jumps to its target is taken.",
+      "The example starts with a clear warning in `t2`. A taken branch skips the line that would set it. Predict the final warning for the fuel and reserve shown in the first two lines. RISC-V compares the two registers directly in this branch; there is no earlier comparison flag to become stale."
+    ],
+    "starter": "li t0, 7\nli t1, 10\nli t2, 0\nbgeu t0, t1, safe\nli t2, 1\nsafe:\n",
+    "observe": ["t0", "t1", "t2"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "After the branch path finishes, what warning value is in t2?",
+      "register": "t2",
+      "reading": "signed",
+      "hint": "Ask whether the branch skips the assignment that sets the warning."
+    },
+    "explanation": [
+      "A branch selects a path through the existing instruction sequence. It does not move the target instruction or run a label. In this example, either the warning-setting line runs or it is skipped. Both paths then reach the supplied observation code.",
+      "`beq` branches on equal register values; `bne` branches on unequal values. `blt` and `bge` use signed ordering, while `bltu` and `bgeu` use unsigned ordering. `j label` is an assembler pseudo-instruction for an unconditional jump. An unconditional jump can prevent one outcome from falling through into another.",
+      "Put more specific rules before broader rules when both could apply. Zero fuel is also below a positive reserve. If an empty tank needs a distinct warning value, test for zero before testing whether fuel is below the reserve. Equality with the reserve belongs to the normal path in this rule."
+    ],
+    "experiment": {
+      "task": "Try fuel below, equal to and above the reserve. Then swap the two input registers in bgeu.",
+      "hint": "Trace the condition in its written source order before deciding whether the warning assignment is skipped."
+    },
+    "challenge": {
+      "task": "Unsigned fuel arrives in t0 and reserve in t1. Leave 2 in t2 for an empty tank, 1 for nonzero fuel below reserve, and 0 otherwise. Preserve the inputs.",
+      "starter": "li t2, 0\n",
+      "reference": "li t2, 2\nbeq t0, zero, done\nli t2, 0\nbgeu t0, t1, done\nli t2, 1\ndone:\n",
+      "hints": [
+        "An empty tank needs priority because it can also satisfy the below-reserve condition.",
+        "Use beq against zero before the unsigned reserve comparison.",
+        "Choose each result before a branch to the shared done label, so a later assignment cannot replace it."
+      ],
+      "cases": [
+        {
+          "name": "Empty tank",
+          "inputs": {
+            "t0": "0",
+            "t1": "10"
+          },
+          "expect": {
+            "t2": "2",
+            "t0": "0",
+            "t1": "10"
+          }
+        },
+        {
+          "name": "Nonzero below reserve",
+          "inputs": {
+            "t0": "6",
+            "t1": "10"
+          },
+          "expect": {
+            "t2": "1",
+            "t0": "6",
+            "t1": "10"
+          }
+        },
+        {
+          "name": "Exactly the reserve",
+          "inputs": {
+            "t0": "10",
+            "t1": "10"
+          },
+          "expect": {
+            "t2": "0",
+            "t0": "10",
+            "t1": "10"
+          }
+        },
+        {
+          "name": "Large unsigned fuel",
+          "inputs": {
+            "t0": "0x8000000000000000",
+            "t1": "10"
+          },
+          "expect": {
+            "t2": "0",
+            "t0": "0x8000000000000000",
+            "t1": "10"
+          }
+        }
+      ]
+    },
+    "references": ["integer", "rv64"],
+    "sourceLessons": ["branches"],
+    "originalityNote": "The trip-computer fuel classification keeps the source activity\u2019s rule ordering but uses RISC-V branches that compare operands directly.",
+    "c": "unsigned long warning(unsigned long fuel, unsigned long reserve) {\n    return fuel < reserve;\n}\n"
+  },
+  {
+    "id": "choosing-maximum",
+    "module": "branches",
+    "title": "Keep the larger input",
+    "summary": "Use two paths to copy the selected input into a result register.",
+    "objectives": [
+      "Keep alternative assignments on separate paths.",
+      "Implement unsigned maximum without condition flags."
+    ],
+    "before": [
+      "The trip computer keeps the larger of two readings. The decision chooses an existing value; it does not need to compute their difference. Begin with signed readings, where a negative value is below a positive one.",
+      "`mv t2, t1` copies a register\u2019s bits into a new destination. It is a pseudo-instruction accepted by the assembler. The example uses a signed `bge` to choose between two copies. `j done` skips the alternative assignment after the first path has selected its value.",
+      "Both paths must reach the same observation point with the selected value in `t2`. Predict that result for the two starting values. The input registers remain available so you can check that choosing a result did not replace either source."
+    ],
+    "starter": "li t0, -4\nli t1, 9\nbge t0, t1, left\nmv t2, t1\nj done\nleft:\nmv t2, t0\ndone:\n",
+    "observe": ["t0", "t1", "t2"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "Which value remains in t2 when the selected path reaches done?",
+      "register": "t2",
+      "reading": "signed",
+      "hint": "Only one of the two mv instructions should run on this path."
+    },
+    "explanation": [
+      "The unconditional jump matters even when the comparison itself is correct. Without it, execution can select the right-hand value and then continue into the left-hand assignment. A correct decision followed by an accidental fall-through still produces the wrong result.",
+      "Changing the comparison from signed to unsigned changes the question while leaving both copy operations unchanged. For unsigned data, the pattern with its top bit set can be the larger input. The correct branch is determined by the data contract, not by which path happens to work for small positive examples.",
+      "Equal inputs are a useful boundary, but either copy gives the same bits in that case. Different valid branch arrangements can therefore implement the same rule. What matters is that every path leaves the requested value and preserves any registers the task says to preserve."
+    ],
+    "experiment": {
+      "task": "Delete j done and find an input pair that exposes the extra assignment. Restore it before trying unsigned inputs.",
+      "hint": "Follow execution beyond the first copy. A label does not stop fall-through."
+    },
+    "challenge": {
+      "task": "Fresh unsigned readings arrive in t0 and t1. Copy the larger unsigned value into t2, preserving both inputs. Equal inputs may take either path.",
+      "starter": "mv t2, t0\n",
+      "reference": "bgeu t0, t1, left\nmv t2, t1\nj done\nleft:\nmv t2, t0\ndone:\n",
+      "hints": [
+        "A pair where the right input is larger catches a program that always returns the left input.",
+        "A top-bit input catches the wrong choice of signed comparison.",
+        "Branch with bgeu to the left-copy path; jump around that path after copying the right input."
+      ],
+      "cases": [
+        {
+          "name": "Right reading larger",
+          "inputs": {
+            "t0": "3",
+            "t1": "11"
+          },
+          "expect": {
+            "t2": "11",
+            "t0": "3",
+            "t1": "11"
+          }
+        },
+        {
+          "name": "Equal readings",
+          "inputs": {
+            "t0": "9",
+            "t1": "9"
+          },
+          "expect": {
+            "t2": "9",
+            "t0": "9",
+            "t1": "9"
+          }
+        },
+        {
+          "name": "Top bit is a large unsigned value",
+          "inputs": {
+            "t0": "0x8000000000000000",
+            "t1": "7"
+          },
+          "expect": {
+            "t2": "0x8000000000000000",
+            "t0": "0x8000000000000000",
+            "t1": "7"
+          }
+        }
+      ]
+    },
+    "references": ["integer", "rv64"],
+    "sourceLessons": ["compare-and-choose", "branches"],
+    "originalityNote": "The source course\u2019s signed/unsigned maximum becomes an explicit two-path RISC-V selection rather than an Arm conditional-select instruction.",
+    "c": "long maximum(long left, long right) {\n    if (left >= right) return left;\n    return right;\n}\n"
+  },
+  {
+    "id": "counting-up",
+    "module": "loops",
+    "title": "Count upwards through repeated work",
+    "summary": "Build a loop from an entry test, a body and a backward jump.",
+    "objectives": [
+      "Identify test, body and update in a loop.",
+      "Handle an exclusive bound and zero iterations."
+    ],
+    "before": [
+      "A loop repeats a piece of code. The trip computer can add the successive counter values below a limit. Keep the limit in `t0`, the next counter value in `t1`, and the running total in `t2`.",
+      "The label `again` names the loop\u2019s test. `bgeu t1, t0, done` stops when the unsigned counter has reached the limit. Otherwise, the body adds the current counter, increments it with `addi`, and jumps backwards. The jump repeats the same instructions with the updated register values.",
+      "The example starts the counter and total at zero. The limit is exclusive: a counter equal to the limit is not added. Predict the final total after the loop has finished, rather than the value after its first iteration. Keep the example limit small enough to trace."
+    ],
+    "starter": "li t0, 4\nli t1, 0\nli t2, 0\nagain:\nbgeu t1, t0, done\nadd t2, t2, t1\naddi t1, t1, 1\nj again\ndone:\n",
+    "observe": ["t0", "t1", "t2"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "What is the total in t2 after the loop reaches done?",
+      "register": "t2",
+      "reading": "signed",
+      "hint": "List the counter values admitted by the test. The value equal to the limit is excluded."
+    },
+    "explanation": [
+      "The body reads the counter before the increment changes it. Moving the increment above the addition changes which values contribute, even if the loop still performs the same number of iterations. Execution order matters inside a loop just as it did in a straight-line calculation.",
+      "The entry test lets a zero limit skip the body completely. At completion, the counter records how far the loop progressed, while the total records the accumulated work. These registers answer different questions and should not be confused when checking a result.",
+      "A backward branch does not reset registers automatically. Each iteration starts with the state left by the previous one. The initialisations belong before `again`; placing the total\u2019s initialisation under that label would discard the work already accumulated."
+    ],
+    "experiment": {
+      "task": "Move the total\u2019s initialisation inside the loop, then compare several small limits. Restore it and try a limit of zero.",
+      "hint": "Check whether each iteration continues the old total or replaces it with zero."
+    },
+    "challenge": {
+      "task": "A nonnegative unsigned limit no greater than 8 arrives in t0. Add every counter value from zero up to, but excluding, that limit. Leave the total in t2 and the final counter in t1. Preserve t0.",
+      "starter": "li t1, 0\nli t2, 0\n",
+      "reference": "li t1, 0\nli t2, 0\nagain:\nbgeu t1, t0, done\nadd t2, t2, t1\naddi t1, t1, 1\nj again\ndone:\n",
+      "hints": [
+        "Test the counter before adding it, including on the first visit.",
+        "The exclusive limit means equality must stop the loop.",
+        "Put both initialisations before again, then add the counter, increment it and jump back to the test."
+      ],
+      "cases": [
+        {
+          "name": "No work requested",
+          "inputs": {
+            "t0": "0"
+          },
+          "expect": {
+            "t0": "0",
+            "t1": "0",
+            "t2": "0"
+          }
+        },
+        {
+          "name": "One counter value",
+          "inputs": {
+            "t0": "1"
+          },
+          "expect": {
+            "t0": "1",
+            "t1": "1",
+            "t2": "0"
+          }
+        },
+        {
+          "name": "Five counter values",
+          "inputs": {
+            "t0": "5"
+          },
+          "expect": {
+            "t0": "5",
+            "t1": "5",
+            "t2": "10"
+          }
+        },
+        {
+          "name": "Eight counter values",
+          "inputs": {
+            "t0": "8"
+          },
+          "expect": {
+            "t0": "8",
+            "t1": "8",
+            "t2": "28"
+          }
+        }
+      ]
+    },
+    "references": ["integer", "rv64"],
+    "sourceLessons": ["counting-up"],
+    "originalityNote": "The source course\u2019s upward-loop activity is adapted to direct RISC-V register comparisons, preserving its zero-limit and instruction-order checks.",
+    "c": "unsigned long total_below(unsigned long limit) {\n    unsigned long total = 0;\n    for (unsigned long i = 0; i < limit; ++i) {\n        total += i;\n    }\n    return total;\n}\n"
+  },
+  {
+    "id": "counting-down",
+    "module": "loops",
+    "title": "Count down to zero",
+    "summary": "Reduce a remaining-work count after each operation.",
+    "objectives": [
+      "Use a remaining-work count.",
+      "Protect the zero-count entry case."
+    ],
+    "before": [
+      "The dashboard halves an unsigned brightness setting once per idle tick. This time, count the work still to do. `t0` holds the starting brightness, `t1` holds the remaining ticks, and `t2` will hold the brightness after the requested work.",
+      "`srli t2, t2, 1` shifts right by one, filling the top bit with zero. For this unsigned value, it halves the brightness and discards any remainder. `addi t1, t1, -1` subtracts one from the remaining count. The following `bne` reads that updated register directly.",
+      "Check for a zero count before entering the body. Zero requested ticks must leave the starting brightness unchanged. Predict the result after all requested shifts in the shown example. The loop may change the remaining-work register, but the separate starting-brightness register stays available for comparison."
+    ],
+    "starter": "li t0, 128\nli t1, 3\nmv t2, t0\nbeq t1, zero, done\nagain:\nsrli t2, t2, 1\naddi t1, t1, -1\nbne t1, zero, again\ndone:\n",
+    "observe": ["t0", "t1", "t2"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "What brightness is in t2 when the remaining count reaches zero?",
+      "register": "t2",
+      "reading": "unsigned",
+      "hint": "Apply one logical right shift per tick, updating the remaining count after each shift."
+    },
+    "explanation": [
+      "The counter and brightness change for different reasons. The counter says how many iterations remain. The brightness says what those iterations have done. RISC-V does not need a flag-setting subtraction here: the branch compares the current counter with zero.",
+      "Removing the first zero test changes the meaning at the boundary. A request for no work would still perform one shift, then subtract one from zero. That unsigned subtraction wraps to an all-ones count, so the loop can run for an impractically long time. Use Stop if you deliberately try that broken version.",
+      "This loop does all requested iterations even if the brightness has already become zero. It is correct for the small counts used here, but it can waste work. The next lesson about useful stopping values will use the result itself to decide when further iterations cannot help."
+    ],
+    "experiment": {
+      "task": "Try an odd brightness, then zero ticks. Finally remove the entry test and inspect the effect on a zero-count request.",
+      "hint": "A right shift discards the low bit. The initial count test protects the no-work case before any shift occurs."
+    },
+    "challenge": {
+      "task": "Starting unsigned brightness arrives in t0 and a tick count from 0 to 8 arrives in t1. Halve once per tick, dropping remainders. Return brightness in t2, preserve t0 and finish with t1 equal to zero.",
+      "starter": "mv t2, t0\n",
+      "reference": "mv t2, t0\nbeq t1, zero, done\nagain:\nsrli t2, t2, 1\naddi t1, t1, -1\nbne t1, zero, again\ndone:\n",
+      "hints": [
+        "Copy the starting brightness into the result before testing the count.",
+        "A zero count must jump around the first shift.",
+        "After each shift, decrement t1 and repeat only while it is nonzero."
+      ],
+      "cases": [
+        {
+          "name": "Several ticks",
+          "inputs": {
+            "t0": "128",
+            "t1": "3"
+          },
+          "expect": {
+            "t0": "128",
+            "t1": "0",
+            "t2": "16"
+          }
+        },
+        {
+          "name": "No dimming requested",
+          "inputs": {
+            "t0": "128",
+            "t1": "0"
+          },
+          "expect": {
+            "t0": "128",
+            "t1": "0",
+            "t2": "128"
+          }
+        },
+        {
+          "name": "Discard an odd remainder",
+          "inputs": {
+            "t0": "5",
+            "t1": "1"
+          },
+          "expect": {
+            "t0": "5",
+            "t1": "0",
+            "t2": "2"
+          }
+        },
+        {
+          "name": "Already dark",
+          "inputs": {
+            "t0": "0",
+            "t1": "8"
+          },
+          "expect": {
+            "t0": "0",
+            "t1": "0",
+            "t2": "0"
+          }
+        }
+      ]
+    },
+    "references": ["integer", "rv64"],
+    "sourceLessons": ["counting-down"],
+    "originalityNote": "The source course\u2019s dimming countdown retains its work-count distinction but replaces Arm subtraction flags with a direct RISC-V zero comparison.",
+    "c": "unsigned long dim(unsigned long brightness, unsigned long ticks) {\n    while (ticks != 0) {\n        brightness >>= 1;\n        --ticks;\n    }\n    return brightness;\n}\n"
+  },
+  {
+    "id": "test-before-body",
+    "module": "loops",
+    "title": "Choose when the first test happens",
+    "summary": "Compare a loop that can skip its body with one that always enters once.",
+    "objectives": [
+      "Distinguish pre-test from post-test control flow.",
+      "Check a loop\u2019s no-work contract."
+    ],
+    "before": [
+      "The position of a loop\u2019s first test changes its boundary behaviour. A pre-test loop checks before the first body visit. A post-test loop checks after a visit, so its body runs at least once. In C these arrangements commonly appear as `while` and `do` loops.",
+      "This example runs two separate counters against the same nonnegative limit in `t0`. `t1` counts visits to the pre-test body. `t2` counts visits to the post-test body. The second loop starts a fresh counter; it does not continue the first loop\u2019s work.",
+      "The shown limit is zero. Predict the post-test count after both loops have finished, and compare it with `t1`. Each body increases its counter before the next test, so these small loops terminate without an unsigned decrement wrapping below zero."
+    ],
+    "starter": "li t0, 0\nli t1, 0\nbefore:\nbgeu t1, t0, start_after\naddi t1, t1, 1\nj before\nstart_after:\nli t2, 0\nafter:\naddi t2, t2, 1\nbltu t2, t0, after\n",
+    "observe": ["t0", "t1", "t2"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "How many post-test body visits does t2 record for the shown limit?",
+      "register": "t2",
+      "reading": "unsigned",
+      "hint": "Find the first instruction reached under after. Is there a test before it?"
+    },
+    "explanation": [
+      "A body visit is work the program actually performs, not a label it passes. In the first loop, the branch can bypass the increment before any work. In the second loop, the increment comes first. The later test cannot undo that completed operation.",
+      "For a positive small limit, these particular counters eventually reach the same final value. That agreement does not make the control-flow arrangements interchangeable. The zero case exposes their different promises, which matters when a body reads input, writes output or changes a device.",
+      "Write the no-work rule before choosing the loop shape. If a request for zero items must perform no accesses, a pre-test is needed. If the task requires at least one attempt before deciding whether to repeat, the post-test structure can express that rule directly."
+    ],
+    "experiment": {
+      "task": "Change the limit to one and then to four. Compare both final counters with their zero-limit results.",
+      "hint": "Keep the same limit for both independent loops so only the test position changes."
+    },
+    "challenge": {
+      "task": "An unsigned requested limit from 0 to 8 arrives in t0. Count body visits in t2 using a post-test structure: make at least one visit, then repeat while the count is below the limit. Preserve t0.",
+      "starter": "li t2, 0\n",
+      "reference": "li t2, 0\nagain:\naddi t2, t2, 1\nbltu t2, t0, again\n",
+      "hints": [
+        "The first body visit must happen before a branch can stop the loop.",
+        "Increase the visit count before comparing it with the requested limit.",
+        "Place the repeat label on the increment and use bltu after that increment."
+      ],
+      "cases": [
+        {
+          "name": "Zero still makes one attempt",
+          "inputs": {
+            "t0": "0"
+          },
+          "expect": {
+            "t0": "0",
+            "t2": "1"
+          }
+        },
+        {
+          "name": "One requested attempt",
+          "inputs": {
+            "t0": "1"
+          },
+          "expect": {
+            "t0": "1",
+            "t2": "1"
+          }
+        },
+        {
+          "name": "Four requested attempts",
+          "inputs": {
+            "t0": "4"
+          },
+          "expect": {
+            "t0": "4",
+            "t2": "4"
+          }
+        }
+      ]
+    },
+    "references": ["integer", "rv64"],
+    "sourceLessons": ["counting-down"],
+    "originalityNote": "Two independently reset visit counters isolate the source course\u2019s while-versus-do distinction without relying on an impractically long wrapped countdown.",
+    "c": "unsigned long post_test_visits(unsigned long limit) {\n    unsigned long visits = 0;\n    do {\n        ++visits;\n    } while (visits < limit);\n    return visits;\n}\n"
+  },
+  {
+    "id": "stopping-sentinel",
+    "module": "loops",
+    "title": "Stop when further work cannot help",
+    "summary": "Use zero brightness as a stopping value as well as checking the remaining count.",
+    "objectives": [
+      "Justify an early loop exit from the operation\u2019s behaviour.",
+      "Handle very large unsigned work counts safely."
+    ],
+    "before": [
+      "A very large tick count does not require equally much useful dimming. Once brightness is zero, another logical right shift still leaves it zero. The result itself can tell the loop that no more useful work remains.",
+      "A sentinel is a value used as a signal to stop. Here zero brightness is that signal. The loop checks both reasons to finish: no ticks remain, or the brightness is already zero. The first reason also protects a request for no work.",
+      "The example starts with a small brightness and more ticks than it needs to become dark. Predict the brightness at completion. Notice whether ticks remain in `t1` afterwards. Unlike the earlier countdown, this version promises the same final brightness, not that it will consume every requested tick."
+    ],
+    "starter": "li t0, 8\nli t1, 12\nmv t2, t0\nbeq t1, zero, done\nagain:\nbeq t2, zero, done\nsrli t2, t2, 1\naddi t1, t1, -1\nbne t1, zero, again\ndone:\n",
+    "observe": ["t0", "t1", "t2"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "What brightness is left when one of the two stopping conditions holds?",
+      "register": "t2",
+      "reading": "unsigned",
+      "hint": "After brightness reaches zero, determine what another right shift could change."
+    },
+    "explanation": [
+      "The early exit is justified by the operation, not merely by a desire to run fewer instructions. Logical right shift keeps zero at zero. Stopping there preserves the result of the longer calculation while avoiding work that cannot change it.",
+      "An unsigned count cannot become negative, so \u201crepeat while the count is at least zero\u201d is not a stopping rule. The useful tests compare with zero for equality or inequality. Keep the count check before the first body visit and the brightness check before each shift.",
+      "A long trace alone does not prove an infinite loop. This repaired loop gives a stronger reason for a short run: each useful shift moves set bits towards the bottom until none remain. A huge remaining count is harmless once the zero-brightness path can end execution."
+    ],
+    "experiment": {
+      "task": "Give the loop a brightness of one and an all-ones unsigned tick count. Then remove the brightness test and use Stop to interrupt the extra work.",
+      "hint": "The answer may stop changing long before the remaining-work count reaches zero."
+    },
+    "challenge": {
+      "task": "Unsigned brightness arrives in t0 and any 64-bit unsigned tick count in t1. Leave the repeatedly halved brightness in t2, preserving t0. Finish promptly when either no ticks remain or brightness is zero; the remaining count need not be exhausted.",
+      "starter": "mv t2, t0\n",
+      "reference": "mv t2, t0\nbeq t1, zero, done\nagain:\nbeq t2, zero, done\nsrli t2, t2, 1\naddi t1, t1, -1\nbne t1, zero, again\ndone:\n",
+      "hints": [
+        "There are two independent reasons to stop, and both must be checked.",
+        "Zero ticks protects the first operation; zero brightness avoids useless later operations.",
+        "Keep the initial count branch, then test t2 at the repeated label before shifting and decrementing."
+      ],
+      "cases": [
+        {
+          "name": "Already dark with many ticks",
+          "inputs": {
+            "t0": "0",
+            "t1": "0xffffffffffffffff"
+          },
+          "expect": {
+            "t0": "0",
+            "t2": "0"
+          }
+        },
+        {
+          "name": "One set bit with many ticks",
+          "inputs": {
+            "t0": "1",
+            "t1": "0xffffffffffffffff"
+          },
+          "expect": {
+            "t0": "1",
+            "t2": "0"
+          }
+        },
+        {
+          "name": "Some useful work remains",
+          "inputs": {
+            "t0": "128",
+            "t1": "3"
+          },
+          "expect": {
+            "t0": "128",
+            "t2": "16"
+          }
+        },
+        {
+          "name": "No ticks requested",
+          "inputs": {
+            "t0": "128",
+            "t1": "0"
+          },
+          "expect": {
+            "t0": "128",
+            "t2": "128"
+          }
+        }
+      ]
+    },
+    "references": ["integer", "rv64"],
+    "sourceLessons": ["counting-down"],
+    "originalityNote": "The source course\u2019s stop-when-dark challenge retains its strongest boundary test while using RISC-V register comparisons instead of condition flags.",
+    "c": "unsigned long dim_until_dark(unsigned long brightness, unsigned long ticks) {\n    while (ticks != 0 && brightness != 0) {\n        brightness >>= 1;\n        --ticks;\n    }\n    return brightness;\n}\n"
+  },
+  {
+    "id": "memory-bytes",
+    "module": "memory",
+    "title": "Read bytes by address",
+    "summary": "Separate the address of a byte from the value stored at that address.",
+    "objectives": [
+      "Distinguish pointers from loaded values.",
+      "Read byte offsets in load syntax."
+    ],
+    "before": [
+      "Registers hold the values an instruction uses immediately. Memory holds many more values, with a separate address for each byte. A byte contains eight bits. Consecutive byte addresses differ by one, regardless of how you later group those bytes into larger values.",
+      "`lesson_data` names the first byte of the supplied memory region. `la t0, lesson_data` loads its address into `t0`; it does not load the byte stored there. An address held in a register is a pointer. The memory view below shows the supplied bytes with their byte offsets. The linker is the build tool that assigns final code and data addresses before execution.",
+      "`lbu t1, 0(t0)` loads one byte from the address in `t0`, then zero-fills the rest of `t1`. The notation `1(t0)` means the address in `t0` plus one byte. Predict the value read by the second byte load after the fragment finishes. Both loads read memory without changing it."
+    ],
+    "starter": "la t0, lesson_data\nlbu t1, 0(t0)\nlbu t2, 1(t0)\n",
+    "observe": ["t0", "t1", "t2"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "What unsigned byte value is loaded into t2?",
+      "register": "t2",
+      "reading": "unsigned",
+      "hint": "The offset is measured in bytes from lesson_data, and the first byte has offset zero."
+    },
+    "explanation": [
+      "The pointer and the loaded value are different kinds of information. Incrementing a pointer chooses a different memory location. Incrementing the loaded value changes a number already in a register. Neither operation automatically changes the other.",
+      "Memory addresses in this course\u2019s RV64 environment are held in 64-bit registers. A byte load still transfers only eight memory bits, however wide the address register is. The instruction\u2019s transfer width and the pointer\u2019s width answer different questions.",
+      "The symbolic name keeps the example independent of the address chosen by the linker. The actual address is visible after execution; the offset tells you which byte was selected. Use the contained memory view to follow that selection without assuming that a symbol\u2019s address is the byte value stored there."
+    ],
+    "experiment": {
+      "task": "Change the second load\u2019s offset from one to two, and compare the selected byte with the memory view.",
+      "hint": "Keep la unchanged. Change the location read by the load, not the address symbol itself."
+    },
+    "challenge": {
+      "task": "Each fresh case supplies bytes at lesson_data. Read the byte at offset one into t2 using an unsigned byte load. Do not modify the supplied memory. You may use t0 as the pointer.",
+      "starter": "li t2, 0\n",
+      "reference": "la t0, lesson_data\nlbu t2, 1(t0)\n",
+      "hints": [
+        "An address must be in a register before the byte load can use it.",
+        "The second byte has offset one, not offset two.",
+        "Use la for the address, then lbu with 1(t0) for the requested location."
+      ],
+      "cases": [
+        {
+          "name": "Large unsigned byte",
+          "inputs": {},
+          "expect": {
+            "t2": "250"
+          },
+          "data": [7, 250, 3],
+          "memoryExpect": {
+            "0": 7,
+            "1": 250,
+            "2": 3
+          }
+        },
+        {
+          "name": "Zero byte",
+          "inputs": {},
+          "expect": {
+            "t2": "0"
+          },
+          "data": [9, 0, 4],
+          "memoryExpect": {
+            "0": 9,
+            "1": 0,
+            "2": 4
+          }
+        },
+        {
+          "name": "Byte with its top bit set",
+          "inputs": {},
+          "expect": {
+            "t2": "128"
+          },
+          "data": [3, 128, 5],
+          "memoryExpect": {
+            "0": 3,
+            "1": 128,
+            "2": 5
+          }
+        }
+      ]
+    },
+    "references": ["integer", "rv64"],
+    "sourceLessons": ["memory-and-addresses"],
+    "originalityNote": "The source course\u2019s address-versus-value investigation is kept as a tiny real byte-load fragment with its actual linked address visible.",
+    "data": [52, 18, 171, 205],
+    "memory": "data",
+    "memoryLabels": [
+      {
+        "offset": 0,
+        "label": "first byte"
+      },
+      {
+        "offset": 1,
+        "label": "second byte"
+      }
+    ]
+  },
+  {
+    "id": "loads-and-stores",
+    "module": "memory",
+    "title": "Move a complete value through memory",
+    "summary": "Load and copy eight bytes while keeping byte order visible.",
+    "objectives": [
+      "Explain little-endian order using byte addresses.",
+      "Distinguish load and store direction."
+    ],
+    "before": [
+      "Eight-byte alignment means the starting byte address is a multiple of eight. A load copies bits from memory into a register. A store copies bits from a register into memory. These operations do not move the only copy: the source bits remain until some later write replaces them.",
+      "`ld t1, 0(t0)` loads eight consecutive bytes into a 64-bit register. `sd t1, 8(t0)` stores eight bytes beginning at offset eight. This guest uses little-endian order: the byte at the lowest address supplies the least significant eight bits of the value.",
+      "The supplied first eight bytes form one value, and the next eight bytes are initially empty. The example copies the value, then uses a byte load to inspect the start of the copy. Predict that final byte in `t2`. The two transfer locations are aligned to eight-byte boundaries."
+    ],
+    "starter": "la t0, lesson_data\nld t1, 0(t0)\nsd t1, 8(t0)\nlbu t2, 8(t0)\n",
+    "observe": ["t0", "t1", "t2"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "Which unsigned byte is read back from the lowest address of the copy?",
+      "register": "t2",
+      "reading": "unsigned",
+      "hint": "A whole-register copy preserves the order of all eight memory bytes."
+    },
+    "explanation": [
+      "Little-endian describes how a multi-byte value is laid out by increasing address. It does not reverse the order of bits inside each byte. The hexadecimal register reading puts the most significant digits on the left, while a byte-addressed memory drawing starts with the lowest address. Compare the labels, not just the visual direction.",
+      "A store replaces its destination bytes and leaves neighbouring bytes outside its transfer width alone. The memory view makes that footprint visible. In this example, the source region remains available and the destination region receives the same byte pattern.",
+      "Use naturally aligned addresses while learning the transfer rule. Whether a particular misaligned access succeeds, traps or needs special handling depends partly on the execution environment. It is separate from the little-endian rule and is not needed to explain this copy."
+    ],
+    "experiment": {
+      "task": "Change one source byte in the supplied example through code, then load and copy the value again. Check which destination byte changes.",
+      "hint": "Compare corresponding byte offsets in the two eight-byte regions."
+    },
+    "challenge": {
+      "task": "Copy the eight bytes at lesson_data offsets 0\u20137 to offsets 16\u201323. Keep the loaded 64-bit pattern in t2. Leave the original source bytes unchanged.",
+      "starter": "li t2, 0\n",
+      "reference": "la t0, lesson_data\nld t2, 0(t0)\nsd t2, 16(t0)\n",
+      "hints": [
+        "Use one 64-bit load and one 64-bit store; the offsets are byte offsets.",
+        "The destination begins at offset sixteen, not at element number sixteen.",
+        "Load into t2 from 0(t0), then store that same register to 16(t0)."
+      ],
+      "cases": [
+        {
+          "name": "Distinct byte positions",
+          "inputs": {},
+          "expect": {
+            "t2": "0x0807060504030201"
+          },
+          "data": [1, 2, 3, 4, 5, 6, 7, 8],
+          "memoryExpect": {
+            "16": 1,
+            "17": 2,
+            "18": 3,
+            "19": 4,
+            "20": 5,
+            "21": 6,
+            "22": 7,
+            "23": 8,
+            "0": 1,
+            "1": 2,
+            "2": 3,
+            "3": 4,
+            "4": 5,
+            "5": 6,
+            "6": 7,
+            "7": 8
+          }
+        },
+        {
+          "name": "All zero bytes",
+          "inputs": {},
+          "expect": {
+            "t2": "0"
+          },
+          "data": [0, 0, 0, 0, 0, 0, 0, 0],
+          "memoryExpect": {
+            "16": 0,
+            "17": 0,
+            "18": 0,
+            "19": 0,
+            "20": 0,
+            "21": 0,
+            "22": 0,
+            "23": 0,
+            "0": 0,
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "5": 0,
+            "6": 0,
+            "7": 0
+          }
+        },
+        {
+          "name": "All one bits",
+          "inputs": {},
+          "expect": {
+            "t2": "-1"
+          },
+          "data": [255, 255, 255, 255, 255, 255, 255, 255],
+          "memoryExpect": {
+            "16": 255,
+            "17": 255,
+            "18": 255,
+            "19": 255,
+            "20": 255,
+            "21": 255,
+            "22": 255,
+            "23": 255,
+            "0": 255,
+            "1": 255,
+            "2": 255,
+            "3": 255,
+            "4": 255,
+            "5": 255,
+            "6": 255,
+            "7": 255
+          }
+        }
+      ]
+    },
+    "references": ["integer", "rv64"],
+    "sourceLessons": ["memory-and-addresses", "loading-widths"],
+    "originalityNote": "The source course\u2019s memory-width view becomes an actual eight-byte copy, keeping byte order and the store footprint observable.",
+    "data": [
+      136, 119, 102, 85, 68, 51, 34, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0
+    ],
+    "memory": "data",
+    "memoryLabels": [
+      {
+        "offset": 0,
+        "label": "source value"
+      },
+      {
+        "offset": 8,
+        "label": "copy destination"
+      }
+    ]
+  },
+  {
+    "id": "load-widths",
+    "module": "memory",
+    "title": "Choose how a narrow load fills a register",
+    "summary": "Compare sign extension and zero extension of the same memory bits.",
+    "objectives": [
+      "Distinguish sign extension from zero extension.",
+      "Choose byte, halfword and word load forms."
+    ],
+    "before": [
+      "A signed sensor byte and an unsigned fuel byte can contain the same eight bits but represent different numbers. A 64-bit register needs more bits than either byte supplies. The load instruction decides how to fill those upper bits.",
+      "`lb` copies the byte\u2019s sign bit into every upper register bit. This is sign extension: it preserves the byte\u2019s signed two\u2019s-complement value. `lbu` fills every upper bit with zero, preserving its unsigned value. Both read the same one-byte memory location.",
+      "The example loads one byte both ways without changing memory between the loads. Predict the unsigned result in `t2`, then compare its complete hexadecimal pattern with `t1`. A different register reading alone does not perform an extension; these two load instructions actually write different upper bits."
+    ],
+    "starter": "la t0, lesson_data\nlb t1, 0(t0)\nlbu t2, 0(t0)\n",
+    "observe": ["t0", "t1", "t2"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "What unsigned value does lbu leave in t2 for the supplied first byte?",
+      "register": "t2",
+      "reading": "unsigned",
+      "hint": "The memory byte supplies the low eight bits and lbu supplies zero for every upper bit."
+    },
+    "explanation": [
+      "When the byte\u2019s top bit is clear, both extension rules write the same register pattern. A byte with that bit set reveals the difference. Inspect the upper hexadecimal digits as well as the decimal readings; they show the bits that the load supplied.",
+      "The same distinction exists at other transfer widths. `lh` and `lhu` load sixteen memory bits with sign or zero extension. `lw` loads thirty-two bits and sign-extends them, whereas `lwu` zero-extends them. An RV64 word load therefore does not necessarily clear the upper thirty-two bits.",
+      "Choose from the stored data\u2019s meaning, not from the fact that addresses and destination registers are wide. The unsigned spelling changes extension, not the number of memory bytes read. Use addresses aligned for the chosen width, as the supplied data region is."
+    ],
+    "experiment": {
+      "task": "Try a first byte whose top bit is clear, then one whose top bit is set. Compare both registers in hexadecimal.",
+      "hint": "The disagreement is in the bits above the transferred byte, not in the byte read from memory."
+    },
+    "challenge": {
+      "task": "The first four bytes encode a little-endian 32-bit pattern. Load it with lw into t1 and with lwu into t2. Do not modify memory.",
+      "starter": "li t1, 0\nli t2, 0\n",
+      "reference": "la t0, lesson_data\nlw t1, 0(t0)\nlwu t2, 0(t0)\n",
+      "hints": [
+        "Both instructions must read four bytes from the same address.",
+        "lw sign-extends bit 31; lwu supplies zero above bit 31.",
+        "Use la once, then lw into t1 and lwu into t2 with the same zero offset."
+      ],
+      "cases": [
+        {
+          "name": "Largest positive signed word",
+          "inputs": {},
+          "expect": {
+            "t1": "2147483647",
+            "t2": "2147483647"
+          },
+          "data": [255, 255, 255, 127],
+          "memoryExpect": {
+            "0": 255,
+            "1": 255,
+            "2": 255,
+            "3": 127
+          }
+        },
+        {
+          "name": "Only the word sign bit is set",
+          "inputs": {},
+          "expect": {
+            "t1": "-2147483648",
+            "t2": "2147483648"
+          },
+          "data": [0, 0, 0, 128],
+          "memoryExpect": {
+            "0": 0,
+            "1": 0,
+            "2": 0,
+            "3": 128
+          }
+        },
+        {
+          "name": "All word bits set",
+          "inputs": {},
+          "expect": {
+            "t1": "-1",
+            "t2": "4294967295"
+          },
+          "data": [255, 255, 255, 255],
+          "memoryExpect": {
+            "0": 255,
+            "1": 255,
+            "2": 255,
+            "3": 255
+          }
+        }
+      ]
+    },
+    "references": ["integer", "rv64"],
+    "sourceLessons": ["loading-widths"],
+    "originalityNote": "The source course\u2019s mixed signed and unsigned sensor loads are adapted to RV64 lb/lbu and lw/lwu, with the actual upper register bits captured.",
+    "data": [128, 255, 0, 0, 0, 0, 0, 0],
+    "memory": "data",
+    "memoryLabels": [
+      {
+        "offset": 0,
+        "label": "same byte loaded twice"
+      }
+    ]
+  },
+  {
+    "id": "narrowing-stores",
+    "module": "memory",
+    "title": "Store only the low bits",
+    "summary": "Use a narrow store without overwriting neighbouring bytes.",
+    "objectives": [
+      "Identify the footprint of sb, sh and sw.",
+      "Separate narrowing a memory copy from changing its source register."
+    ],
+    "before": [
+      "A store can write fewer bits than its source register holds. `sb` writes the low eight bits into one memory byte. The upper source bits are not stored, and the source register itself keeps its full value.",
+      "In the example, the source value has more than one byte. `sb t1, 1(t0)` replaces just the byte at offset one. A following `lbu` reads that byte back into `t2`. Predict the read-back value and use the memory view to check the neighbouring bytes.",
+      "`sh` writes the low sixteen bits into two consecutive bytes, and `sw` writes the low thirty-two bits into four. The transfer width determines the store\u2019s footprint. These names describe memory widths, even though the source and address registers are both 64 bits wide. A sixteen-bit transfer is often called a halfword."
+    ],
+    "starter": "la t0, lesson_data\nli t1, 0x1234\nsb t1, 1(t0)\nlbu t2, 1(t0)\n",
+    "observe": ["t0", "t1", "t2"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "What unsigned value is read back from the byte written by sb?",
+      "register": "t2",
+      "reading": "unsigned",
+      "hint": "Only the low eight source bits reach this memory byte."
+    },
+    "explanation": [
+      "Narrowing a store discards information from the copy placed in memory. It does not shorten the source register. Comparing `t1` with the read-back result separates these two effects and prevents a common mistake: assuming that storing a byte also changes the original value.",
+      "A later load makes its own extension choice. The store does not attach a signed type to its bytes. The same stored pattern can later be read by a signed or an unsigned load, giving different complete destination-register patterns when the transferred sign bit is set.",
+      "The surrounding bytes are part of the observation. An accidentally wider store may appear correct if you inspect only the requested byte, while silently damaging an adjacent field. The challenge therefore checks untouched neighbours as well as the value read back."
+    ],
+    "experiment": {
+      "task": "Replace sb with sh in the example and inspect which additional byte changes. Restore sb and try a source whose low byte has its top bit set.",
+      "hint": "The instruction width fixes how many destination bytes are replaced; the source\u2019s apparent size does not."
+    },
+    "challenge": {
+      "task": "A value arrives in t1. Store its low sixteen bits at lesson_data offsets 2 and 3, then load those two bytes without sign extension into t2. Leave offsets 0, 1, 4 and 5 unchanged.",
+      "starter": "li t2, 0\n",
+      "reference": "la t0, lesson_data\nsh t1, 2(t0)\nlhu t2, 2(t0)\n",
+      "hints": [
+        "The two-byte destination starts at an aligned offset of two.",
+        "A halfword store writes the low sixteen bits; an unsigned halfword load fills the upper register bits with zero.",
+        "Use sh followed by lhu at 2(t0), leaving neighbouring bytes outside that footprint."
+      ],
+      "cases": [
+        {
+          "name": "Discard upper source bits",
+          "inputs": {
+            "t1": "0x12345678"
+          },
+          "expect": {
+            "t2": "0x5678"
+          },
+          "data": [161, 178, 195, 212, 229, 246],
+          "memoryExpect": {
+            "0": 161,
+            "1": 178,
+            "2": 120,
+            "3": 86,
+            "4": 229,
+            "5": 246
+          }
+        },
+        {
+          "name": "Store zero",
+          "inputs": {
+            "t1": "0"
+          },
+          "expect": {
+            "t2": "0"
+          },
+          "data": [161, 178, 195, 212, 229, 246],
+          "memoryExpect": {
+            "0": 161,
+            "1": 178,
+            "2": 0,
+            "3": 0,
+            "4": 229,
+            "5": 246
+          }
+        },
+        {
+          "name": "Low sixteen bits all set",
+          "inputs": {
+            "t1": "-1"
+          },
+          "expect": {
+            "t2": "65535"
+          },
+          "data": [161, 178, 195, 212, 229, 246],
+          "memoryExpect": {
+            "0": 161,
+            "1": 178,
+            "2": 255,
+            "3": 255,
+            "4": 229,
+            "5": 246
+          }
+        }
+      ]
+    },
+    "references": ["integer", "rv64"],
+    "sourceLessons": ["loading-widths"],
+    "originalityNote": "The source course\u2019s transfer-width lesson becomes a neighbouring-field preservation task so a too-wide store is caught by real memory checks.",
+    "data": [170, 187, 204, 221, 238, 255, 0, 0],
+    "memory": "data",
+    "memoryLabels": [
+      {
+        "offset": 0,
+        "label": "neighbour before store"
+      },
+      {
+        "offset": 1,
+        "label": "one-byte destination"
+      },
+      {
+        "offset": 2,
+        "label": "neighbour after store"
+      }
+    ]
+  },
+  {
+    "id": "array-addresses",
+    "module": "arrays",
+    "title": "Scale an array index",
+    "summary": "Turn an element index into a byte address before loading.",
+    "objectives": [
+      "Distinguish an element index from a byte offset.",
+      "Scale an address by the declared element size."
+    ],
+    "before": [
+      "An array stores equal-sized elements consecutively. Its index counts elements, while a memory address counts bytes. In this example, each unsigned sample occupies four bytes, so moving one element means moving four byte addresses. In the C intent, `unsigned int *samples` declares a pointer to those four-byte unsigned elements.",
+      "The address of sample i is the array\u2019s first address plus i times the element size. For this four-byte size, `slli t3, t1, 2` multiplies index `t1` by four. Adding that offset to the pointer in `t0` gives the selected element\u2019s address in `t3`.",
+      "The supplied region begins with four little-endian unsigned 32-bit samples. `lwu` reads the selected element without sign extension. Predict the loaded sample in `t2` for the shown zero-based index. The first element has index zero, not one."
+    ],
+    "starter": "la t0, lesson_data\nli t1, 2\nslli t3, t1, 2\nadd t3, t0, t3\nlwu t2, 0(t3)\n",
+    "observe": ["t0", "t1", "t3", "t2"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "Which sample value is loaded into t2 at the shown index?",
+      "register": "t2",
+      "reading": "unsigned",
+      "hint": "Convert the element index to a byte offset before choosing the four bytes read by lwu."
+    },
+    "explanation": [
+      "The shift is a consequence of this element size, not a rule that all pointers advance by four. A byte array advances by one, and an array of eight-byte values advances by eight. The C expression `p + 1` means one element for the type of p; a RISC-V integer addition only adds the number of bytes you explicitly supply.",
+      "Keeping the selected address in `t3` lets you compare it with the memory view before interpreting the loaded value. The load\u2019s offset is zero because the address calculation has already selected the element. Adding the index again in the load would count part of the displacement twice.",
+      "An array bound is part of the program\u2019s contract. A wrong index can still point into mapped memory and return unrelated bytes instead of causing an immediate fault. These exercises supply valid indices; later loops must enforce their count before accessing an element."
+    ],
+    "experiment": {
+      "task": "Use indices zero and three, then remove the scaling shift and inspect what lwu reads for index one.",
+      "hint": "The memory instruction\u2019s offsets are byte offsets, not array element numbers."
+    },
+    "challenge": {
+      "task": "The memory region begins with four unsigned 32-bit samples. A valid index from 0 through 3 arrives in t1. Load that sample into t2, preserving the index in t1.",
+      "starter": "li t2, 0\n",
+      "reference": "la t0, lesson_data\nslli t3, t1, 2\nadd t3, t0, t3\nlwu t2, 0(t3)\n",
+      "hints": [
+        "Find the byte displacement from an element index and a four-byte element size.",
+        "The shift by two multiplies the index by four; add that result to the base pointer.",
+        "Load with lwu from the calculated address so a sample\u2019s top bit does not become a negative 64-bit value."
+      ],
+      "cases": [
+        {
+          "name": "First sample",
+          "inputs": {
+            "t1": "0"
+          },
+          "expect": {
+            "t1": "0",
+            "t2": "10"
+          },
+          "data": [10, 0, 0, 0, 20, 0, 0, 0, 30, 0, 0, 0, 40, 0, 0, 0]
+        },
+        {
+          "name": "Last sample",
+          "inputs": {
+            "t1": "3"
+          },
+          "expect": {
+            "t1": "3",
+            "t2": "40"
+          },
+          "data": [10, 0, 0, 0, 20, 0, 0, 0, 30, 0, 0, 0, 40, 0, 0, 0]
+        },
+        {
+          "name": "Unsigned sample with top bit set",
+          "inputs": {
+            "t1": "1"
+          },
+          "expect": {
+            "t1": "1",
+            "t2": "2147483648"
+          },
+          "data": [1, 0, 0, 0, 0, 0, 0, 128, 3, 0, 0, 0, 4, 0, 0, 0]
+        }
+      ]
+    },
+    "references": ["integer", "rv64"],
+    "sourceLessons": ["array-addresses"],
+    "originalityNote": "The source course\u2019s scaled-pointer diagram becomes an explicit shift-plus-add sequence because base RV64GC does not fold scaling into the load.",
+    "data": [10, 0, 0, 0, 20, 0, 0, 0, 30, 0, 0, 0, 40, 0, 0, 0],
+    "memory": "data",
+    "memoryLabels": [
+      {
+        "offset": 0,
+        "label": "sample[0]"
+      },
+      {
+        "offset": 4,
+        "label": "sample[1]"
+      },
+      {
+        "offset": 8,
+        "label": "sample[2]"
+      },
+      {
+        "offset": 12,
+        "label": "sample[3]"
+      }
+    ],
+    "c": "unsigned long sample(unsigned int *samples, unsigned long index) {\n    return samples[index];\n}\n"
+  },
+  {
+    "id": "sum-array",
+    "module": "arrays",
+    "title": "Walk an array without crossing its end",
+    "summary": "Advance a pointer by one element while accumulating unsigned samples.",
+    "objectives": [
+      "Keep pointer stride and element count distinct.",
+      "Accumulate narrow unsigned samples in a wider register.",
+      "Place a bounds check before a memory access."
+    ],
+    "before": [
+      "The trip computer stores several unsigned 32-bit samples consecutively. To add them, keep a pointer to the next sample and a separate count of how many samples have been processed. A pointer describes a location; a count describes progress. The C intent uses `unsigned int *samples` for that array pointer and a 64-bit `unsigned long` total.",
+      "This example keeps the requested sample count in `t0`, the moving pointer in `t1`, the total in `t2`, and the processed count in `t3`. `t4` holds each sample after `lwu` loads it. Each successful visit advances the pointer by four bytes because every sample occupies four bytes.",
+      "The test comes before the load. A zero requested count therefore reads no sample and leaves the total at its initial value. Predict the final total for the supplied four samples. The view shows the actual bytes, not an array object known to the processor."
+    ],
+    "starter": "li t0, 4\nla t1, lesson_data\nli t2, 0\nli t3, 0\nagain:\nbgeu t3, t0, done\nlwu t4, 0(t1)\nadd t2, t2, t4\naddi t1, t1, 4\naddi t3, t3, 1\nj again\ndone:\n",
+    "observe": ["t0", "t1", "t2", "t3", "t4"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "What unsigned total is in t2 after every requested sample has been processed?",
+      "register": "t2",
+      "reading": "unsigned",
+      "hint": "Each array element contributes once. The pointer advances by four bytes after the current element is loaded."
+    },
+    "explanation": [
+      "The final pointer can name the address just after the last processed element. Computing that address does not itself read memory. The next load must remain behind the count check so that the one-past address is never used as another element of this array.",
+      "The load and accumulator widths serve different jobs. `lwu` interprets each stored sample as an unsigned 32-bit value. `add` accumulates those values in a 64-bit register. For the bounded sample counts here, that wider total can retain sums that would not fit in one sample.",
+      "Initialise the total once before the loop and update it after each load. Resetting it on each visit retains only the last sample. Advancing the pointer by one instead of four reads overlapping byte groups rather than successive array elements; the memory addresses make that mistake visible."
+    ],
+    "experiment": {
+      "task": "Try processing only the first two samples, then zero samples. Change the pointer increment to one and compare the selected byte groups.",
+      "hint": "Keep the requested count separate from the pointer stride: one counts elements and the other counts bytes."
+    },
+    "challenge": {
+      "task": "An unsigned sample count from 0 through 8 arrives in t0. Sum that many little-endian unsigned 32-bit samples from lesson_data into the 64-bit result t2. Preserve t0. Test the count before every load; do not read a further sample after the count is exhausted.",
+      "starter": "li t2, 0\n",
+      "reference": "la t1, lesson_data\nli t2, 0\nli t3, 0\nagain:\nbgeu t3, t0, done\nlwu t4, 0(t1)\nadd t2, t2, t4\naddi t1, t1, 4\naddi t3, t3, 1\nj again\ndone:\n",
+      "hints": [
+        "A zero count must reach done before the first memory load.",
+        "Use lwu to widen each unsigned sample, then add it to a total kept outside the loop initialisation.",
+        "After the addition, advance the pointer by four and the processed count by one before testing again."
+      ],
+      "cases": [
+        {
+          "name": "Empty array",
+          "inputs": {
+            "t0": "0"
+          },
+          "expect": {
+            "t0": "0",
+            "t2": "0"
+          },
+          "data": []
+        },
+        {
+          "name": "One full-range unsigned sample",
+          "inputs": {
+            "t0": "1"
+          },
+          "expect": {
+            "t0": "1",
+            "t2": "4294967295"
+          },
+          "data": [255, 255, 255, 255]
+        },
+        {
+          "name": "Four distinct samples",
+          "inputs": {
+            "t0": "4"
+          },
+          "expect": {
+            "t0": "4",
+            "t2": "24"
+          },
+          "data": [3, 0, 0, 0, 5, 0, 0, 0, 7, 0, 0, 0, 9, 0, 0, 0]
+        },
+        {
+          "name": "Wide total from eight samples",
+          "inputs": {
+            "t0": "8"
+          },
+          "expect": {
+            "t0": "8",
+            "t2": "34359738360"
+          },
+          "data": [
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+            255, 255, 255, 255, 255, 255
+          ]
+        }
+      ]
+    },
+    "references": ["integer", "rv64"],
+    "sourceLessons": ["array-addresses"],
+    "originalityNote": "The source course\u2019s trip-log walk is retained with explicit RISC-V pointer updates and boundary cases that separate sample width from accumulator width.",
+    "data": [10, 0, 0, 0, 20, 0, 0, 0, 30, 0, 0, 0, 40, 0, 0, 0],
+    "memory": "data",
+    "memoryLabels": [
+      {
+        "offset": 0,
+        "label": "first sample"
+      },
+      {
+        "offset": 12,
+        "label": "last requested sample"
+      },
+      {
+        "offset": 16,
+        "label": "one-past address"
+      }
+    ],
+    "c": "unsigned long sum(unsigned int *samples, unsigned long count) {\n    unsigned long total = 0;\n    for (unsigned long i = 0; i < count; ++i) {\n        total += samples[i];\n    }\n    return total;\n}\n"
+  },
+  {
+    "id": "zero-terminated-strings",
+    "module": "arrays",
+    "title": "Count bytes up to a terminator",
+    "summary": "Combine a zero-byte stopping value with an explicit capacity bound.",
+    "objectives": [
+      "Exclude a zero terminator from a byte count.",
+      "Check a capacity before every read.",
+      "Distinguish bytes from encoded characters."
+    ],
+    "before": [
+      "A zero-terminated string stores its content as bytes followed by a byte whose value is zero. That terminating byte marks the end; it is not counted as part of the content. A pointer alone does not tell you how much memory is safe to inspect. The C declaration `unsigned char *bytes` names a pointer to these unsigned bytes.",
+      "Keep a capacity as well as the zero-byte rule. The fragment first checks whether the byte count has reached that capacity. Only then may it load another byte. It stops when the loaded byte is zero; otherwise, it counts that byte and advances the pointer by one.",
+      "The supplied bytes encode a short ASCII label followed by zero and an extra byte. ASCII is a character encoding in which these letters each occupy one byte. Predict the count in `t2` after the scan finishes. In a general UTF-8 string, a visible character can occupy several bytes, so this activity measures bytes, not characters."
+    ],
+    "starter": "li t0, 6\nla t1, lesson_data\nli t2, 0\nagain:\nbgeu t2, t0, done\nlbu t3, 0(t1)\nbeq t3, zero, done\naddi t2, t2, 1\naddi t1, t1, 1\nj again\ndone:\n",
+    "observe": ["t0", "t1", "t2", "t3"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "How many content bytes are counted before the first zero byte?",
+      "register": "t2",
+      "reading": "unsigned",
+      "hint": "The zero byte stops the scan before the increment, so it does not contribute to the count."
+    },
+    "explanation": [
+      "Two different stopping conditions protect different parts of the contract. The zero byte identifies the content\u2019s end. The capacity limits the region the program may read even if a terminator is missing. Both are needed when the memory comes from a source that may provide incomplete data.",
+      "The order of the operations matters. Incrementing the count before checking the loaded byte would count the terminator. Loading before checking the capacity would access a byte outside the promised region, even when the returned count happened to look correct. A correct count alone does not explain why an access was safe.",
+      "When no zero appears within the capacity, this bounded scan reports the capacity. It does not claim that a complete terminated string was found. If your program needs to distinguish a complete string from a capacity-limited scan, it can report a separate found-terminator value."
+    ],
+    "experiment": {
+      "task": "Move the zero byte later, then remove every zero within the chosen capacity. Finally try a capacity of zero.",
+      "hint": "Follow the capacity test before the load, and the terminator test before the count increment."
+    },
+    "challenge": {
+      "task": "Capacity t0 is an unsigned byte count from 0 through 64. Starting at lesson_data, count nonzero bytes until the first zero or the capacity is reached. Leave the count in t2 and preserve t0. Check capacity before loading; exclude the terminator from the count.",
+      "starter": "li t2, 0\n",
+      "reference": "la t1, lesson_data\nli t2, 0\nagain:\nbgeu t2, t0, done\nlbu t3, 0(t1)\nbeq t3, zero, done\naddi t2, t2, 1\naddi t1, t1, 1\nj again\ndone:\n",
+      "hints": [
+        "A zero capacity permits no byte access, even if a terminator happens to be nearby.",
+        "Only nonzero bytes inside the capacity increase the count.",
+        "At again, test t2 against t0, load the current byte, test it against zero, then increment the count and pointer."
+      ],
+      "cases": [
+        {
+          "name": "Empty terminated string",
+          "inputs": {
+            "t0": "5"
+          },
+          "expect": {
+            "t0": "5",
+            "t2": "0"
+          },
+          "data": [0, 65, 66, 67, 68]
+        },
+        {
+          "name": "Terminator inside capacity",
+          "inputs": {
+            "t0": "6"
+          },
+          "expect": {
+            "t0": "6",
+            "t2": "4"
+          },
+          "data": [84, 82, 73, 80, 0, 88]
+        },
+        {
+          "name": "No terminator within capacity",
+          "inputs": {
+            "t0": "3"
+          },
+          "expect": {
+            "t0": "3",
+            "t2": "3"
+          },
+          "data": [65, 66, 67, 88, 0]
+        },
+        {
+          "name": "No capacity to read",
+          "inputs": {
+            "t0": "0"
+          },
+          "expect": {
+            "t0": "0",
+            "t2": "0"
+          },
+          "data": [65, 66, 0]
+        },
+        {
+          "name": "Full region without a terminator",
+          "inputs": {
+            "t0": "64"
+          },
+          "data": [
+            65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65,
+            65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65,
+            65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65,
+            65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65
+          ],
+          "expect": {
+            "t0": "64",
+            "t2": "64"
+          }
+        }
+      ]
+    },
+    "references": ["integer", "rv64"],
+    "sourceLessons": ["zero-terminated-strings"],
+    "originalityNote": "The source course\u2019s label scan keeps both termination and capacity checks, with missing-terminator and zero-capacity cases and an explicit byte-count contract.",
+    "data": [84, 82, 73, 80, 0, 88],
+    "memory": "data",
+    "memoryLabels": [
+      {
+        "offset": 0,
+        "label": "label begins"
+      },
+      {
+        "offset": 4,
+        "label": "zero terminator"
+      },
+      {
+        "offset": 5,
+        "label": "byte after the string"
+      }
+    ],
+    "c": "unsigned long bounded_length(unsigned char *bytes, unsigned long capacity) {\n    unsigned long count = 0;\n    while (count < capacity && bytes[count] != 0) {\n        ++count;\n    }\n    return count;\n}\n"
+  }
+]

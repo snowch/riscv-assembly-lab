@@ -10,7 +10,9 @@
     "upstream": "snowch/xv6-lab"
   },
   "riscvRust": {
-    "commit": "8ee69d7a5dc7ef6d8b2bda96bf86d2923f2cf176"
+    "commit": "8ee69d7a5dc7ef6d8b2bda96bf86d2923f2cf176",
+    "changes": "User/Supervisor page permissions, SUM/MXR, MPRV and translation-cache invalidation; Rust1.85.1, wasm-bindgen0.2.100",
+    "source": "site/sources/riscv-rust-permissions-source.tar.gz"
   },
   "sha256": {
     "site/images/fs.img": "90397a946f1a5d458361df39e54056512f083b2a3fb3ecf750889a4eed6d0d4b",
@@ -27,7 +29,22 @@
     "site/vendor/binutils/riscv64-linux-gnu-ld.js": "d7f070c408969f00e5ea2627c75cfc80942b6a74050737e69da2542795217e9f",
     "site/vendor/runtime/LICENSE-riscv-rust": "8acf4083ad9a498e4a10554ea52814a414e5f4401a3f9cf6db59b9aa6640a95b",
     "site/vendor/runtime/LICENSE-xv6": "677302f30c9882c1f81b9be8ceda6efd4edff5576b9e02963b6114cf70c3162c",
-    "site/vendor/runtime/riscv_emu_rust_wasm.js": "b51a13f2be49a8286e96e5c6d51dd677950fbdf4675b7fa80ff356da76878d05",
-    "site/vendor/runtime/riscv_emu_rust_wasm_bg.wasm": "e1804062b8a40bfe27af9a393bee291b0e8228435ebbc47a19d45a1faa8e3f65"
+    "site/vendor/runtime/riscv_emu_rust_wasm.js": "f18ff9cce28f75bae6673d99ea52d164dfc50ed1d5e29eb53a1e0aca99a7c694",
+    "site/vendor/runtime/riscv_emu_rust_wasm_bg.wasm": "acecbb32bb10570246f74889001c06f85d307fa4a24395e1bf85cfb2eb34b5c7",
+    "site/sources/riscv-rust-permissions-source.tar.gz": "5559f947b5483a6e85d02acd5141551e56a9dd3c21cf3e6aaac97c899e1df226",
+    "site/sources/riscv-rust-permissions.patch": "1da2839b6458e4a6453daedbdd14299f7802174b7e55132de30fc41b268a3709",
+    "site/sources/tcc-source.tar.gz": "abff0af6154eecc427c0ea1d17ea3614f42390f55d9be2c10eb99d100eea6603",
+    "site/vendor/binutils/objdump.wasm": "194b8229f7ca602626c35873107de001db1501d77eb46a42afc9ea8947f7d4cd",
+    "site/vendor/binutils/riscv64-linux-gnu-objdump.js": "a35e146d9048a80dbd2c1883e3b513c66e8584b0f827f53436c098535211ad1e",
+    "site/vendor/compiler/COPYING-LGPL-2.1.txt": "512d2d21b6b3384ba64781abb0208a1b87740bc31e2df48e2b206ddb7e4d5779",
+    "site/vendor/compiler/tcc.wasm": "047bba88a9c036598d8d3e7e76750736e8304dc9b8f0604f4e33ecc3b5217b0d",
+    "site/vendor/runtime/THIRD_PARTY_NOTICES.txt": "a4922e0710b39d5361624edfb858a0a2350e3efea657af50de731431c5845d96"
+  },
+  "compiler": {
+    "upstream": "lupyuen/tcc-riscv32-wasm",
+    "commit": "8cffa69ed303d80206b7cb6e6e3737506243777c",
+    "target": "riscv64",
+    "changes": "Unchanged compiler binary; MIT xv6-lab adapter reused",
+    "source": "site/sources/tcc-source.tar.gz"
   }
 }

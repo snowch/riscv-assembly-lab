@@ -1,0 +1,1303 @@
+[
+  {
+    "id": "c-return-values",
+    "module": "c",
+    "title": "Follow a C return value",
+    "summary": "Compile a trip charge locally and follow its returned value into a0.",
+    "language": "c",
+    "objectives": [
+      "Connect a C return expression with the register observed after a real function call.",
+      "Distinguish the C source from the compiler\u2019s generated instruction sequence."
+    ],
+    "before": [
+      "A compiler translates C into machine instructions. The editor now accepts a complete C function named `lesson`. TinyCC compiles it inside your browser into an object file: machine code whose address references still need resolving. The GNU linker joins that object with the supplied caller and reporting code, then resolves the addresses to make an executable for xv6. You can inspect the compiler\u2019s output without sending your source to a compilation service.",
+      "The two arguments arrive in `a0` and `a1`. For the starting call, `a` is the trip distance and `b` is the charge per distance unit. The function first calculates their product in the local variable `charge`, then adds a fixed charge before returning. The supplied caller observes the return value in `a0`.",
+      "Both parameters and the return type are `unsigned long`. This target uses a 64-bit `unsigned long`, so its arithmetic keeps the low 64 bits. The function may change temporary registers while it works. The calling convention guarantees the result location; it does not promise that every incoming argument remains in its original register."
+    ],
+    "starter": "unsigned long lesson(unsigned long a, unsigned long b) {\n    unsigned long charge = a * b;\n    return charge + 7;\n}\n",
+    "inputs": {
+      "a0": "6",
+      "a1": "4"
+    },
+    "observe": ["a0", "sp"],
+    "result": "a0",
+    "prediction": {
+      "prompt": "What unsigned value is in a0 when lesson(6, 4) returns?",
+      "register": "a0",
+      "reading": "unsigned",
+      "hint": "Follow the values on the path that executes, then inspect the captured register."
+    },
+    "explanation": [
+      "The name `charge` belongs to the C program. It does not attach a permanent type or name to a physical register. A compiler can keep a value in a register, place it on the stack, or replace it with another calculation that preserves the required result. Read the emitted instructions to find what this compiler chose.",
+      "A return statement provides the caller\u2019s result. The compiler also emits the instructions needed to leave the function and restore any state it must preserve. One C expression can therefore correspond to several instructions. The disassembly is output from the current compilation, not a handwritten promise about how every compiler must implement the function.",
+      "Compiling successfully establishes that the tool accepted the source. Running one call checks that call. The exercise uses several fresh calls so a function that returns a fixed answer cannot satisfy the whole contract."
+    ],
+    "experiment": {
+      "task": "Change the fixed charge from 7 to 11. Predict the new returned value, build again, and compare the emitted instructions.",
+      "hint": "The product is unchanged. Follow only the constant added by the return expression."
+    },
+    "challenge": {
+      "task": "Write an unsigned trip-charge function that returns a * b + 3 in a0. The two unsigned arguments arrive through the supplied caller. Keep unsigned 64-bit wrapping, including when the mathematical product is too large.",
+      "starter": "unsigned long lesson(unsigned long a, unsigned long b) {\n    return a * b;\n}\n",
+      "reference": "unsigned long lesson(unsigned long a, unsigned long b) {\n    return a * b + 3;\n}\n",
+      "hints": [
+        "Calculate the distance-dependent charge before adding the fixed charge.",
+        "Unsigned arithmetic wraps at the operation; a later addition uses the wrapped product.",
+        "The caller reads the function\u2019s returned expression, not a local variable that was never returned."
+      ],
+      "cases": [
+        {
+          "name": "Ordinary trip",
+          "inputs": {
+            "a0": "6",
+            "a1": "4"
+          },
+          "expect": {
+            "a0": "27"
+          }
+        },
+        {
+          "name": "Zero distance",
+          "inputs": {
+            "a0": "0",
+            "a1": "99"
+          },
+          "expect": {
+            "a0": "3"
+          }
+        },
+        {
+          "name": "Wrapped product",
+          "inputs": {
+            "a0": "0xffffffffffffffff",
+            "a1": "2"
+          },
+          "expect": {
+            "a0": "1"
+          }
+        }
+      ]
+    },
+    "references": ["c", "abi", "multiply"],
+    "sourceLessons": ["from-c-to-instructions", "change-c-calculation"],
+    "originalityNote": "The source course\u2019s editable trip charge is compiled by the real browser TinyCC toolchain for RISC-V, with its ABI result captured after execution."
+  },
+  {
+    "id": "c-decisions",
+    "module": "c",
+    "title": "Choose a result in C",
+    "summary": "Compile a limit check and test both paths of the returned result.",
+    "language": "c",
+    "objectives": [
+      "Follow the path selected by a signed C comparison.",
+      "Test a limit function below, at and above its boundaries."
+    ],
+    "before": [
+      "An `if` statement chooses whether its body runs. The function below compares a measured value `a` with a limit `b`. If the measurement is greater, it returns the limit. Otherwise it returns the original measurement. This is a cap: it prevents the returned value from exceeding the limit.",
+      "The arguments and result use signed `long`, which is 64 bits on this target. A negative measurement therefore participates in a signed comparison. The result is observed in `a0` only after the selected path returns to the supplied caller. Neither path needs to execute the other path\u2019s return statement.",
+      "A compiler can implement a C decision with more than one instruction sequence. Inspect the current disassembly to see TinyCC\u2019s choice. RISC-V conditional branches compare register values directly; there is no separate Arm-style condition-flag register for the C expression to update."
+    ],
+    "starter": "long lesson(long a, long b) {\n    if (a > b) {\n        return b;\n    }\n    return a;\n}\n",
+    "inputs": {
+      "a0": "28",
+      "a1": "20"
+    },
+    "observe": ["a0", "sp"],
+    "result": "a0",
+    "prediction": {
+      "prompt": "What is in a0 after the capped measurement lesson(28, 20) returns?",
+      "register": "a0",
+      "reading": "signed",
+      "hint": "Follow the values on the path that executes, then inspect the captured register."
+    },
+    "explanation": [
+      "The comparison determines which value reaches the return location. It does not change the stored bits of the original measurement by itself. Follow the condition first, then the return statement on that path. Reading the listing from top to bottom without following a branch can make mutually exclusive operations look as though they both execute.",
+      "An upper cap is not a complete range check. A negative input is already below a non-negative limit, so the example leaves that negative value unchanged. If the application also requires a lower bound, it must express that requirement separately. Tests should cover both sides and equality, where neither a strict greater-than nor a strict less-than condition holds.",
+      "The challenge asks for a value in a closed range. It supplies only non-negative upper limits, keeping that contract consistent even when the measurement is negative. The function does not need a particular branch spelling to pass; it needs the correct returned value for every supplied call."
+    ],
+    "experiment": {
+      "task": "Run the same source with the comparison changed from > to >=. Decide whether equality changes the returned value, then explain why.",
+      "hint": "At equality, the two candidate return values are equal even if control takes a different path."
+    },
+    "challenge": {
+      "task": "Return a clamped measurement: return 0 when signed a is negative, return b when a exceeds b, and return a otherwise. The supplied upper limit b is always non-negative.",
+      "starter": "long lesson(long a, long b) {\n    if (a > b) return b;\n    return a;\n}\n",
+      "reference": "long lesson(long a, long b) {\n    if (a < 0) return 0;\n    if (a > b) return b;\n    return a;\n}\n",
+      "hints": [
+        "An upper cap alone does not reject a negative measurement.",
+        "Check the lower boundary before returning the unchanged measurement.",
+        "Treat a value equal to a boundary as part of the allowed range."
+      ],
+      "cases": [
+        {
+          "name": "Below zero",
+          "inputs": {
+            "a0": "-5",
+            "a1": "20"
+          },
+          "expect": {
+            "a0": "0"
+          }
+        },
+        {
+          "name": "Above cap",
+          "inputs": {
+            "a0": "12",
+            "a1": "10"
+          },
+          "expect": {
+            "a0": "10"
+          }
+        },
+        {
+          "name": "Inside range",
+          "inputs": {
+            "a0": "7",
+            "a1": "10"
+          },
+          "expect": {
+            "a0": "7"
+          }
+        },
+        {
+          "name": "Both boundaries zero",
+          "inputs": {
+            "a0": "0",
+            "a1": "0"
+          },
+          "expect": {
+            "a0": "0"
+          }
+        }
+      ]
+    },
+    "references": ["c", "integer", "abi"],
+    "sourceLessons": ["from-c-to-instructions", "cap-charge-in-c"],
+    "originalityNote": "The source course\u2019s cap becomes a real RISC-V C compilation whose fresh exercise checks a lower boundary as well as an upper limit."
+  },
+  {
+    "id": "c-loops",
+    "module": "c",
+    "title": "Compile a counted loop",
+    "summary": "Connect a C loop\u2019s test, body and update to a returned total.",
+    "language": "c",
+    "objectives": [
+      "Distinguish a loop\u2019s test, body and update.",
+      "Check the zero-iteration case before relying on a counted loop."
+    ],
+    "before": [
+      "A C `for` loop puts its initialisation, continuation test and update together. The initialisation runs once. Before each iteration, the continuation test decides whether the body runs. The update follows the body, then control returns to the test. The compiler must preserve this order for the defined calls used here.",
+      "The example starts `total` at zero and adds `b` once for each count below `a`. Both arguments are unsigned. With the supplied small count, the loop has a clear stopping point. The returned value is the total after the loop ends, not the value after the first addition.",
+      "The loop variable is a C value, not a promise to use one particular register. Build the current source, inspect its generated instructions, and find the comparison and backward control flow. The result cards capture the state after the whole function returns. They are not a recording of every intermediate iteration."
+    ],
+    "starter": "unsigned long lesson(unsigned long a, unsigned long b) {\n    unsigned long total = 0;\n    for (unsigned long i = 0; i < a; i++) {\n        total += b;\n    }\n    return total;\n}\n",
+    "inputs": {
+      "a0": "4",
+      "a1": "3"
+    },
+    "observe": ["a0", "sp"],
+    "result": "a0",
+    "prediction": {
+      "prompt": "What unsigned total is returned after all iterations for a = 4 and b = 3?",
+      "register": "a0",
+      "reading": "unsigned",
+      "hint": "Follow the values on the path that executes, then inspect the captured register."
+    },
+    "explanation": [
+      "A zero count makes the continuation test false before the first body execution. Initialising the total before the loop therefore matters: the function still needs a result when it performs no additions. A test after the body would describe a different loop, with at least one body execution.",
+      "Changing `<` to `<=` changes the set of counts that reach the body. It can add an iteration even though the body is unchanged. Work out the first count, the last count that passes, and the update between them. This is more reliable than guessing the answer from the visual length of the loop.",
+      "These exercises restrict counts to at most 1000. That keeps the loop bounded well before its unsigned counter can wrap. Passing the supplied cases does not prove that an arbitrary loop terminates for every possible 64-bit input. Keep a bound or a progress argument with any repeated calculation."
+    ],
+    "experiment": {
+      "task": "Change the comparison to i <= a. Predict how many extra body executions occur for the starting count, then build and run again.",
+      "hint": "The added path is the one where the counter equals the bound."
+    },
+    "challenge": {
+      "task": "Return the sum of the integers from 1 through unsigned a, including a. The count a is between 0 and 1000; b is unused. A zero count must return zero.",
+      "starter": "unsigned long lesson(unsigned long a, unsigned long b) {\n    unsigned long total = 0;\n    for (unsigned long i = 0; i < a; i++) total += i;\n    return total;\n}\n",
+      "reference": "unsigned long lesson(unsigned long a, unsigned long b) {\n    unsigned long total = 0;\n    for (unsigned long i = 1; i <= a; i++) total += i;\n    return total;\n}\n",
+      "hints": [
+        "Name the first and last values that should be added.",
+        "The zero case must skip the body, leaving the initial total unchanged.",
+        "Starting at zero and stopping before a omits the last requested value."
+      ],
+      "cases": [
+        {
+          "name": "No terms",
+          "inputs": {
+            "a0": "0",
+            "a1": "0"
+          },
+          "expect": {
+            "a0": "0"
+          }
+        },
+        {
+          "name": "One term",
+          "inputs": {
+            "a0": "1",
+            "a1": "0"
+          },
+          "expect": {
+            "a0": "1"
+          }
+        },
+        {
+          "name": "Several terms",
+          "inputs": {
+            "a0": "5",
+            "a1": "0"
+          },
+          "expect": {
+            "a0": "15"
+          }
+        },
+        {
+          "name": "Longer count",
+          "inputs": {
+            "a0": "12",
+            "a1": "0"
+          },
+          "expect": {
+            "a0": "78"
+          }
+        }
+      ]
+    },
+    "references": ["c", "integer"],
+    "sourceLessons": ["compile-a-loop", "change-loop-boundary"],
+    "originalityNote": "The loop lesson retains test-before-body reasoning and adds a fresh inclusive-sum exercise executed by the actual RISC-V compiler/runtime."
+  },
+  {
+    "id": "c-memory",
+    "module": "c",
+    "title": "Use a local array in C",
+    "summary": "Compile array access and distinguish element offsets from byte offsets.",
+    "language": "c",
+    "objectives": [
+      "Relate a C array subscript to an element-sized address step.",
+      "Use defined unsigned arithmetic while reading a local array."
+    ],
+    "before": [
+      "A local array groups several values of the same type inside a function. Its subscript selects an element: `samples[1]` is the second element, not the second byte. On this target a `long` occupies eight bytes. Earlier byte-addressed loads explain why neighbouring long elements need more than a one-byte address step.",
+      "The example gives three signed long elements their values from the two arguments and a fixed adjustment. It then returns their sum. Every subscript is within the declared three-element array, and the supplied inputs keep the signed addition within range. Observe `a0` after the function returns.",
+      "A pointer holds an address. For a pointer to long, adding one advances by one long element. C performs that scaling from the pointed-to type. The generated assembly has only addresses and instructions; it does not carry a C type label on each register. A compiler can also remove storage when an equivalent calculation preserves the required behaviour."
+    ],
+    "starter": "long lesson(long a, long b) {\n    long samples[3];\n    samples[0] = a;\n    samples[1] = b;\n    samples[2] = 2;\n    return samples[0] + samples[1] + samples[2];\n}\n",
+    "inputs": {
+      "a0": "8",
+      "a1": "-3"
+    },
+    "observe": ["a0", "sp"],
+    "result": "a0",
+    "prediction": {
+      "prompt": "What is returned after the three initialised elements are added for a = 8 and b = -3?",
+      "register": "a0",
+      "reading": "signed",
+      "hint": "Follow the values on the path that executes, then inspect the captured register."
+    },
+    "explanation": [
+      "The assignments give every element a value before this function reads it. Leaving an automatic local element uninitialised and then using its indeterminate value is not a sound way to create a test. The function also must not read beyond the array just because surrounding stack memory happens to be mapped.",
+      "The disassembly records this compiler\u2019s implementation. You can look for frame-relative addresses and element loads if they are present, but the C source does not require a separate memory access for every written subscript. Do not infer an instruction count or a performance result from the source alone.",
+      "The exercise uses unsigned long elements so the requested weighted sum has defined 64-bit wrapping. The pointer must still stay within the two-element array. Arithmetic wrapping is a rule for integer values; it is not permission to form or dereference arbitrary addresses."
+    ],
+    "experiment": {
+      "task": "Change the fixed third element from 2 to -2. Predict which part of the returned sum changes. Keep every subscript inside the declared array.",
+      "hint": "The first two elements still come from the same arguments; only the adjustment changes."
+    },
+    "challenge": {
+      "task": "Create a two-element unsigned long array containing a and b. Use its elements to return a + 2*b with unsigned 64-bit arithmetic. Keep every access within those two elements.",
+      "starter": "unsigned long lesson(unsigned long a, unsigned long b) {\n    unsigned long samples[2];\n    samples[0] = a;\n    samples[1] = b;\n    return samples[0] + samples[1];\n}\n",
+      "reference": "unsigned long lesson(unsigned long a, unsigned long b) {\n    unsigned long samples[2];\n    samples[0] = a;\n    samples[1] = b;\n    unsigned long *p = samples;\n    return p[0] + 2 * p[1];\n}\n",
+      "hints": [
+        "The second element contributes twice; the first contributes once.",
+        "A subscript counts elements of the pointed-to type, not raw bytes.",
+        "Unsigned arithmetic keeps the low 64 bits after the multiply and addition."
+      ],
+      "cases": [
+        {
+          "name": "Two samples",
+          "inputs": {
+            "a0": "1",
+            "a1": "2"
+          },
+          "expect": {
+            "a0": "5"
+          }
+        },
+        {
+          "name": "Both zero",
+          "inputs": {
+            "a0": "0",
+            "a1": "0"
+          },
+          "expect": {
+            "a0": "0"
+          }
+        },
+        {
+          "name": "Only first sample",
+          "inputs": {
+            "a0": "9",
+            "a1": "0"
+          },
+          "expect": {
+            "a0": "9"
+          }
+        },
+        {
+          "name": "Wrapped weighted sum",
+          "inputs": {
+            "a0": "0xffffffffffffffff",
+            "a1": "1"
+          },
+          "expect": {
+            "a0": "1"
+          }
+        }
+      ]
+    },
+    "references": ["c", "abi", "integer"],
+    "sourceLessons": ["array-addresses", "traversing-arrays", "compile-a-loop"],
+    "originalityNote": "A short local array connects the existing byte-address lessons with real C compilation without inventing a permanent register allocation or memory trace."
+  },
+  {
+    "id": "c-integer-widths",
+    "module": "c-edges",
+    "title": "Keep a type\u2019s width separate from a register\u2019s width",
+    "summary": "Measure this C target\u2019s integer sizes and test a defined narrowing conversion.",
+    "language": "c",
+    "objectives": [
+      "Distinguish a C type\u2019s size from the 64-bit result register.",
+      "Apply unsigned byte conversion before widening the result."
+    ],
+    "before": [
+      "`sizeof` gives a C type\u2019s size in bytes. The expression below encodes two sizes into one returned number: the size of int contributes the hundreds, and the size of long contributes the units. This is a measurement of the selected compiler target. It is not a statement that the C language gives every machine those sizes.",
+      "This lab uses the RV64 LP64 data model: int is 32 bits and long and pointers are 64 bits. A returned int-sized value can still occupy a 64-bit architectural register. The compiler and calling convention determine which bits carry the value and how a narrower value is extended.",
+      "A cast requests a conversion to a chosen type. Converting an integer to `unsigned char` keeps its value modulo 256 on this eight-bit-byte target. Returning that converted value as unsigned long then widens the value already obtained. Widening afterwards cannot recover high bits discarded by the earlier conversion.",
+      "At a standard RV64 integer call boundary, an argument narrower than 64 bits is first widened to 32 bits using its type\u2019s signedness. That 32-bit value is then sign-extended to 64 bits. Even `unsigned int` arguments copy bit 31 into the upper register bits. This differs from `lwu`, which zero-extends a load from memory. This page\u2019s function accepts 64-bit `unsigned long` arguments, so its fixtures do not demonstrate an `unsigned int` call."
+    ],
+    "starter": "unsigned long lesson(unsigned long a, unsigned long b) {\n    return sizeof(int) * 100 + sizeof(long);\n}\n",
+    "inputs": {
+      "a0": "0",
+      "a1": "0"
+    },
+    "observe": ["a0", "sp"],
+    "result": "a0",
+    "prediction": {
+      "prompt": "What size code does the current target return: 100*sizeof(int) + sizeof(long)?",
+      "register": "a0",
+      "reading": "unsigned",
+      "hint": "Follow the values on the path that executes, then inspect the captured register."
+    },
+    "explanation": [
+      "The register\u2019s width does not make an int operation into a long operation. Likewise, the fact that a pointer and a long have the same size on this target does not make them the same C type. Keep the source operation, its conversion rules and the machine instructions as separate parts of the explanation.",
+      "For the byte exercise, first perform the conversion to unsigned char, then read the returned widened value. A value just above the byte range does not remain just above the range. The conversion wraps within the destination type. If an application must reject that value instead, it must check the original input before narrowing.",
+      "Do not generalise the byte rule to an out-of-range conversion to signed char without checking the selected language version and implementation rules. This exercise deliberately uses unsigned char, where the conversion needed for its cases is defined. The unused second argument does not affect either measurement or conversion."
+    ],
+    "experiment": {
+      "task": "Replace sizeof(long) with sizeof(void *). Predict whether the returned size code changes for this target, then compile it.",
+      "hint": "This target has 64-bit pointers as well as a 64-bit long; that equality is target-specific."
+    },
+    "challenge": {
+      "task": "Convert unsigned argument a to unsigned char, then return that byte value widened to unsigned long. Argument b is unused. Do not reject out-of-range values; apply the defined unsigned conversion.",
+      "starter": "unsigned long lesson(unsigned long a, unsigned long b) {\n    return a;\n}\n",
+      "reference": "unsigned long lesson(unsigned long a, unsigned long b) {\n    unsigned char byte = (unsigned char)a;\n    return byte;\n}\n",
+      "hints": [
+        "The result must be within the unsigned-byte range.",
+        "The conversion happens before the return value is widened.",
+        "Returning a directly omits the narrowing operation, even though small inputs happen to pass."
+      ],
+      "cases": [
+        {
+          "name": "Zero byte",
+          "inputs": {
+            "a0": "0",
+            "a1": "0"
+          },
+          "expect": {
+            "a0": "0"
+          }
+        },
+        {
+          "name": "Largest byte",
+          "inputs": {
+            "a0": "255",
+            "a1": "0"
+          },
+          "expect": {
+            "a0": "255"
+          }
+        },
+        {
+          "name": "First wrapped byte",
+          "inputs": {
+            "a0": "256",
+            "a1": "0"
+          },
+          "expect": {
+            "a0": "0"
+          }
+        },
+        {
+          "name": "Higher bits discarded",
+          "inputs": {
+            "a0": "511",
+            "a1": "0"
+          },
+          "expect": {
+            "a0": "255"
+          }
+        }
+      ]
+    },
+    "references": ["c", "abi", "rv64"],
+    "sourceLessons": [
+      "c-integer-types",
+      "checked-arithmetic",
+      "register-widths"
+    ],
+    "originalityNote": "The source course\u2019s type-width and narrowing distinctions are measured on the real RV64 C target, avoiding Arm W-register zero-extension assumptions."
+  },
+  {
+    "id": "c-overflow-contracts",
+    "module": "c-edges",
+    "title": "Separate C overflow from machine wrapping",
+    "summary": "Run defined unsigned wrapping and protect a bounded increment before it wraps.",
+    "language": "c",
+    "objectives": [
+      "Explain why a machine\u2019s wrapping addition does not define signed C overflow.",
+      "Check an input limit before computing a bounded increment."
+    ],
+    "before": [
+      "An unsigned C addition has a defined wrapping result. For unsigned long on this target, it keeps the low 64 bits. The starting function adds the two supplied unsigned arguments. Its behaviour at the end of the unsigned range follows the C type\u2019s rule as well as the instructions that implement it.",
+      "Signed C addition has a different contract. If the mathematical signed result is outside the signed type\u2019s range, C describes the operation as undefined behaviour: the language places no requirements on that execution. It does not promise a wrapped value, an exception or an error message.",
+      "A RISC-V add instruction still has defined low-bit behaviour. That fact does not require a compiler to translate an overflowing signed C expression into that instruction. An optimiser can use the assumption that a defined signed addition does not overflow. This page\u2019s executed cases use defined C; they do not treat one compiler\u2019s response to undefined behaviour as a portable answer."
+    ],
+    "starter": "unsigned long lesson(unsigned long a, unsigned long b) {\n    return a + b;\n}\n",
+    "inputs": {
+      "a0": "0xffffffffffffffff",
+      "a1": "2"
+    },
+    "observe": ["a0", "sp"],
+    "result": "a0",
+    "prediction": {
+      "prompt": "What unsigned value is returned when the largest unsigned long is increased by two?",
+      "register": "a0",
+      "reading": "unsigned",
+      "hint": "Follow the values on the path that executes, then inspect the captured register."
+    },
+    "explanation": [
+      "Interpret the result in the type used by the source calculation. A signed decimal display can show a negative reading for a perfectly valid unsigned result whose top bit is set. The hexadecimal bits identify the same stored value without choosing a signed reading. A display choice does not change the C arithmetic that produced those bits.",
+      "If wrapping is unwanted, express a different application rule. A bounded increment can test whether the input is already the largest allowed value, then leave it unchanged. Testing first makes the rule explicit. Adding first and hoping a later comparison reconstructs an invalid signed operation does not repair undefined behaviour. In C, `0UL` is zero of type `unsigned long`. The `~` operator complements every bit, so `~0UL` is the largest unsigned long value.",
+      "Tests and compiler warnings help find mistakes, but neither proves that all possible inputs are safe. A run-time checker also observes only paths that execute. The exercise\u2019s boundary cases make the intended behaviour visible without asking the browser compiler to diagnose every kind of C error."
+    ],
+    "experiment": {
+      "task": "Change the unsigned return calculation to a - b and use a = 0, b = 1 in a fresh call. Explain the hexadecimal result using unsigned arithmetic.",
+      "hint": "Subtraction has the same unsigned modulo rule; the signed decimal reading is a separate choice."
+    },
+    "challenge": {
+      "task": "Write an unsigned increment that stops at the largest unsigned long. Return a unchanged when it equals ~0UL; otherwise return a + 1. Argument b is unused.",
+      "starter": "unsigned long lesson(unsigned long a, unsigned long b) {\n    return a + 1;\n}\n",
+      "reference": "unsigned long lesson(unsigned long a, unsigned long b) {\n    if (a == ~0UL) return a;\n    return a + 1;\n}\n",
+      "hints": [
+        "The largest unsigned long has every bit set.",
+        "Check that original input before deciding to perform the increment.",
+        "A wrapped zero is a defined arithmetic result, but it violates this exercise\u2019s stop-at-the-limit rule."
+      ],
+      "cases": [
+        {
+          "name": "Ordinary increment",
+          "inputs": {
+            "a0": "0",
+            "a1": "0"
+          },
+          "expect": {
+            "a0": "1"
+          }
+        },
+        {
+          "name": "Reach the limit",
+          "inputs": {
+            "a0": "0xfffffffffffffffe",
+            "a1": "0"
+          },
+          "expect": {
+            "a0": "0xffffffffffffffff"
+          }
+        },
+        {
+          "name": "Already at the limit",
+          "inputs": {
+            "a0": "0xffffffffffffffff",
+            "a1": "0"
+          },
+          "expect": {
+            "a0": "0xffffffffffffffff"
+          }
+        }
+      ]
+    },
+    "references": ["c", "integer"],
+    "sourceLessons": ["c-and-overflow", "checked-arithmetic"],
+    "originalityNote": "The source course\u2019s hardware-versus-C distinction is preserved while all live C cases remain defined and the exercise states an explicit unsigned boundary contract."
+  },
+  {
+    "id": "checked-addition",
+    "module": "c-edges",
+    "title": "Check a sum before using it",
+    "summary": "Turn a defined unsigned carry check into a saturating C addition.",
+    "language": "c",
+    "objectives": [
+      "Detect unsigned addition overflow from a defined wrapped sum.",
+      "Distinguish the stored sum from the decision about whether to use it."
+    ],
+    "before": [
+      "A checked calculation returns or uses both a result and a decision about its range. The example forms an unsigned sum, then returns a Boolean: one when the mathematical sum does not fit, zero when it does. A Boolean result uses one for true and zero for false.",
+      "For unsigned addition, a wrapped sum is smaller than the first operand exactly when a carry was lost beyond the 64-bit result. The C comparison `sum < a` therefore checks this condition using defined unsigned operations. It is the same value relationship used by an explicit RISC-V unsigned comparison; no Arm-style carry flag is available.",
+      "The returned Boolean is not the sum. Observe the function\u2019s return contract before interpreting a0. The challenge changes the contract to return a usable saturated sum: either the ordinary result or the largest unsigned long. The input types remain unsigned throughout, including the temporary variable."
+    ],
+    "starter": "unsigned long lesson(unsigned long a, unsigned long b) {\n    unsigned long sum = a + b;\n    return sum < a;\n}\n",
+    "inputs": {
+      "a0": "0xffffffffffffffff",
+      "a1": "1"
+    },
+    "observe": ["a0", "sp"],
+    "result": "a0",
+    "prediction": {
+      "prompt": "What Boolean does the unsigned range check return for the largest unsigned long plus one?",
+      "register": "a0",
+      "reading": "unsigned",
+      "hint": "Follow the values on the path that executes, then inspect the captured register."
+    },
+    "explanation": [
+      "A range check answers whether the mathematical result fits the required destination. It does not make the wrapped bits into that mathematical result. Keep those two facts separate when choosing whether to store, reject, clamp or report a value. Different applications can use the same check and choose different policies.",
+      "This unsigned comparison must stay unsigned. Reinterpreting the sum as signed before testing changes which values are ordered below others. The top bit is part of the unsigned magnitude, not a negative sign for this calculation. A normal sum that sets that bit is not automatically an unsigned overflow.",
+      "Signed checking needs its own rule. In ordinary signed C, do not first calculate an overflowing signed sum to discover overflow afterwards. Check operands against valid bounds before adding, or use a checked-arithmetic facility supported by the chosen environment. The freestanding browser exercises do not provide a host checked-arithmetic library."
+    ],
+    "experiment": {
+      "task": "Change the starting second argument to zero and predict the range-check result. Then try a pair whose sum sets the top bit without carrying beyond it.",
+      "hint": "The predicate checks a carry beyond the width, not whether the signed reading is negative."
+    },
+    "challenge": {
+      "task": "Return a saturated unsigned sum. Calculate a + b; if it overflows unsigned long, return ~0UL. Otherwise return the sum. Use only defined unsigned operations.",
+      "starter": "unsigned long lesson(unsigned long a, unsigned long b) {\n    return a + b;\n}\n",
+      "reference": "unsigned long lesson(unsigned long a, unsigned long b) {\n    unsigned long sum = a + b;\n    if (sum < a) return ~0UL;\n    return sum;\n}\n",
+      "hints": [
+        "Keep the wrapped sum in an unsigned local value.",
+        "Compare that sum with an original operand to detect the lost carry.",
+        "Return the maximum only for overflow; a sum equal to the maximum can still be a normal result."
+      ],
+      "cases": [
+        {
+          "name": "Ordinary sum",
+          "inputs": {
+            "a0": "7",
+            "a1": "5"
+          },
+          "expect": {
+            "a0": "12"
+          }
+        },
+        {
+          "name": "Overflow at the top",
+          "inputs": {
+            "a0": "0xffffffffffffffff",
+            "a1": "1"
+          },
+          "expect": {
+            "a0": "0xffffffffffffffff"
+          }
+        },
+        {
+          "name": "Exact maximum",
+          "inputs": {
+            "a0": "0xfffffffffffffffe",
+            "a1": "1"
+          },
+          "expect": {
+            "a0": "0xffffffffffffffff"
+          }
+        },
+        {
+          "name": "No increment at maximum",
+          "inputs": {
+            "a0": "0xffffffffffffffff",
+            "a1": "0"
+          },
+          "expect": {
+            "a0": "0xffffffffffffffff"
+          }
+        }
+      ]
+    },
+    "references": ["c", "integer", "rv64"],
+    "sourceLessons": ["checked-arithmetic", "adding-and-the-flags"],
+    "originalityNote": "The source course\u2019s result-versus-overflow distinction becomes an explicit, fully defined unsigned C predicate rather than an Arm flag test."
+  },
+  {
+    "id": "system-calls",
+    "module": "xv6",
+    "title": "Ask xv6 to write bytes",
+    "summary": "Pass a byte range to xv6 and inspect the system call\u2019s returned count.",
+    "objectives": [
+      "Identify a system call\u2019s number, arguments and return value.",
+      "Keep a byte count separate from a zero-terminated string length."
+    ],
+    "before": [
+      "A user program asks the operating system to perform an operation with a system call. For xv6 write, a0 names the open file, a1 holds the address of the first byte, and a2 gives the number of bytes. Put the system call number 16 in a7, then execute `ecall` to enter xv6.",
+      "The supplied program has file 1 open for standard output, the console used here. The example writes five bytes from lesson_data, then copies write\u2019s returned value from a0 into t2. The snapshot is taken after that copy. The report is separate from the text that write sends to the console.",
+      "These numbers belong to xv6. Linux and teaching simulators can use different system call conventions even when they execute RISC-V instructions. `ecall` requests service from the execution environment; the instruction itself does not define what a file number or a write operation means."
+    ],
+    "starter": "li a0, 1\nla a1, lesson_data\nli a2, 5\nli a7, 16\necall\nmv t2, a0\n",
+    "data": [116, 114, 105, 112, 10],
+    "memory": "data",
+    "memoryLabels": [
+      {
+        "offset": 0,
+        "label": "message bytes"
+      }
+    ],
+    "observe": ["a0", "a1", "t2"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "How many bytes does t2 report after the starting write succeeds?",
+      "register": "t2",
+      "reading": "signed",
+      "hint": "Follow the values on the path that executes, then inspect the captured register."
+    },
+    "explanation": [
+      "Write uses the explicit count, not a search for a zero terminator. A zero byte inside the requested range is still one byte to write. Conversely, text beyond the requested range is not part of this request. A byte count also differs from a character count for text whose characters use more than one encoded byte.",
+      "The returned value reports the operation\u2019s result. A successful xv6 write returns the bytes written; an error can return -1. The general purpose of checking the return is to distinguish an attempted operation from one that completed. The exercise keeps the file descriptor and source range valid so it can focus on the count.",
+      "The supplied reporting code also writes to the console after your fragment. That later write does not change the earlier snapshot of t2. Inspect Program output when you want to separate your message bytes from the lab\u2019s register report. No CPU flag announces that a system call succeeded."
+    ],
+    "experiment": {
+      "task": "Change the requested count from five to four. Predict the returned count and inspect which message byte is no longer sent.",
+      "hint": "The final byte is a newline. Omitting it affects presentation, not the number of earlier bytes requested."
+    },
+    "challenge": {
+      "task": "Write exactly the unsigned byte count in t0 from the beginning of lesson_data to standard output. Counts are between 0 and 5, and those bytes are valid. Leave the returned write count in t2.",
+      "starter": "li a0, 1\nla a1, lesson_data\nli a2, 0\nli a7, 16\necall\nmv t2, a0\n",
+      "reference": "li a0, 1\nla a1, lesson_data\nmv a2, t0\nli a7, 16\necall\nmv t2, a0\n",
+      "hints": [
+        "The count comes from the test input, not from a fixed number in the source.",
+        "Set the address and count before ecall; copy the result after it returns.",
+        "A zero count is still a valid request here and must report zero."
+      ],
+      "cases": [
+        {
+          "name": "No message bytes",
+          "inputs": {
+            "t0": "0"
+          },
+          "data": [116, 114, 105, 112, 10],
+          "expect": {
+            "t2": "0"
+          }
+        },
+        {
+          "name": "One byte",
+          "inputs": {
+            "t0": "1"
+          },
+          "data": [116, 114, 105, 112, 10],
+          "expect": {
+            "t2": "1"
+          }
+        },
+        {
+          "name": "Whole message",
+          "inputs": {
+            "t0": "5"
+          },
+          "data": [116, 114, 105, 112, 10],
+          "expect": {
+            "t2": "5"
+          }
+        }
+      ]
+    },
+    "references": ["xv6", "abi", "integer"],
+    "sourceLessons": ["from-function-to-executable"],
+    "originalityNote": "The source course\u2019s real-output boundary is adapted to a user process\u2019s xv6 write contract, keeping device access and Linux conventions out of the live example.",
+    "language": "asm"
+  },
+  {
+    "id": "elf-entry",
+    "module": "xv6",
+    "title": "Follow the executable\u2019s entry contract",
+    "summary": "Connect a source fragment, a callable function and the complete ELF user program.",
+    "objectives": [
+      "Distinguish a process entry from an ordinary function return.",
+      "Explain why editing source requires a fresh build and run."
+    ],
+    "before": [
+      "An object file contains machine code and names that the linker still needs to resolve. The linker combines those contents, gives them addresses and writes an executable. This lab\u2019s executable uses ELF, a file format whose headers describe the target, the entry address and the memory regions to load.",
+      "The program entry is where a newly started process begins. It is not an ordinary function called with a saved return address. The supplied _start code prepares the lesson\u2019s inputs, runs your fragment, reports its results and asks xv6 to exit. Open View complete program to see that surrounding code.",
+      "Your fragment can still call an ordinary helper. The example calls advance and jumps past its body after the helper returns. `ret` returns from advance to its caller. It does not terminate the process. The register cards observe the state after the fragment reaches the supplied reporting code."
+    ],
+    "starter": "li a0, 9\nli a1, 4\ncall advance\nj entry_done\nadvance:\n    addi a0, a0, 1\n    add a0, a0, a1\n    ret\nentry_done:\n",
+    "observe": ["a0", "a1", "ra"],
+    "result": "a0",
+    "prediction": {
+      "prompt": "What result is in a0 after advance returns and the fragment reaches entry_done?",
+      "register": "a0",
+      "reading": "signed",
+      "hint": "Follow the values on the path that executes, then inspect the captured register."
+    },
+    "explanation": [
+      "The source label _start and the executable\u2019s entry field serve related but different jobs. The label names code during assembly and linking. The ELF header tells xv6 the resulting start address. A file loader uses the executable\u2019s loading information, not the visual position of the first interesting line in the editor.",
+      "xv6 is already running when it loads this user executable. It supplies the process\u2019s address space and initial stack. This is not a firmware reset experiment, a board boot image or a direct write to a physical device. Those environments require their own startup and handoff contracts.",
+      "Changing the editor does not change an executable that was already built or a process that already ran. Build & Run creates and launches a fresh image. The source-change notice keeps that distinction visible when the displayed register snapshot belongs to an earlier version. Returning the correct value still matters independently of assembling and loading successfully."
+    ],
+    "experiment": {
+      "task": "Remove the jump after call advance. Predict where control goes after the helper returns, then use Stop if execution cannot reach a completed report. Restore the jump afterwards.",
+      "hint": "A return selects an address; it does not make the following function body disappear from the instruction stream."
+    },
+    "challenge": {
+      "task": "Write a fragment that calls adjust, then skips its body. Pass t0, t1 and t2 into a0, a1 and a2 before the call. The helper must return a0 + a1 - a2 in a0. Keep ret inside the helper, not at the end of the top-level fragment.",
+      "starter": "mv a0, t0\nmv a1, t1\nmv a2, t2\ncall adjust\nj entry_done\nadjust:\n    add a0, a0, a1\n    ret\nentry_done:\n",
+      "reference": "mv a0, t0\nmv a1, t1\nmv a2, t2\ncall adjust\nj entry_done\nadjust:\n    add a0, a0, a1\n    sub a0, a0, a2\n    ret\nentry_done:\n",
+      "hints": [
+        "The first three incoming arguments use a0, a1 and a2.",
+        "The correction reduces the accumulated result; assembling successfully does not establish that calculation.",
+        "After ret, the caller must jump over the helper body before reaching the lab\u2019s report."
+      ],
+      "cases": [
+        {
+          "name": "Corrected total",
+          "inputs": {
+            "t0": "7",
+            "t1": "9",
+            "t2": "2"
+          },
+          "expect": {
+            "a0": "14"
+          }
+        },
+        {
+          "name": "Zero inputs",
+          "inputs": {
+            "t0": "0",
+            "t1": "0",
+            "t2": "0"
+          },
+          "expect": {
+            "a0": "0"
+          }
+        },
+        {
+          "name": "Negative corrected total",
+          "inputs": {
+            "t0": "12",
+            "t1": "4",
+            "t2": "20"
+          },
+          "expect": {
+            "a0": "-4"
+          }
+        }
+      ]
+    },
+    "references": ["assembler", "xv6", "abi"],
+    "sourceLessons": ["from-function-to-executable", "loading-and-startup"],
+    "originalityNote": "The source course\u2019s loader and startup lesson is rebuilt around the actual xv6 user ELF contract instead of presenting an Arm bare-metal startup as a RISC-V program.",
+    "language": "asm"
+  },
+  {
+    "id": "memory-protection",
+    "module": "xv6",
+    "title": "Keep an access inside its permitted range",
+    "summary": "Separate an application\u2019s byte bounds from xv6\u2019s process memory protection.",
+    "objectives": [
+      "Check a byte offset before loading from a bounded record.",
+      "Distinguish a logical record boundary from an operating-system memory boundary."
+    ],
+    "before": [
+      "A user process has an address space: the addresses xv6 allows it to use. A load from an unmapped or forbidden address can trap into the kernel, which can terminate the process. The CPU\u2019s load instruction does not promise that every possible address is usable.",
+      "The safe starting fragment reads one byte from lesson_data, then adjusts that value. The supplied data region is mapped and contains the byte shown below the editor. The memory view displays actual bytes after execution. You can compare the address used by the load with the base of that region.",
+      "An application often has a smaller boundary than the mapped memory region. A three-byte sensor record may sit inside a much larger mapped page. Reading its fourth byte can violate the record\u2019s contract without causing an operating-system fault. Your code must check the record\u2019s capacity before it performs the load."
+    ],
+    "starter": "la t0, lesson_data\nlbu t1, 0(t0)\naddi t2, t1, 1\n",
+    "data": [41, 0, 0],
+    "memory": "data",
+    "memoryLabels": [
+      {
+        "offset": 0,
+        "label": "valid sensor byte"
+      }
+    ],
+    "observe": ["t0", "t1", "t2"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "What is in t2 after the valid byte load and adjustment?",
+      "register": "t2",
+      "reading": "signed",
+      "hint": "Follow the values on the path that executes, then inspect the captured register."
+    },
+    "explanation": [
+      "A trap is a transfer to the execution environment in response to an event such as an invalid memory access. It is not an ordinary function return. If your fragment faults before the reporting code, there may be no completed register snapshot. Inspect the actual serial log rather than treating a blank result as a numeric answer.",
+      "The challenge supplies an unsigned offset and a capacity. The comparison must happen before the address is used for a byte load. Equality is already outside the allowed offset range: a capacity of three permits offsets zero, one and two. A zero capacity permits no reads at all.",
+      "Unsigned comparison matters for addresses and counts. A large bit pattern that has a negative signed reading is not a small valid offset. A bounds test, a valid mapping and the intended object\u2019s lifetime answer different questions. None should be substituted for another just because one example happens to run without a fault."
+    ],
+    "experiment": {
+      "task": "In a separate experiment, replace la t0, lesson_data with li t0, -1 and run the load. Inspect the serial log if xv6 stops the process before reporting. Restore the safe address afterwards.",
+      "hint": "The changed bit pattern is not an address inside the supplied user data region. Do not expect a normal returned byte."
+    },
+    "challenge": {
+      "task": "t0 is an unsigned byte offset and t1 is the record capacity, at most 64. Return the byte at that offset in t2 only when offset < capacity. Otherwise leave t2 as -1 and perform no load from the record.",
+      "starter": "la t3, lesson_data\nadd t3, t3, t0\nlbu t2, 0(t3)\n",
+      "reference": "li t2, -1\nbgeu t0, t1, guarded_done\nla t3, lesson_data\nadd t3, t3, t0\nlbu t2, 0(t3)\nguarded_done:\n",
+      "hints": [
+        "Choose the rejection result before testing the offset.",
+        "An offset equal to capacity is already beyond the record.",
+        "Branch around the load when the unsigned offset is outside the allowed range."
+      ],
+      "cases": [
+        {
+          "name": "First byte",
+          "inputs": {
+            "t0": "0",
+            "t1": "3"
+          },
+          "data": [8, 13, 21],
+          "expect": {
+            "t2": "8"
+          }
+        },
+        {
+          "name": "Last allowed byte",
+          "inputs": {
+            "t0": "2",
+            "t1": "3"
+          },
+          "data": [8, 13, 21],
+          "expect": {
+            "t2": "21"
+          }
+        },
+        {
+          "name": "Exactly at capacity",
+          "inputs": {
+            "t0": "3",
+            "t1": "3"
+          },
+          "data": [8, 13, 21],
+          "expect": {
+            "t2": "-1"
+          }
+        },
+        {
+          "name": "Empty record",
+          "inputs": {
+            "t0": "0",
+            "t1": "0"
+          },
+          "data": [8, 13, 21],
+          "expect": {
+            "t2": "-1"
+          }
+        },
+        {
+          "name": "At the mapped data boundary",
+          "inputs": {
+            "t0": "64",
+            "t1": "64"
+          },
+          "data": [8, 13, 21],
+          "expect": {
+            "t2": "-1"
+          }
+        }
+      ]
+    },
+    "references": ["xv6", "integer", "rv64"],
+    "sourceLessons": [
+      "memory-and-addresses",
+      "zero-terminated-strings",
+      "debug-native-instructions"
+    ],
+    "originalityNote": "A safe byte read and a guard-before-load challenge retain the source course\u2019s failure diagnosis while distinguishing xv6 page protection from application record bounds.",
+    "language": "asm"
+  },
+  {
+    "id": "trip-computer",
+    "module": "xv6",
+    "title": "Build a checked trip calculation",
+    "summary": "Combine bounded records, status masks, a loop and a helper call in one executed program.",
+    "objectives": [
+      "Integrate a record stride, a status test and a bounded accumulation.",
+      "Pass the accumulated value to a helper and inspect its returned result."
+    ],
+    "before": [
+      "A trip record here occupies four bytes. Its first two bytes hold an unsigned distance in little-endian order. Byte two holds status bits, and byte three is reserved. The byte view marks each record\u2019s start. The count in t0 says how many records to inspect, with a maximum of four.",
+      "The mask in t1 chooses the status bit or bits that make a record active. A record contributes when its status AND the mask is nonzero. The scale in t2 multiplies the final total. The supplied values keep every distance, sum and scaled result within the unsigned 64-bit range.",
+      "The fragment first walks the records and accumulates distances in a0. It then passes the scale in a1 and calls a leaf helper, a function that calls no other function. The helper returns the scaled total in a0. The snapshot is taken after that helper returns and the caller jumps past its body."
+    ],
+    "starter": "la t3, lesson_data\nli t4, 0\nli a0, 0\nscan_records:\n    bgeu t4, t0, scale_records\n    lbu t5, 2(t3)\n    and t5, t5, t1\n    beqz t5, next_record\n    lhu t6, 0(t3)\n    add a0, a0, t6\nnext_record:\n    addi t3, t3, 4\n    addi t4, t4, 1\n    j scan_records\nscale_records:\n    mv a1, t2\n    call scale_total\n    j trip_done\nscale_total:\n    mul a0, a0, a1\n    ret\ntrip_done:\n",
+    "inputs": {
+      "t0": "3",
+      "t1": "1",
+      "t2": "10"
+    },
+    "data": [12, 0, 1, 0, 7, 0, 0, 0, 20, 0, 3, 0, 99, 0, 1, 0],
+    "memory": "data",
+    "memoryLabels": [
+      {
+        "offset": 0,
+        "label": "record 0"
+      },
+      {
+        "offset": 4,
+        "label": "record 1"
+      },
+      {
+        "offset": 8,
+        "label": "record 2"
+      },
+      {
+        "offset": 12,
+        "label": "record 3"
+      }
+    ],
+    "observe": ["t0", "t1", "t2", "a0"],
+    "result": "a0",
+    "prediction": {
+      "prompt": "What scaled total is returned after only the first three records are considered?",
+      "register": "a0",
+      "reading": "signed",
+      "hint": "Follow the values on the path that executes, then inspect the captured register."
+    },
+    "explanation": [
+      "The count check precedes the read. For a zero count, the loop skips all record accesses and the zero total reaches the scaling helper. Otherwise the pointer advances by the full four-byte record size, not by the two-byte distance field or the one-byte status field.",
+      "A status byte is a bit pattern. Comparing it with the mask for equality would reject a record that has the desired bit plus another bit. AND tests the requested bits while allowing unrelated status bits. The branch decides whether to include the distance; it does not change the stored record.",
+      "The helper call separates accumulation from scaling. Its result contract is a0, so the caller uses that returned value rather than assuming an earlier temporary register still holds the answer. This program combines the mechanisms already taught, but one successful example is not enough evidence. Fresh cases include an empty list, different selected bits and a mask selecting nothing."
+    ],
+    "experiment": {
+      "task": "Change the record count from three to four. Predict whether the extra record contributes under the current mask, then run again without changing the data.",
+      "hint": "First decide whether the fourth record is inspected; then test its status against the mask."
+    },
+    "challenge": {
+      "task": "Using at most four records from lesson_data, sum each unsigned 16-bit distance whose status byte has any bit selected by t1. t0 supplies the record count and t2 the scale. Return total * scale in a0. Do not read a record after the count is exhausted. The cases keep the product within range.",
+      "starter": "li a0, 0\n",
+      "reference": "la t3, lesson_data\nli t4, 0\nli a0, 0\nscan_records:\n    bgeu t4, t0, scale_records\n    lbu t5, 2(t3)\n    and t5, t5, t1\n    beqz t5, next_record\n    lhu t6, 0(t3)\n    add a0, a0, t6\nnext_record:\n    addi t3, t3, 4\n    addi t4, t4, 1\n    j scan_records\nscale_records:\n    mv a1, t2\n    call scale_total\n    j trip_done\nscale_total:\n    mul a0, a0, a1\n    ret\ntrip_done:\n",
+      "hints": [
+        "Use the count to guard each read, and advance by the four-byte record stride.",
+        "Test status AND mask for nonzero rather than testing status equal to mask.",
+        "Accumulate eligible distances first; pass the total and scale to the helper only after the loop ends."
+      ],
+      "cases": [
+        {
+          "name": "Empty log",
+          "inputs": {
+            "t0": "0",
+            "t1": "1",
+            "t2": "10"
+          },
+          "data": [12, 0, 1, 0],
+          "expect": {
+            "a0": "0"
+          }
+        },
+        {
+          "name": "Mixed active records",
+          "inputs": {
+            "t0": "3",
+            "t1": "1",
+            "t2": "10"
+          },
+          "data": [12, 0, 1, 0, 7, 0, 0, 0, 20, 0, 3, 0, 99, 0, 1, 0],
+          "expect": {
+            "a0": "320"
+          }
+        },
+        {
+          "name": "A different selected bit",
+          "inputs": {
+            "t0": "4",
+            "t1": "2",
+            "t2": "5"
+          },
+          "data": [4, 0, 2, 0, 8, 0, 1, 0, 6, 0, 3, 0, 9, 0, 0, 0],
+          "expect": {
+            "a0": "50"
+          }
+        },
+        {
+          "name": "No status bit selected",
+          "inputs": {
+            "t0": "1",
+            "t1": "0",
+            "t2": "9"
+          },
+          "data": [255, 0, 255, 0],
+          "expect": {
+            "a0": "0"
+          }
+        }
+      ]
+    },
+    "references": ["integer", "multiply", "abi", "xv6"],
+    "sourceLessons": [
+      "array-addresses",
+      "masks",
+      "consumption-calculation",
+      "from-function-to-executable"
+    ],
+    "originalityNote": "The source course\u2019s trip-computer quantities become an integrated RISC-V/xv6 record-processing program with independently varied count, status mask and scale.",
+    "language": "asm"
+  },
+  {
+    "id": "twos-complement",
+    "module": "appendices",
+    "title": "Derive fixed-width negation",
+    "summary": "Use complement and addition to negate a 64-bit bit pattern.",
+    "objectives": [
+      "Connect fixed-width negation with complement plus one.",
+      "Explain why the most-negative signed value has no positive partner at the same width."
+    ],
+    "before": [
+      "Two\u2019s complement assigns a signed reading to a fixed-width bit pattern. In a 64-bit value, the top bit has weight minus two to the power 63; the remaining bits keep their positive place values. The same stored pattern also has an unsigned reading. Choosing a reading does not alter the bits.",
+      "Complementing a pattern replaces every zero with one and every one with zero. The pseudo-instruction not performs that bitwise complement. The example then adds one. Keep only the low 64 bits, as the machine\u2019s integer addition requires, and predict the signed reading of the resulting t2.",
+      "This rule describes fixed-width machine negation. It does not give C permission to overflow a signed type. The assembly example and its challenge operate on register bits directly; any related C expression still has to meet the C type\u2019s own rules."
+    ],
+    "starter": "li t0, 5\nnot t1, t0\naddi t2, t1, 1\n",
+    "observe": ["t0", "t1", "t2"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "What signed reading does t2 have after complementing the starting pattern and adding one?",
+      "register": "t2",
+      "reading": "signed",
+      "hint": "Follow the values on the path that executes, then inspect the captured register."
+    },
+    "explanation": [
+      "For a 64-bit pattern x, complementing every bit gives the unsigned maximum minus x. Adding one therefore gives the low-bit representation of zero minus x. The modulo operation also explains why a carry out of the width is discarded rather than stored in an extra register bit.",
+      "Zero is a useful boundary: complementing it first produces all ones, and the following addition wraps back to zero. Two\u2019s complement has one zero pattern. It also has one more negative signed value than positive values, so negating the most-negative value leaves the same stored pattern at this width.",
+      "A miniature four-bit drawing can make the arithmetic easier to follow, but a four-bit carry belongs to that miniature width. The live instructions here still operate on 64-bit registers. Keep the width visible whenever you compare an arithmetic diagram with an executed instruction."
+    ],
+    "experiment": {
+      "task": "Replace the starting value with zero, then with the most-negative 64-bit pattern. Predict which stored patterns return unchanged after negation.",
+      "hint": "Work modulo the fixed register width, then choose the signed reading of the remaining bits."
+    },
+    "challenge": {
+      "task": "Leave the low 64 bits of zero minus the incoming t0 pattern in t2. Use complement followed by addition. The challenge compares stored bit patterns, including the most-negative signed pattern.",
+      "starter": "not t2, t0\n",
+      "reference": "not t2, t0\naddi t2, t2, 1\n",
+      "hints": [
+        "Bitwise complement alone is one short of the required fixed-width negation.",
+        "The addition must use the complemented value, not the original input.",
+        "Discard a carry beyond bit 63; there is no extra result bit in t2."
+      ],
+      "cases": [
+        {
+          "name": "Zero pattern",
+          "inputs": {
+            "t0": "0"
+          },
+          "expect": {
+            "t2": "0"
+          }
+        },
+        {
+          "name": "Positive magnitude",
+          "inputs": {
+            "t0": "5"
+          },
+          "expect": {
+            "t2": "-5"
+          }
+        },
+        {
+          "name": "Most-negative pattern",
+          "inputs": {
+            "t0": "0x8000000000000000"
+          },
+          "expect": {
+            "t2": "0x8000000000000000"
+          }
+        },
+        {
+          "name": "All ones",
+          "inputs": {
+            "t0": "0xffffffffffffffff"
+          },
+          "expect": {
+            "t2": "1"
+          }
+        }
+      ]
+    },
+    "references": ["integer", "rv64", "c"],
+    "sourceLessons": ["twos-complement", "four-bit-arithmetic"],
+    "originalityNote": "The source course\u2019s fixed-width derivation is retained while the executed experiment uses full RV64 registers and distinguishes the miniature width from the machine width.",
+    "language": "asm"
+  },
+  {
+    "id": "riscv-and-arm",
+    "module": "appendices",
+    "title": "Translate the mechanism, not the mnemonic",
+    "summary": "Compare explicit RISC-V checks with Arm\u2019s flags and register-width rules.",
+    "objectives": [
+      "Identify architecture-specific state when translating assembly.",
+      "Choose an unsigned RISC-V branch from the required value relationship."
+    ],
+    "before": [
+      "Different instruction sets can implement the same calculation without exposing the same intermediate state. Arm\u2019s flag-setting additions can record condition bits such as carry. Base RISC-V integer addition writes a register result but has no Arm-style NZCV flags. This example makes the lost unsigned carry explicit in another register.",
+      "After add computes the low 64-bit sum in t2, sltu writes one to t3 when that sum is unsigned-smaller than the original first operand. The prediction concerns t3 after both instructions have run. It is a register containing a Boolean, not an architectural carry flag.",
+      "Width rules also differ. An Arm write through a 32-bit W name clears the upper half of the matching X register. An RV64 W-suffixed arithmetic instruction instead sign-extends its low 32-bit result to 64 bits. Renaming registers or instructions without checking that rule can change the values used by later comparisons."
+    ],
+    "starter": "li t0, -1\nli t1, 1\nadd t2, t0, t1\nsltu t3, t2, t0\n",
+    "observe": ["t0", "t1", "t2", "t3"],
+    "result": "t3",
+    "prediction": {
+      "prompt": "What Boolean is in t3 after the explicit unsigned carry check?",
+      "register": "t3",
+      "reading": "unsigned",
+      "hint": "Follow the values on the path that executes, then inspect the captured register."
+    },
+    "explanation": [
+      "Translate the required relationship first. An unsigned maximum needs an unsigned ordering of the two stored patterns. RISC-V can express that choice with a direct branch such as bgeu; it does not need an instruction that reproduces an Arm compare\u2019s flags before the branch.",
+      "Pseudo-instructions add another translation boundary. A source spelling such as li, call or ret can expand into one or more machine instructions. With compressed instructions enabled, decoded instruction widths can differ too. Do not carry across a rule that each source line or each instruction must advance the program counter by four bytes.",
+      "The environment remains a separate concern. Two machines may use RISC-V instructions while assigning different meanings to a system call number or a device address. Match the instruction set, width, calling convention and operating environment independently. A familiar mnemonic alone does not establish that a complete program can run unchanged."
+    ],
+    "experiment": {
+      "task": "Replace the initial all-ones input with 255 while keeping the addition 64 bits wide. Predict whether the explicit carry check still reports overflow.",
+      "hint": "Crossing an eight-bit boundary is not a carry beyond a 64-bit register."
+    },
+    "challenge": {
+      "task": "Return the larger of the incoming t0 and t1 patterns under unsigned 64-bit ordering, leaving the chosen pattern in t2. Use a direct RISC-V branch; do not use signed ordering when the top bit is set.",
+      "starter": "mv t2, t0\nbge t0, t1, maximum_done\nmv t2, t1\nmaximum_done:\n",
+      "reference": "mv t2, t0\nbgeu t0, t1, maximum_done\nmv t2, t1\nmaximum_done:\n",
+      "hints": [
+        "The choice concerns unsigned magnitude, not the signed decimal display.",
+        "RISC-V branch operands are compared directly; there is no preceding cmp flag state to preserve.",
+        "The u in the branch spelling selects the unsigned relationship."
+      ],
+      "cases": [
+        {
+          "name": "Second is larger",
+          "inputs": {
+            "t0": "1",
+            "t1": "2"
+          },
+          "expect": {
+            "t2": "2"
+          }
+        },
+        {
+          "name": "Top-bit pattern wins unsigned",
+          "inputs": {
+            "t0": "0xffffffffffffffff",
+            "t1": "1"
+          },
+          "expect": {
+            "t2": "0xffffffffffffffff"
+          }
+        },
+        {
+          "name": "Equal patterns",
+          "inputs": {
+            "t0": "9",
+            "t1": "9"
+          },
+          "expect": {
+            "t2": "9"
+          }
+        }
+      ]
+    },
+    "references": ["integer", "rv64", "abi", "assembler", "arm"],
+    "sourceLessons": ["register-widths", "compare-and-choose", "same-c-on-a32"],
+    "originalityNote": "The optional cross-architecture comparison focuses on semantic differences that change a result, rather than presenting recorded Arm instructions as live RISC-V code.",
+    "language": "asm"
+  },
+  {
+    "id": "floating-point-bits",
+    "module": "appendices",
+    "title": "Inspect a floating-point encoding as bits",
+    "summary": "Extract fields from stored binary32 bytes using integer loads and shifts.",
+    "objectives": [
+      "Separate a floating-point representation from an integer reading of the same bits.",
+      "Extract a binary32 field without claiming to execute floating-point instructions."
+    ],
+    "before": [
+      "A floating-point format stores a sign, a fraction and a power-of-two scale. IEEE 754 binary32 uses one sign bit, eight exponent bits and 23 fraction bits. A normal value has an implied leading one before its binary fraction. The stored exponent includes a bias of 127.",
+      "The supplied four bytes encode 9.5 in binary32, in little-endian byte order. The live fragment uses lwu to load those bytes as an unsigned 32-bit bit pattern. It shifts away the fraction and masks the exponent field into t2. Predict that integer field, not a floating-point calculation.",
+      "This experiment executes integer RISC-V instructions only. The current xv6 guest does not provide the floating-point context used by a floating-point application. Reading an encoding as integer bits does not show that floating-point instructions, exception flags or a rounding mode are being exercised."
+    ],
+    "starter": "la t0, lesson_data\nlwu t1, 0(t0)\nsrli t2, t1, 23\nandi t2, t2, 255\n",
+    "data": [0, 0, 24, 65],
+    "memory": "data",
+    "memoryLabels": [
+      {
+        "offset": 0,
+        "label": "binary32 encoding"
+      }
+    ],
+    "observe": ["t1", "t2"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "What unsigned exponent field is extracted from the supplied binary32 encoding?",
+      "register": "t2",
+      "reading": "unsigned",
+      "hint": "Follow the values on the path that executes, then inspect the captured register."
+    },
+    "explanation": [
+      "For a normal binary32 value, subtract the bias from the stored exponent to obtain the power of two. The fraction field describes the bits after the implied leading one. Its weights are halves, quarters and further powers of one half. This representation is different from a two\u2019s-complement integer even when both occupy the same four bytes.",
+      "The normal rule has exceptions. An all-zero exponent with a zero fraction represents signed zero. With a nonzero fraction it represents a subnormal value, using a fixed small scale and no implied leading one. An all-one exponent represents infinity when the fraction is zero and NaN, \u201cnot a number\u201d, when it is nonzero.",
+      "The sign bit belongs to the floating-point encoding. In particular, positive and negative zero have different stored sign bits. Loading binary32 bytes with lwu zero-extends them into a 64-bit integer register, so a signed comparison of that widened integer is not a way to recover the binary32 sign. Extract bit 31 instead."
+    ],
+    "experiment": {
+      "task": "Change only the sign bit in the supplied encoding by using an integer bit operation before extracting the exponent. Predict whether the exponent field changes.",
+      "hint": "The sign occupies bit 31; the exponent occupies bits 30 through 23."
+    },
+    "challenge": {
+      "task": "Load the first four bytes of lesson_data with lwu and leave their binary32 sign bit in t2 as 0 or 1. Do not classify the encoding with a signed integer comparison. Negative zero must retain its sign bit.",
+      "starter": "la t0, lesson_data\nlwu t1, 0(t0)\nslti t2, t1, 0\n",
+      "reference": "la t0, lesson_data\nlwu t1, 0(t0)\nsrli t2, t1, 31\nandi t2, t2, 1\n",
+      "hints": [
+        "The floating-point sign is a field at a fixed bit position.",
+        "lwu clears the upper 32 bits, so the widened integer does not have a negative signed 64-bit reading.",
+        "Shift bit 31 into bit zero and keep that one bit."
+      ],
+      "cases": [
+        {
+          "name": "Positive ordinary value",
+          "data": [0, 0, 24, 65],
+          "expect": {
+            "t2": "0"
+          },
+          "inputs": {}
+        },
+        {
+          "name": "Negative ordinary value",
+          "data": [0, 0, 24, 193],
+          "expect": {
+            "t2": "1"
+          },
+          "inputs": {}
+        },
+        {
+          "name": "Negative zero",
+          "data": [0, 0, 0, 128],
+          "expect": {
+            "t2": "1"
+          },
+          "inputs": {}
+        },
+        {
+          "name": "Positive zero",
+          "data": [0, 0, 0, 0],
+          "expect": {
+            "t2": "0"
+          },
+          "inputs": {}
+        }
+      ]
+    },
+    "references": ["integer", "rv64", "floating"],
+    "sourceLessons": ["floating-point-bits", "floating-point-rounding"],
+    "originalityNote": "The source course\u2019s encoding distinction is retained as an integer-only memory experiment, with negative zero exposing why a widened signed-integer test is wrong.",
+    "language": "asm"
+  }
+]

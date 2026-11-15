@@ -1,0 +1,272 @@
+[
+  {
+    "id": "addition",
+    "module": "fundamentals",
+    "title": "Add two register values"
+  },
+  {
+    "id": "constants-and-inputs",
+    "module": "fundamentals",
+    "title": "Add a constant"
+  },
+  {
+    "id": "register-reuse",
+    "module": "fundamentals",
+    "title": "Read and replace a register"
+  },
+  {
+    "id": "instruction-order",
+    "module": "fundamentals",
+    "title": "Follow instructions in order"
+  },
+  {
+    "id": "zero-register",
+    "module": "fundamentals",
+    "title": "Use the zero register"
+  },
+  {
+    "id": "hexadecimal",
+    "module": "bits",
+    "title": "Read hexadecimal"
+  },
+  {
+    "id": "signed-readings",
+    "module": "bits",
+    "title": "Read one pattern two ways"
+  },
+  {
+    "id": "building-constants",
+    "module": "bits",
+    "title": "Build a larger constant"
+  },
+  {
+    "id": "word-arithmetic",
+    "module": "bits",
+    "title": "Calculate with the low 32 bits"
+  },
+  {
+    "id": "addition-wraps",
+    "module": "arithmetic",
+    "title": "Keep the bits that fit"
+  },
+  {
+    "id": "carry-without-flags",
+    "module": "arithmetic",
+    "title": "Check unsigned carry explicitly"
+  },
+  {
+    "id": "signed-overflow",
+    "module": "arithmetic",
+    "title": "Check the signed range"
+  },
+  {
+    "id": "elapsed-time",
+    "module": "arithmetic",
+    "title": "Measure ticks across a wrap"
+  },
+  {
+    "id": "bit-masks",
+    "module": "logic",
+    "title": "Keep selected warning bits"
+  },
+  {
+    "id": "set-clear-toggle",
+    "module": "logic",
+    "title": "Set, clear and toggle warnings"
+  },
+  {
+    "id": "logical-shifts",
+    "module": "logic",
+    "title": "Move and replace a field"
+  },
+  {
+    "id": "arithmetic-shifts",
+    "module": "logic",
+    "title": "Shift a signed reading right"
+  },
+  {
+    "id": "compare-values",
+    "module": "branches",
+    "title": "Turn a comparison into a value"
+  },
+  {
+    "id": "signed-unsigned-comparison",
+    "module": "branches",
+    "title": "Compare the same bits two ways"
+  },
+  {
+    "id": "branch-paths",
+    "module": "branches",
+    "title": "Choose which instructions run"
+  },
+  {
+    "id": "choosing-maximum",
+    "module": "branches",
+    "title": "Keep the larger input"
+  },
+  {
+    "id": "counting-up",
+    "module": "loops",
+    "title": "Count upwards through repeated work"
+  },
+  {
+    "id": "counting-down",
+    "module": "loops",
+    "title": "Count down to zero"
+  },
+  {
+    "id": "test-before-body",
+    "module": "loops",
+    "title": "Choose when the first test happens"
+  },
+  {
+    "id": "stopping-sentinel",
+    "module": "loops",
+    "title": "Stop when further work cannot help"
+  },
+  {
+    "id": "memory-bytes",
+    "module": "memory",
+    "title": "Read bytes by address"
+  },
+  {
+    "id": "loads-and-stores",
+    "module": "memory",
+    "title": "Move a complete value through memory"
+  },
+  {
+    "id": "load-widths",
+    "module": "memory",
+    "title": "Choose how a narrow load fills a register"
+  },
+  {
+    "id": "narrowing-stores",
+    "module": "memory",
+    "title": "Store only the low bits"
+  },
+  {
+    "id": "array-addresses",
+    "module": "arrays",
+    "title": "Scale an array index"
+  },
+  {
+    "id": "sum-array",
+    "module": "arrays",
+    "title": "Walk an array without crossing its end"
+  },
+  {
+    "id": "zero-terminated-strings",
+    "module": "arrays",
+    "title": "Count bytes up to a terminator"
+  },
+  {
+    "id": "products",
+    "module": "multiply",
+    "title": "Keep the product bits you need"
+  },
+  {
+    "id": "high-products",
+    "module": "multiply",
+    "title": "Read both halves of a product"
+  },
+  {
+    "id": "division-remainders",
+    "module": "multiply",
+    "title": "Keep the quotient and the remainder"
+  },
+  {
+    "id": "safe-scaling",
+    "module": "multiply",
+    "title": "Scale before dividing"
+  },
+  {
+    "id": "calls-and-returns",
+    "module": "functions",
+    "title": "Call a helper and come back"
+  },
+  {
+    "id": "preserving-return-address",
+    "module": "functions",
+    "title": "Keep the return address across a call"
+  },
+  {
+    "id": "stack-frames",
+    "module": "functions",
+    "title": "Keep values in a stack frame"
+  },
+  {
+    "id": "recursive-progress",
+    "module": "functions",
+    "title": "Make progress towards the base case"
+  },
+  {
+    "id": "c-return-values",
+    "module": "c",
+    "title": "Follow a C return value"
+  },
+  {
+    "id": "c-decisions",
+    "module": "c",
+    "title": "Choose a result in C"
+  },
+  {
+    "id": "c-loops",
+    "module": "c",
+    "title": "Compile a counted loop"
+  },
+  {
+    "id": "c-memory",
+    "module": "c",
+    "title": "Use a local array in C"
+  },
+  {
+    "id": "c-integer-widths",
+    "module": "c-edges",
+    "title": "Keep a type’s width separate from a register’s width"
+  },
+  {
+    "id": "c-overflow-contracts",
+    "module": "c-edges",
+    "title": "Separate C overflow from machine wrapping"
+  },
+  {
+    "id": "checked-addition",
+    "module": "c-edges",
+    "title": "Check a sum before using it"
+  },
+  {
+    "id": "system-calls",
+    "module": "xv6",
+    "title": "Ask xv6 to write bytes"
+  },
+  {
+    "id": "elf-entry",
+    "module": "xv6",
+    "title": "Follow the executable’s entry contract"
+  },
+  {
+    "id": "memory-protection",
+    "module": "xv6",
+    "title": "Keep an access inside its permitted range"
+  },
+  {
+    "id": "trip-computer",
+    "module": "xv6",
+    "title": "Build a checked trip calculation"
+  },
+  {
+    "id": "twos-complement",
+    "module": "appendices",
+    "title": "Derive fixed-width negation"
+  },
+  {
+    "id": "riscv-and-arm",
+    "module": "appendices",
+    "title": "Translate the mechanism, not the mnemonic"
+  },
+  {
+    "id": "floating-point-bits",
+    "module": "appendices",
+    "title": "Inspect a floating-point encoding as bits"
+  }
+]
