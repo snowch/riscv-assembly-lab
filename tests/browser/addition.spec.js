@@ -1,3 +1,4 @@
+import { fillSource, selectedSource } from "./editor-helpers.js";
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 
@@ -8,7 +9,8 @@ test("focused lesson executes three editable lines and exposes the complete prog
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/lessons/addition/");
   await expect(page.locator("#run")).toBeEnabled();
-  await expect(page.locator("#run")).toBeInViewport();
+  await page.locator("#run").scrollIntoViewIfNeeded();
+  await expect(page.locator("#workbench #run")).toBeInViewport();
   await expect(page.locator("#source")).toHaveValue(
     "li t0, 7\nli t1, 5\nadd t2, t0, t1\n",
   );
@@ -40,14 +42,14 @@ test("focused lesson executes three editable lines and exposes the complete prog
     await page.locator("#complete-source").textContent(),
   );
   await page.locator("#complete-program > summary").click();
-  await page.locator("#source").fill("li t0, 19\nli t1, 23\nadd t2, t0, t1");
+  await fillSource(page, "li t0, 19\nli t1, 23\nadd t2, t0, t1");
   await expect(page.locator("#snapshot-note")).toBeVisible();
   await expect(page.locator("#complete-source")).toContainText("li t0, 19");
   await page.locator("#run").click();
   await expect(page.locator("#t2-decimal")).toHaveText("42", {
     timeout: 45000,
   });
-  await page.locator("#source").fill("li t0, 19\nli t1, 23\nsub t2, t0, t1");
+  await fillSource(page, "li t0, 19\nli t1, 23\nsub t2, t0, t1");
   await page.locator("#run").click();
   await expect(page.locator("#t2-decimal")).toHaveText("-4", {
     timeout: 45000,
@@ -71,9 +73,7 @@ test("lesson errors point to the editable line and missing reports stay empty", 
 }) => {
   await page.goto("/lessons/addition/");
   await expect(page.locator("#run")).toBeEnabled();
-  await page
-    .locator("#source")
-    .fill("li t0, 7\nli t1, 5\nwrong_instruction t2, t0, t1");
+  await fillSource(page, "li t0, 7\nli t1, 5\nwrong_instruction t2, t0, t1");
   await page.locator("#run").click();
   await expect(page.locator("#state-badge")).toHaveText("Error", {
     timeout: 30000,
@@ -82,13 +82,9 @@ test("lesson errors point to the editable line and missing reports stay empty", 
     "lesson.s:3: Error",
   );
   await page.locator(".diagnostic-link").click();
-  expect(
-    await page
-      .locator("#source")
-      .evaluate((el) => el.value.slice(el.selectionStart, el.selectionEnd)),
-  ).toBe("wrong_instruction t2, t0, t1");
+  expect(await selectedSource(page)).toBe("wrong_instruction t2, t0, t1");
   await expect(page.locator("#t2-decimal")).toHaveText("—");
-  await page.locator("#source").fill("li a0, 0\nli a7, 2\necall");
+  await fillSource(page, "li a0, 0\nli a7, 2\necall");
   await page.locator("#run").click();
   await expect(page.locator("#state-badge")).toHaveText("No snapshot", {
     timeout: 45000,

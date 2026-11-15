@@ -1,4 +1,5 @@
 // Copyright © 2026 Christopher Snow
+import { fillSource, selectedSource } from "./editor-helpers.js";
 import { test, expect } from "@playwright/test";
 
 const height = (locator) =>
@@ -20,7 +21,7 @@ test("the editor fits drafts, restores and activity changes without losing code"
   const long = Array.from({ length: 30 }, (_, i) => `addi t0, t0, ${i}`).join(
     "\n",
   );
-  await source.fill(long);
+  await fillSource(page, long);
   expect(await height(editor)).toBeGreaterThan(small);
   expect(await height(editor)).toBeLessThanOrEqual(360);
   await page.locator("#restore").click();
@@ -56,18 +57,24 @@ test("the editor fits drafts, restores and activity changes without losing code"
   await expect(toggle).toHaveText("Expand editor");
   expect(await height(editor)).toBe(compact);
   await expect(source).toHaveValue(long);
-  await source.evaluate((el) => {
+  await page.locator(".cm-scroller").evaluate((el) => {
     el.scrollTop = el.scrollHeight;
-    el.dispatchEvent(new Event("scroll"));
   });
-  // Fractional desktop line boxes round the two scroll ranges independently.
-  // At 30 lines Chromium measures 452px for the textarea and 451px for the gutter.
-  expect(
-    Math.abs(
-      (await page.locator("#line-numbers").evaluate((el) => el.scrollTop)) -
-        (await source.evaluate((el) => el.scrollTop)),
-    ),
-  ).toBeLessThanOrEqual(1);
+  const lastRow = page.getByRole("button", {
+    name: "Set breakpoint at source line 30",
+    exact: true,
+  });
+  await expect(lastRow).toBeVisible();
+  const codeLine = page
+    .locator(".cm-line")
+    .filter({ hasText: /^addi t0, t0, 29$/ });
+  await expect
+    .poll(async () =>
+      Math.abs(
+        (await lastRow.boundingBox()).y - (await codeLine.boundingBox()).y,
+      ),
+    )
+    .toBeLessThanOrEqual(1);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -85,7 +92,7 @@ test("resizing keeps breakpoint rows aligned and help opens the complete program
       .poll(() =>
         page.locator("#source-editor").evaluate((el) => {
           const source = el.querySelector("textarea"),
-            style = getComputedStyle(source);
+            style = getComputedStyle(el.querySelector(".cm-content"));
           const content =
             source.value.split("\n").length * parseFloat(style.lineHeight) +
             parseFloat(style.paddingTop) +
@@ -105,9 +112,11 @@ test("resizing keeps breakpoint rows aligned and help opens the complete program
       exact: true,
     });
     const lineHeight = await page
-      .locator("#source")
+      .locator(".cm-content")
       .evaluate((el) => parseFloat(getComputedStyle(el).lineHeight));
-    expect(await height(row)).toBeCloseTo(lineHeight, 1);
+    // CodeMirror estimates offscreen rows, then measures them when visible.
+    await row.scrollIntoViewIfNeeded();
+    await expect.poll(() => height(row)).toBeCloseTo(lineHeight, 1);
     if (width === 390) expect(await height(row)).toBeGreaterThanOrEqual(44);
     expect(
       await page.evaluate(

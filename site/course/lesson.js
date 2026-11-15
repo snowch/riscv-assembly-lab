@@ -19,6 +19,8 @@ import {
   renderCompletion,
 } from "./home.js";
 import { sourceZip } from "./zip.js";
+import { createSourceEditor } from "./editor.js";
+import { setupWorkbench } from "./workspace.js";
 const $ = (id) => document.getElementById(id),
   lesson = JSON.parse($("lesson-data").textContent);
 setupTheme();
@@ -46,8 +48,18 @@ let activity = "explore",
   currentPc = null;
 let session = null;
 const tabDrafts = new Map();
-const caseRecords = new Map(),
-  source = $("source");
+const caseRecords = new Map();
+const workbench = setupWorkbench();
+$("source").disabled = false;
+const source = createSourceEditor($("source"), {
+  language: lesson.language,
+  onChange: onSourceChange,
+  onToggleBreakpoint(line) {
+    if (busy || batch) return;
+    debuggerPanel.toggleLine(line);
+    workbench.inspect("debugger");
+  },
+});
 const debuggerPanel = new DebuggerPanel($("debugger-panel"), {
   lesson,
   onBreakpoints(selection) {
@@ -95,52 +107,23 @@ function restoreDraft(fallback) {
   }
 }
 function lineNumbers() {
-  const focused =
-    document.activeElement?.parentElement === $("line-numbers")
-      ? Number(document.activeElement.textContent)
-      : null;
-  const count = source.value.split("\n").length;
-  $("line-numbers").replaceChildren(
-    ...Array.from({ length: count }, (_, i) => {
-      const span = document.createElement(
-        lesson.language === "c" ? "span" : "button",
-      );
-      span.textContent = i + 1;
-      if (lesson.language !== "c") {
-        span.type = "button";
-        const selected = debuggerPanel.getBreakpoints().lines.includes(i + 1);
-        span.classList.toggle("has-breakpoint", selected);
-        span.setAttribute("aria-pressed", String(selected));
-        span.setAttribute(
-          "aria-label",
-          `${selected ? "Remove" : "Set"} breakpoint at source line ${i + 1}`,
-        );
-        span.disabled = busy || batch;
-        span.addEventListener("click", () => {
-          debuggerPanel.toggleLine(i + 1);
-          $("debugger-panel").open = true;
-        });
-      }
-      if (i + 1 === activeLine) span.classList.add("active-line");
-      return span;
-    }),
-  );
-  $("line-numbers").scrollTop = source.scrollTop;
-  if (focused)
-    $("line-numbers").children[focused - 1]?.focus({ preventScroll: true });
+  source.renderState({
+    activeLine,
+    breakpoints: debuggerPanel.getBreakpoints().lines,
+    disabled: busy || batch,
+  });
 }
 function sizeEditor() {
-  const style = getComputedStyle(source);
+  const style = getComputedStyle(source.contentDOM);
   const height =
     source.value.split("\n").length * parseFloat(style.lineHeight) +
     parseFloat(style.paddingTop) +
     parseFloat(style.paddingBottom) +
     2;
-  source.parentElement.style.setProperty(
+  $("source-editor").style.setProperty(
     "--editor-content-height",
     `${Math.ceil(height)}px`,
   );
-  $("line-numbers").scrollTop = source.scrollTop;
 }
 function stale() {
   $("snapshot-note").hidden =
@@ -159,11 +142,7 @@ function controls() {
   $("run").disabled = busy || batch;
   $("debug").disabled = busy || batch;
   debuggerPanel.setBusy({ busy, paused, batch });
-  $("line-numbers")
-    .querySelectorAll("button")
-    .forEach((b) => {
-      b.disabled = busy || batch;
-    });
+  lineNumbers();
   $("step").disabled = (busy && !paused) || batch;
   $("step").textContent = paused ? "Step instruction" : "Start stepping";
   $("continue").hidden = !paused;
@@ -425,16 +404,14 @@ function diagnostics(message, error = false) {
           .reduce((n, line) => n + line.length + 1, 0);
         source.focus();
         source.setSelectionRange(start, start + lines[number - 1].length);
-        source.scrollTop = Math.max(
-          0,
-          (number - 3) * parseFloat(getComputedStyle(source).lineHeight),
-        );
+        source.scrollToLine(number);
         lineNumbers();
       });
     }
     $("diagnostic-lines").append(el);
   }
   $("diagnostics").open = error || !!message;
+  if (error || message) workbench.inspect("diagnostics");
   $("diagnostics-summary").textContent = error
     ? "Check messages"
     : message
@@ -558,11 +535,7 @@ session = new Session((event) => {
       ? `Lesson code ended at PC ${event.pc}. The supplied reporting code runs next.`
       : `PC ${event.pc}${activeLine && activeLine > 0 ? ` · lesson source line ${activeLine}` : ""}. One source line may expand into several machine instructions.`;
     lineNumbers();
-    if (activeLine > 0)
-      source.scrollTop = Math.max(
-        0,
-        (activeLine - 3) * parseFloat(getComputedStyle(source).lineHeight),
-      );
+    if (activeLine > 0) source.scrollToLine(activeLine);
     $("trace-list").replaceChildren(
       ...trace.map((item) => {
         const li = document.createElement("li");
@@ -726,7 +699,7 @@ function startRun(debug = false, startAtBreakpoint = false) {
 }
 $("run").addEventListener("click", () => startRun());
 $("debug").addEventListener("click", () => {
-  $("debugger-panel").open = true;
+  workbench.inspect("debugger");
   startRun(true, true);
 });
 $("step").addEventListener("click", () => {
@@ -753,7 +726,7 @@ $("stop").addEventListener("click", () => {
   session.stop();
   controls();
 });
-source.addEventListener("input", () => {
+function onSourceChange() {
   if (busy || paused) {
     session.stop();
     activeLine = null;
@@ -765,21 +738,25 @@ source.addEventListener("input", () => {
   completeSource();
   $("prediction-feedback").textContent =
     "Run the edited code to check a fresh prediction.";
-});
-source.addEventListener("scroll", () => {
-  $("line-numbers").scrollTop = source.scrollTop;
-});
+}
 $("expand-editor").addEventListener("click", () => {
-  const expanded = source.parentElement.classList.toggle("expanded");
+  const expanded = $("source-editor").classList.toggle("expanded");
   $("expand-editor").setAttribute("aria-expanded", String(expanded));
   $("expand-editor").textContent = expanded
     ? "Collapse editor"
     : "Expand editor";
-  $("line-numbers").scrollTop = source.scrollTop;
 });
-document.querySelector(".lab-help a").addEventListener("click", () => {
-  $("complete-program").open = true;
-});
+document
+  .querySelector(".lab-help a")
+  .addEventListener("click", async (event) => {
+    event.preventDefault();
+    await workbench.close();
+    const program = $("complete-program");
+    program.open = true;
+    location.hash = "complete-program";
+    program.querySelector("summary").focus({ preventScroll: true });
+    program.scrollIntoView({ block: "start" });
+  });
 window.addEventListener("resize", sizeEditor);
 document.fonts.ready.then(sizeEditor);
 document.addEventListener("keydown", (event) => {
@@ -1033,7 +1010,7 @@ $("lesson-complete").addEventListener("change", () => {
       "This mark is tab-only because browser storage is unavailable.";
 });
 source.value = restoreDraft(lesson.starter);
-source.disabled = false;
+if (lesson.id === "system-calls") workbench.inspect("output");
 startingState();
 completeSource();
 clearState();

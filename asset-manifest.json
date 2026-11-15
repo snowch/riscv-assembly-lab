@@ -38,7 +38,9 @@
     "site/vendor/binutils/riscv64-linux-gnu-objdump.js": "a35e146d9048a80dbd2c1883e3b513c66e8584b0f827f53436c098535211ad1e",
     "site/vendor/compiler/COPYING-LGPL-2.1.txt": "512d2d21b6b3384ba64781abb0208a1b87740bc31e2df48e2b206ddb7e4d5779",
     "site/vendor/compiler/tcc.wasm": "047bba88a9c036598d8d3e7e76750736e8304dc9b8f0604f4e33ecc3b5217b0d",
-    "site/vendor/runtime/THIRD_PARTY_NOTICES.txt": "a4922e0710b39d5361624edfb858a0a2350e3efea657af50de731431c5845d96"
+    "site/vendor/runtime/THIRD_PARTY_NOTICES.txt": "a4922e0710b39d5361624edfb858a0a2350e3efea657af50de731431c5845d96",
+    "site/vendor/editor/codemirror.js": "0cb8729015830239dd4f4bf34073035e7619c1fcd4c03642cd43eb57cb773eb7",
+    "site/vendor/editor/LICENSES.txt": "1c55f8637aca40a705ae0cdffc78844ca5cfeefd567a198058af2dc60f4beaf4"
   },
   "compiler": {
     "upstream": "lupyuen/tcc-riscv32-wasm",
@@ -46,5 +48,25 @@
     "target": "riscv64",
     "changes": "Unchanged compiler binary; MIT xv6-lab adapter reused",
     "source": "site/sources/tcc-source.tar.gz"
+  },
+  "editor": {
+    "packages": {
+      "@codemirror/commands": "6.11.1",
+      "@codemirror/lang-cpp": "6.0.3",
+      "@codemirror/language": "6.13.1",
+      "@codemirror/search": "6.7.2",
+      "@codemirror/state": "6.7.6",
+      "@codemirror/streamparser": "6.0.0",
+      "@codemirror/view": "6.43.15",
+      "@lezer/common": "1.5.5",
+      "@lezer/cpp": "1.1.6",
+      "@lezer/highlight": "1.2.5",
+      "@lezer/lr": "1.4.12",
+      "@marijn/find-cluster-break": "1.0.4",
+      "crelt": "1.0.7",
+      "style-mod": "4.1.4",
+      "w3c-keyname": "2.2.8"
+    },
+    "build": "npm run build:editor"
   }
 }

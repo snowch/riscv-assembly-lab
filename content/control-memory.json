@@ -729,7 +729,7 @@
     ],
     "before": [
       "Registers hold the values an instruction uses immediately. Memory holds many more values, with a separate address for each byte. A byte contains eight bits. Consecutive byte addresses differ by one, regardless of how you later group those bytes into larger values.",
-      "`lesson_data` names the first byte of the supplied memory region. `la t0, lesson_data` loads its address into `t0`; it does not load the byte stored there. An address held in a register is a pointer. The memory view below shows the supplied bytes with their byte offsets. The linker is the build tool that assigns final code and data addresses before execution.",
+      "`lesson_data` names the first byte of the supplied memory region. `la t0, lesson_data` loads its address into `t0`; it does not load the byte stored there. An address held in a register is a pointer. In the Memory tab, Before shows the supplied bytes with their byte offsets. The linker is the build tool that assigns final code and data addresses before execution.",
       "`lbu t1, 0(t0)` loads one byte from the address in `t0`, then zero-fills the rest of `t1`. The notation `1(t0)` means the address in `t0` plus one byte. Predict the value read by the second byte load after the fragment finishes. Both loads read memory without changing it."
     ],
     "starter": "la t0, lesson_data\nlbu t1, 0(t0)\nlbu t2, 1(t0)\n",

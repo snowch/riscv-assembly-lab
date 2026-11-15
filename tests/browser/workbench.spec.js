@@ -1,3 +1,4 @@
+import { fillSource, selectedSource } from "./editor-helpers.js";
 import { test, expect } from "@playwright/test";
 test("real build, edited output, diagnostics, draft and recovery", async ({
   page,
@@ -14,7 +15,7 @@ test("real build, edited output, diagnostics, draft and recovery", async ({
   });
   await expect(page.locator("#console")).toHaveText("Hello, RISC-V!\n");
   const edited = starter.replace("Hello, RISC-V!", "It really runs!");
-  await page.locator("#source").fill(edited);
+  await fillSource(page, edited);
   await expect(page.locator("#snapshot-note")).toBeVisible();
   await page.locator("#run").click();
   await expect(page.locator("#console")).toHaveText("It really runs!\n", {
@@ -23,9 +24,10 @@ test("real build, edited output, diagnostics, draft and recovery", async ({
   await expect(page.locator("#state-badge")).toHaveText("Finished");
   await page.reload();
   await expect(page.locator("#source")).toHaveValue(edited);
-  await page
-    .locator("#source")
-    .fill(".text\n.global _start\n_start:\n  invalid_instruction a0, 1");
+  await fillSource(
+    page,
+    ".text\n.global _start\n_start:\n  invalid_instruction a0, 1",
+  );
   await page.locator("#run").click();
   await expect(page.locator("#state-badge")).toHaveText("Error", {
     timeout: 30000,
@@ -34,11 +36,7 @@ test("real build, edited output, diagnostics, draft and recovery", async ({
     "hello.s:4: Error",
   );
   await page.locator(".diagnostic-link").first().click();
-  expect(
-    await page
-      .locator("#source")
-      .evaluate((e) => e.value.slice(e.selectionStart, e.selectionEnd)),
-  ).toContain("invalid_instruction");
+  expect(await selectedSource(page)).toContain("invalid_instruction");
   await page.locator("#restore").click();
   await expect(page.locator("#source")).toHaveValue(starter);
   await page.locator("#run").click();
@@ -53,15 +51,16 @@ test("loop can be stopped, edits remain tied to their build, and layout fits", a
   await page.goto("/lessons/hello-world/");
   await expect(page.locator("#run")).toBeEnabled();
   await page.locator("#theme").selectOption("dark");
-  await page.locator("#source").fill(".text\n.global _start\n_start: j _start");
+  await fillSource(page, ".text\n.global _start\n_start: j _start");
   await page.locator("#run").click();
   await expect(page.locator("#run-status")).toHaveText(
     "Running your program…",
     { timeout: 45000 },
   );
-  await page
-    .locator("#source")
-    .fill(".text\n.global _start\n_start: li a0,0\nli a7,2\necall");
+  await fillSource(
+    page,
+    ".text\n.global _start\n_start: li a0,0\nli a7,2\necall",
+  );
   await expect(page.locator("#snapshot-note")).toBeVisible();
   await page.locator("#stop").click();
   await expect(page.locator("#state-badge")).toHaveText("Stopped");
@@ -101,9 +100,7 @@ test("CPU traps are reported and unavailable storage keeps editing usable", asyn
   await page.goto("/lessons/hello-world/");
   await expect(page.locator("#run")).toBeEnabled();
   await expect(page.locator("#save-state")).toContainText("tab-only");
-  await page
-    .locator("#source")
-    .fill(".text\n.global _start\n_start: .word 0\n");
+  await fillSource(page, ".text\n.global _start\n_start: .word 0\n");
   await page.locator("#run").click();
   await expect(page.locator("#state-badge")).toHaveText("Error", {
     timeout: 45000,
