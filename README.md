@@ -13,6 +13,14 @@ A first working example: edit **Hello, RISC-V!**, assemble and link it in the br
 
 The starter targets **RV64GC / LP64D**, defines `_start`, and uses **xv6** system calls: `write = 16`, `exit = 2`. These are not Linux or RARS system call numbers. First-run assets total approximately 8 MB; source archives are downloaded only on request.
 
+## Focused lesson preview
+
+[Try the addition lesson](https://snowch.github.io/riscv-assembly-lab/lessons/addition/). The editor contains only three lines: load two values and add them. A supplied assembly wrapper provides `_start`, captures `t0`, `t1` and `t2` immediately after the fragment, prints their saved 64-bit bit patterns through xv6 `write`, and exits. The interface displays signed decimal and hexadecimal readings of that actual report; it does not interpret the fragment or calculate the sum in JavaScript.
+
+“View complete program” shows the exact current source passed to the assembler, including entry and reporting code, and offers a self-contained `.s` download. Diagnostics from the fragment link back to its editable line. Source edited after a build is marked as newer than the displayed register snapshot. The lesson has a separate saved draft from Hello World; unavailable storage keeps both usable in the current tab. Programs that exit early or fail before reporting leave the register cards empty.
+
+This page is a working preview of how later lessons can keep supplied startup and reporting code out of the main teaching flow. It is not a full curriculum or instruction debugger. The wrapper observes these three registers and uses other working registers while reporting, all visible in the complete program.
+
 ## Develop
 
 ```sh

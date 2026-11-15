@@ -50,3 +50,33 @@ test('empty and excessive source fail before the assembler', async () => {
   await assert.rejects(buildProgram('', inputs, factories), /Enter an assembly/);
   await assert.rejects(buildProgram('#'.repeat(65537), inputs, factories), /64 KiB/);
 });
+
+test('focused lesson captures real registers for add, sub and 64-bit wrapping', async () => {
+  const { completeProgram, readRegisters } = await import('../site/lessons/addition/program.js');
+  const cases = [
+    ['li t0, 7\nli t1, 5\nadd t2, t0, t1', ['7', '5', '12']],
+    ['li t0, 19\nli t1, 23\nadd t2, t0, t1', ['19', '23', '42']],
+    ['li t0, 7\nli t1, 5\nsub t2, t0, t1', ['7', '5', '2']],
+    ['li t0, -1\nli t1, 1\nadd t2, t0, t1', ['-1', '1', '0']],
+  ];
+  for (const [fragment, expected] of cases) {
+    const built = await buildProgram(completeProgram(fragment), inputs, factories, 'program.s');
+    const registers = readRegisters(execute(built.elf));
+    assert.ok(registers, 'guest must emit exactly one full register report');
+    assert.deepEqual(Object.values(registers).map(value => value.decimal), expected);
+  }
+});
+test('lesson diagnostics map to the fragment and partial reports never fabricate values', async () => {
+  const { completeProgram, lessonDiagnostic, readRegisters } = await import('../site/lessons/addition/program.js');
+  const fragment = 'li t0, 7\nli t1, 5\ninvalid_instruction t2, t0, t1';
+  try {
+    await buildProgram(completeProgram(fragment), inputs, factories, 'program.s');
+    assert.fail('invalid instruction must fail assembly');
+  } catch (error) {
+    const location = error.message.split('\n').map(line => lessonDiagnostic(line, fragment)).find(Boolean);
+    assert.equal(location.line, 3);
+    assert.match(location.label, /^lesson\.s:3: Error/);
+  }
+  assert.equal(readRegisters(''), null);
+  assert.equal(readRegisters('RVALAB_REGS_V1\n0000000000000007\n'), null);
+});

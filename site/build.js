@@ -1,16 +1,17 @@
 // GNU as and ld run unchanged inside WebAssembly. Each build gets fresh instances.
 export const MAX_SOURCE_BYTES = 65536;
-export async function buildProgram(source, assets, factories) {
-  if (!source.trim()) throw new Error('hello.s:1: Error: Enter an assembly program first.');
+export async function buildProgram(source, assets, factories, filename = "hello.s") {
+  if (!/^[a-zA-Z0-9_-]+\.s$/.test(filename)) throw new Error('Invalid assembly filename.');
+  if (!source.trim()) throw new Error(`${filename}:1: Error: Enter an assembly program first.`);
   if (new TextEncoder().encode(source).length > MAX_SOURCE_BYTES)
     throw new Error('This prototype accepts at most 64 KiB of source.');
   let diagnostics = '';
   const report = (line) => { if (diagnostics.length < 32000) diagnostics += line + '\n'; };
   const options = { noInitialRun: true, print: report, printErr: report };
   const assembler = await factories.as({ ...options, wasmBinary: assets.as });
-  assembler.FS.writeFile('hello.s', source);
+  assembler.FS.writeFile(filename, source);
   let status;
-  try { status = assembler.callMain(['-march=rv64gc', '-mabi=lp64d', '-mno-relax', 'hello.s', '-o', 'hello.o']); }
+  try { status = assembler.callMain(['-march=rv64gc', '-mabi=lp64d', '-mno-relax', filename, '-o', 'hello.o']); }
   catch (error) { throw new Error(diagnostics.trim() || String(error)); }
   if (status) throw new Error(diagnostics.trim() || 'Assembly failed.');
   const linker = await factories.ld({ ...options, wasmBinary: assets.ld });

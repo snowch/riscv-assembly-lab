@@ -18,7 +18,7 @@ onmessage = async ({ data }) => {
       import('./vendor/runtime/riscv_emu_rust_wasm.js'), import('./build.js'), import('./filesystem.js'),
     ]);
     send('phase', { phase: 'building', message: 'Assembling and linking…' });
-    const built = await builder.buildProgram(data.source, { as, ld, script }, { as: createAssembler, ld: createLinker });
+    const built = await builder.buildProgram(data.source, { as, ld, script }, { as: createAssembler, ld: createLinker }, data.filename);
     send('built', { diagnostics: built.diagnostics, bytes: built.elf.length });
     await runtime.default('./vendor/runtime/riscv_emu_rust_wasm_bg.wasm');
     const vm = runtime.WasmRiscv.new();
