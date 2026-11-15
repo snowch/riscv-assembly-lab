@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Edit, assemble and run a small RISC-V assembly program in your browser, using GNU tools and a real xv6 guest.">
+  <meta name="theme-color" content="#087e72">
+  <title>Hello, RISC-V! · RISC-V Assembly Lab</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to workspace</a>
+  <header>
+    <a class="brand" href="./"><span class="logo" aria-hidden="true">≋</span> RISC-V Assembly Lab</a>
+    <nav aria-label="Site"><a href="https://snowch.github.io/labs/">All labs</a><a href="https://github.com/snowch/riscv-assembly-lab">☆ <span>Star on GitHub</span></a>
+      <label class="theme-label">Theme <select id="theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
+    </nav>
+  </header>
+  <main id="main">
+    <div class="intro"><p class="eyebrow">A first working example <span class="badge">Prototype</span></p>
+      <h1>Hello, RISC-V!</h1>
+      <p>Edit the message. Build the assembly. See your program run.</p>
+      <p class="subtle">GNU assembler + linker → RISC-V executable → xv6, all in your browser.</p>
+    </div>
+    <noscript><p class="notice">JavaScript and WebAssembly are required to build and run. You can still <a href="./hello.s">read the starter assembly</a> and <a href="https://github.com/snowch/riscv-assembly-lab">view the source</a>.</p></noscript>
+    <div class="build-toolbar">
+      <div class="run-actions"><button id="run" class="primary" disabled>Build & Run</button><button id="stop" disabled>Stop</button><span class="shortcut">Ctrl / ⌘ + Enter</span></div>
+      <p id="run-status" role="status">Loading starter…</p>
+    </div>
+    <p id="snapshot-note" class="notice" hidden>These results belong to the source captured when you chose Build & Run. Run again to use your edits.</p>
+    <div class="workspace">
+      <section class="panel editor-panel" aria-labelledby="source-heading">
+        <div class="panel-heading"><div><span class="eyebrow">01 · Edit</span><h2 id="source-heading">hello.s</h2></div><span class="tag">RV64GC · xv6</span></div>
+        <p id="source-help" class="panel-note">Try replacing <code>Hello, RISC-V!</code> with your own message.</p>
+        <div class="editor"><div id="line-numbers" aria-hidden="true">1</div><textarea id="source" aria-label="Assembly source: hello.s" aria-describedby="source-help save-state" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" disabled></textarea></div>
+        <div class="editor-footer"><span id="save-state">Loading starter…</span><div><button id="restore" class="text-button" disabled>Restore starter</button><button id="download" class="text-button" disabled>Download .s</button></div></div>
+      </section>
+      <section class="panel run-panel" aria-labelledby="console-heading">
+        <div class="panel-heading"><div><span class="eyebrow">02 · Output</span><h2 id="console-heading">Console</h2></div><span id="state-badge" class="tag">Ready</span></div>
+        <div class="console-wrap"><pre id="console" tabindex="0" aria-label="Program output"><span class="placeholder">Your program’s output will appear here.</span></pre></div>
+        <details id="diagnostics"><summary>Build diagnostics <span id="diagnostics-summary">Not built yet</span></summary><div id="diagnostic-lines"><p>Assembler and linker messages appear here.</p></div></details>
+        <details><summary>xv6 serial log <span>Boot and shell output</span></summary><pre id="serial" tabindex="0" aria-label="Full xv6 serial output">Not started yet.</pre></details>
+      </section>
+    </div>
+    <section class="next-step" aria-labelledby="try-heading"><span aria-hidden="true">↗</span><div><h2 id="try-heading">Make it yours</h2><p>Change the text inside <code>.ascii</code>, then build again. <code>message_length</code> updates automatically. Add a second <code>\n</code> to see what changes.</p></div></section>
+    <details class="explanation"><summary>What is this program asking xv6 to do?</summary><div class="explanation-body"><p>The <code>write</code> system call sends bytes to the console. Registers <code>a0</code>, <code>a1</code> and <code>a2</code> hold its arguments: output file, message address and byte count. <code>a7</code> selects the system call. <code>ecall</code> enters the operating system.</p><p>The program then calls <code>exit</code> to finish. These system call numbers belong to <strong>xv6</strong>: <code>write = 16</code>, <code>exit = 2</code>. Linux and teaching simulators can use different numbers.</p><p><code>li</code> loads a number; <code>la</code> loads an address. They are assembler pseudo-instructions which GNU <code>as</code> translates into RISC-V machine instructions.</p></div></details>
+    <details class="explanation"><summary>How the browser builds and runs it</summary><div class="explanation-body"><p>GNU <code>as</code> assembles your source and GNU <code>ld</code> links a real ELF64 executable. It is installed as <code>workbench</code> in a fresh xv6 filesystem. The WebAssembly RISC-V CPU boots xv6 and runs that executable.</p><p>This first prototype runs one assembly file targeting RV64GC / LP64D, with an entry named <code>_start</code>. It has console output and a Stop button. Source is limited to 64 KiB, executables to 256 KiB and execution to 30 seconds. Console input and stepping are future work.</p><p>No compilation server or account is needed. Your draft saves in this browser when storage is available. Each run starts a disposable machine; guest filesystem changes are discarded.</p></div></details>
+    <details class="explanation"><summary>References, source and licences</summary><div class="explanation-body"><ul><li><a href="https://riscv-non-isa.github.io/riscv-asm-manual/">RISC-V Assembly Programmer’s Manual</a></li><li><a href="https://github.com/mit-pdos/xv6-riscv/blob/d7c0a1b7a703f7366942092f9cf421b6cd111a36/kernel/syscall.h">xv6 system call numbers</a> and <a href="https://pdos.csail.mit.edu/6.1810/2025/xv6/book-riscv-rev5.pdf">xv6 book</a></li><li><a href="./NOTICE.md">Runtime and toolchain provenance, licences and corresponding source</a></li></ul><p>Builds use Lucas Teske’s <a href="https://github.com/racerxdl/riscv-online-asm">WebAssembly port of GNU binutils</a>. Guest execution reuses the pinned CPU and xv6 images from <a href="https://snowch.github.io/xv6-lab/">xv6 Lab</a>.</p></div></details>
+  </main>
+  <footer><p>A small beginning for RISC-V Assembly Lab.</p><div><a href="https://snowch.github.io/assembly-lab/">Arm Assembly Lab</a><a href="https://snowch.github.io/xv6-lab/">Explore xv6</a><a href="https://github.com/snowch/riscv-assembly-lab/issues">Report a problem</a></div></footer>
+</body>
+</html>
