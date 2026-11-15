@@ -137,7 +137,7 @@ test("resizing and fullscreen preserve a paused machine and return focus", async
   await expect(page.locator("#t2-decimal")).toHaveText("12");
   await fullscreen.click();
   await page.locator(".lab-help > summary").click();
-  await page.locator(".lab-help a").click();
+  await page.locator('.lab-help a[href="#complete-program"]').click();
   await expect(page.locator(".workbench-dialog")).toHaveJSProperty(
     "open",
     false,

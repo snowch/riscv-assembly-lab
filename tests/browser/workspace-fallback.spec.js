@@ -32,7 +32,7 @@ test("the modal workspace fallback returns to the lesson and complete program", 
   await expect(page.locator("#source")).toHaveValue(source);
   await toggle.click();
   await page.locator(".lab-help > summary").click();
-  await page.locator(".lab-help a").click();
+  await page.locator('.lab-help a[href="#complete-program"]').click();
   await expect(page.locator(".workbench-dialog")).toHaveJSProperty(
     "open",
     false,

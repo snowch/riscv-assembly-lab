@@ -1,0 +1,94 @@
+{
+  "title": "Using the workbench",
+  "intro": "An optional guide to editing, running and inspecting code. Try the controls in the addition lesson; return here when you need a reminder.",
+  "sections": [
+    {
+      "id": "run-an-example",
+      "title": "Edit, run and compare",
+      "paragraphs": [
+        "Registers are the processor’s working storage. Open the addition workbench in Explore mode. If a saved draft differs from the example below, choose Restore starter; Undo restore recovers your draft. This example’s first two lines load values into registers; the third adds them into t2.",
+        "Predict what t2 will hold, then choose Build & Run. Inspect Registers after the code finishes. Change a starting number in the editor, predict again, and run the edited code. Each run starts a fresh machine. Stop ends the current run."
+      ],
+      "example": true,
+      "link": {
+        "label": "Open the addition workbench",
+        "href": "../lessons/addition/#workbench"
+      }
+    },
+    {
+      "id": "inspect-results",
+      "title": "Choose what to inspect",
+      "paragraphs": [
+        "The inspector sits beside the editor on a wide screen and below it on a phone. Select a named tab. The addition example has no Memory tab."
+      ],
+      "headers": ["Tab", "What it shows"],
+      "rows": [
+        [
+          "Registers",
+          "Values captured at a pause or after your code completes."
+        ],
+        [
+          "Memory",
+          "Data or stack bytes, in lessons that provide a memory view."
+        ],
+        [
+          "Output",
+          "Your program’s console text. This addition prints no console text."
+        ],
+        [
+          "Diagnostics",
+          "Compiler, assembler and linker messages, plus execution errors."
+        ],
+        [
+          "Debugger",
+          "Breakpoints and the register or memory values you choose to watch."
+        ]
+      ]
+    },
+    {
+      "id": "step-and-debug",
+      "title": "Follow execution",
+      "paragraphs": [
+        "Start stepping pauses before the first machine instruction of your code. Step instruction executes one machine instruction. In assembly, the execution highlight identifies the source line for the next instruction. A source line can expand into several machine instructions.",
+        "A breakpoint pauses before its instruction runs. In the addition example, select the line number beside `add`, then choose Start debugging. Continue runs to the next selected breakpoint or the end of your code. C debugging uses actual instruction addresses because this compiler provides no C source-line mappings."
+      ]
+    },
+    {
+      "id": "keyboard-shortcuts",
+      "title": "Use familiar editing controls",
+      "paragraphs": [
+        "Syntax highlighting and bracket matching help you read the code. Diagnostics report whether the tools accept it."
+      ],
+      "headers": ["Keys", "Action"],
+      "rows": [
+        ["Ctrl / ⌘ + F", "Find text."],
+        ["Ctrl / ⌘ + Z", "Undo an edit."],
+        ["Ctrl / ⌘ + Enter", "Build and run."],
+        ["Tab", "Indent code."],
+        [
+          "Escape, then Tab",
+          "Leave the editor using the keyboard. Close Find first if it is open."
+        ]
+      ]
+    },
+    {
+      "id": "workspace-size",
+      "title": "Make room for code",
+      "paragraphs": [
+        "Resize from the editor’s lower-right corner, or choose Expand editor. Full screen fills the screen; when fullscreen is unavailable, Expand workspace fills the browser window. Escape leaves fullscreen or the expanded workspace. Close Find first if it is open."
+      ]
+    },
+    {
+      "id": "keep-your-work",
+      "title": "Keep or restore your work",
+      "paragraphs": [
+        "Explore and Challenge keep separate drafts. Drafts save in this browser when storage is available; check the save message. Download code keeps a file.",
+        "Restore starter replaces your edits; Undo restore recovers them. View complete program shows the supplied entry, reporting and exit code around your work."
+      ]
+    }
+  ],
+  "endLink": {
+    "label": "Start with addition",
+    "href": "../lessons/addition/"
+  }
+}

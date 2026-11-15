@@ -22,6 +22,9 @@ test("every published lesson has readable, connected course views in both themes
       lesson.title,
     );
     await expect(page.locator("#source")).toHaveValue(lesson.starter);
+    await expect(
+      page.locator('.lab-help a[href="../../using-the-workbench/"]'),
+    ).toHaveAttribute("target", "_blank");
     await expect(page.locator("#complete-source")).not.toBeVisible();
     for (const theme of ["light", "dark"]) {
       await page.locator("#theme").selectOption(theme);
