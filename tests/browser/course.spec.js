@@ -180,6 +180,22 @@ test("completion and independent drafts survive navigation without forcing progr
   page,
 }) => {
   await go(page, "addition");
+  const contents = page.locator("#course-navigation");
+  await expect(contents).toHaveJSProperty("open", false);
+  await contents.locator(":scope > summary").focus();
+  await page.keyboard.press("Enter");
+  await expect(contents).toHaveJSProperty("open", true);
+  await expect(page.locator('a[aria-current="page"]')).toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect(contents).toHaveJSProperty("open", false);
+  const originalViewport = page.viewportSize();
+  await page.setViewportSize({
+    width: originalViewport.width > 950 ? 800 : 1100,
+    height: originalViewport.height,
+  });
+  await expect(contents).toHaveJSProperty("open", false);
+  await page.setViewportSize(originalViewport);
+  await expect(contents).toHaveJSProperty("open", false);
   await expect(page.locator("#reading")).not.toBeVisible();
   await expect(page.locator("#bit-view")).not.toBeVisible();
   await page.locator("#source").fill("li t0,8\nli t1,9\nadd t2,t0,t1");
@@ -195,6 +211,21 @@ test("completion and independent drafts survive navigation without forcing progr
         document.documentElement.clientWidth,
     ),
   ).toBe(true);
+  await expect(page.locator("#course-contents")).toHaveJSProperty(
+    "open",
+    false,
+  );
+  await expect(page.locator("#fundamentals")).toHaveJSProperty("open", false);
+  await expect(page.locator(".home-hero-art img")).toBeVisible();
+  await expect
+    .poll(() =>
+      page
+        .locator(".home-hero-art img")
+        .evaluate((img) => img.complete && img.naturalWidth > 0),
+    )
+    .toBe(true);
+  await page.locator("#course-contents > summary").click();
+  await page.locator("#fundamentals > summary").click();
   await page.locator('.course-module a[href="./lessons/addition/"]').click();
   await expect(page.locator("#source")).toHaveValue(
     "li t0,8\nli t1,9\nadd t2,t0,t1",

@@ -23,12 +23,6 @@ const $ = (id) => document.getElementById(id),
   lesson = JSON.parse($("lesson-data").textContent);
 setupTheme();
 renderCompletion();
-const nav = $("course-navigation"),
-  wide = matchMedia("(min-width:951px)");
-nav.open = wide.matches;
-wide.addEventListener("change", (event) => {
-  nav.open = event.matches;
-});
 let activity = "explore",
   caseIndex = 0,
   state = null,
