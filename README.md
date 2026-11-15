@@ -2,7 +2,7 @@
 
 [Open the course](https://snowch.github.io/riscv-assembly-lab/) · [Start with addition](https://snowch.github.io/riscv-assembly-lab/lessons/addition/) · [Hello World](https://snowch.github.io/riscv-assembly-lab/lessons/hello-world/)
 
-A complete core course in reading, writing and running RISC-V assembly, adapted with the author's permission from [Assembly Lab](https://snowch.github.io/assembly-lab/). The 54 short lessons cover first instructions, register readings, range checks, masks, branches, loops, memory, arrays, multiplication, functions, C and real xv6 programs, followed by three further readings.
+A complete core course in reading, writing and running RISC-V assembly, adapted with the author's permission from [Assembly Lab](https://snowch.github.io/assembly-lab/). The 58 short lessons cover first instructions, register readings, range checks, masks, branches, loops, memory, arrays, multiplication, functions, debugging, C and real xv6 programs, followed by three further readings.
 
 The learner edits the relevant code. Supplied entry, capture and exit code stays behind **View complete program**. Predictions are checked against executed results; each programming challenge runs the same submitted code on fresh cases. No source interpreter or scripted result substitutes for machine execution.
 
@@ -10,9 +10,11 @@ The learner edits the relevant code. Supplied entry, capture and exit code stays
 
 GNU `as` and `ld`, compiled to WebAssembly, produce real ELF64 executables. The CPU boots a real xv6 kernel and executes each program in a fresh filesystem copy. The target is RV64GC / LP64D. C lessons use the pinned RV64 TinyCC compiler locally, then link and execute its actual object. Compiler output is disassembled by real GNU `objdump`; no invented C source-line mapping is shown.
 
-- **Build & Run**, **Start stepping**, **Step instruction**, **Continue** and **Stop**.
+- **Build & Run**, **Start debugging**, **Start stepping**, **Step instruction**, **Continue** and **Stop**.
 - Actual relevant register values, signed/unsigned/hex readings, bit views and byte-addressed data or stack views.
-- Real breakpoint snapshots and instruction paths. A source line can expand into several instructions.
+- Exact assembly-line and actual instruction-address breakpoints. Continue revisits selected loop breakpoints; C uses real addresses without invented source mappings.
+- Pinned register comparisons, memory watches sampled at pauses and 64 observed stack bytes with exact symbol/address matches. Stack rows are not an inferred call stack.
+- Four debugging investigations: loop boundaries, load width, return-address preservation and access order. A source line can expand into several instructions.
 - Multi-case challenges, specific hints, reference solutions and case inspection.
 - Source-line diagnostics, separate exploration/challenge drafts, completion marks and an explicit tab-only fallback when storage is unavailable.
 - Phone/desktop layouts, light/dark/system themes, course navigation and source downloads.

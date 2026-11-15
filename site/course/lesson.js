@@ -1,5 +1,6 @@
 // Copyright © 2026 Christopher Snow
 import { Session } from "./session.js";
+import { DebuggerPanel } from "./debugger.js";
 import {
   REGISTERS,
   registerIndex,
@@ -46,10 +47,26 @@ let activity = "explore",
   hintIndex = 0,
   undoSource = null,
   memoryMoment = "before",
-  predictionAtRun = "";
+  predictionAtRun = "",
+  debugFinalState = null,
+  currentPc = null;
+let session = null;
 const tabDrafts = new Map();
 const caseRecords = new Map(),
   source = $("source");
+const debuggerPanel = new DebuggerPanel($("debugger-panel"), {
+  lesson,
+  onBreakpoints(selection) {
+    session?.setBreakpoints(selection);
+    lineNumbers();
+  },
+  onWatches(watches) {
+    session?.setWatches(watches);
+  },
+  onInspect() {
+    if (paused) session?.inspect();
+  },
+});
 const key = () => `riscv-assembly-lab:${lesson.id}:${activity}:v2`;
 const fixture = () =>
   activity === "challenge" ? lesson.challenge.cases[caseIndex] : {};
@@ -84,16 +101,39 @@ function restoreDraft(fallback) {
   }
 }
 function lineNumbers() {
+  const focused =
+    document.activeElement?.parentElement === $("line-numbers")
+      ? Number(document.activeElement.textContent)
+      : null;
   const count = source.value.split("\n").length;
   $("line-numbers").replaceChildren(
     ...Array.from({ length: count }, (_, i) => {
-      const span = document.createElement("span");
+      const span = document.createElement(
+        lesson.language === "c" ? "span" : "button",
+      );
       span.textContent = i + 1;
-      if (i + 1 === activeLine) span.className = "active-line";
+      if (lesson.language !== "c") {
+        span.type = "button";
+        const selected = debuggerPanel.getBreakpoints().lines.includes(i + 1);
+        span.classList.toggle("has-breakpoint", selected);
+        span.setAttribute("aria-pressed", String(selected));
+        span.setAttribute(
+          "aria-label",
+          `${selected ? "Remove" : "Set"} breakpoint at source line ${i + 1}`,
+        );
+        span.disabled = busy || batch;
+        span.addEventListener("click", () => {
+          debuggerPanel.toggleLine(i + 1);
+          $("debugger-panel").open = true;
+        });
+      }
+      if (i + 1 === activeLine) span.classList.add("active-line");
       return span;
     }),
   );
   $("line-numbers").scrollTop = source.scrollTop;
+  if (focused)
+    $("line-numbers").children[focused - 1]?.focus({ preventScroll: true });
 }
 function stale() {
   $("snapshot-note").hidden =
@@ -109,6 +149,13 @@ function completeSource() {
 }
 function controls() {
   $("run").disabled = busy || batch;
+  $("debug").disabled = busy || batch;
+  debuggerPanel.setBusy({ busy, paused, batch });
+  $("line-numbers")
+    .querySelectorAll("button")
+    .forEach((b) => {
+      b.disabled = busy || batch;
+    });
   $("step").disabled = (busy && !paused) || batch;
   $("step").textContent = paused ? "Step instruction" : "Start stepping";
   $("continue").hidden = !paused;
@@ -135,6 +182,8 @@ function clearState(
   note = "Run your code to capture the actual register values.",
 ) {
   state = null;
+  debuggerPanel.clear();
+  currentPc = null;
   activeLine = null;
   $("register-note").textContent = note;
   renderRegisters();
@@ -189,6 +238,7 @@ function renderRegisters(previous = null) {
 function showState(next, when) {
   const previous = state;
   state = next;
+  debuggerPanel.update(next, { pc: currentPc, when });
   renderRegisters(previous);
   memoryMoment = "after";
   renderMemory();
@@ -426,7 +476,7 @@ function checkPrediction() {
       "Use a whole decimal number, 0x hexadecimal or 0b binary for the prediction.";
   }
 }
-const session = new Session((event) => {
+session = new Session((event) => {
   if (event.type === "phase") {
     paused = event.phase === "paused";
     busy = !paused;
@@ -442,6 +492,8 @@ const session = new Session((event) => {
     );
   } else if (event.type === "built") {
     builtInfo = event;
+    debuggerPanel.setBuild(event, builtSource);
+    lineNumbers();
     diagnostics(event.diagnostics);
     $("diagnostics-summary").textContent = event.diagnostics
       ? "Messages available"
@@ -460,6 +512,8 @@ const session = new Session((event) => {
     output += event.text;
     $("console").textContent = learnerOutput(output, true);
   } else if (event.type === "snapshot") {
+    currentPc = event.pc;
+    if (event.complete) debugFinalState = event.state;
     showState(event.state, event.when);
     $("step-observations").hidden = false;
     if (event.trace) {
@@ -510,6 +564,15 @@ const session = new Session((event) => {
     controls();
     const result = readState(output);
     if (result) {
+      const complete =
+        debugFinalState &&
+        REGISTERS.every(
+          (name) => debugFinalState.registers[name] === result.registers[name],
+        );
+      if (complete) {
+        result.stack = debugFinalState.stack;
+        result.watches = debugFinalState.watches;
+      }
       showState(result, "Captured after your code completed");
       checkPrediction();
       status(
@@ -546,6 +609,7 @@ const session = new Session((event) => {
 });
 async function runOnce({
   debug = false,
+  startAtBreakpoint = false,
   code = source.value,
   test = fixture(),
 } = {}) {
@@ -555,6 +619,7 @@ async function runOnce({
   output = "";
   serial = "";
   builtInfo = null;
+  debugFinalState = null;
   trace = [];
   activeLine = null;
   paused = false;
@@ -576,7 +641,15 @@ async function runOnce({
   clearState("Building and running your code…");
   controls();
   stale();
-  await session.start({ source: code, lesson, fixture: test, debug });
+  await session.start({
+    source: code,
+    lesson,
+    fixture: test,
+    debug,
+    startAtBreakpoint,
+    breakpoints: debuggerPanel.getBreakpoints(),
+    watches: debuggerPanel.getWatches(),
+  });
   return captureRecord();
 }
 function renderOutput() {
@@ -605,6 +678,7 @@ function inspectRecord(index, submitted) {
   serial = record.serial;
   builtInfo = record.builtInfo;
   cancelExecution();
+  if (builtInfo) debuggerPanel.setBuild(builtInfo, submitted);
   startingState();
   completeSource();
   clearState("This recorded case did not produce a complete state report.");
@@ -630,13 +704,17 @@ function inspectRecord(index, submitted) {
   );
   stale();
 }
-function startRun(debug = false) {
+function startRun(debug = false, startAtBreakpoint = false) {
   if (batch) return;
   if (busy && !paused) return;
   cancelExecution();
-  runOnce({ debug }).catch(() => {});
+  runOnce({ debug, startAtBreakpoint }).catch(() => {});
 }
 $("run").addEventListener("click", () => startRun());
+$("debug").addEventListener("click", () => {
+  $("debugger-panel").open = true;
+  startRun(true, true);
+});
 $("step").addEventListener("click", () => {
   if (paused) {
     busy = true;
@@ -662,10 +740,11 @@ $("stop").addEventListener("click", () => {
   controls();
 });
 source.addEventListener("input", () => {
-  if (paused) {
+  if (busy || paused) {
     session.stop();
     activeLine = null;
   }
+  debuggerPanel.sourceChanged();
   undoSource = null;
   $("restore").textContent = "Restore starter";
   saveDraft();
@@ -689,6 +768,7 @@ function switchActivity(next) {
   activity = next;
   caseIndex = 0;
   undoSource = null;
+  debuggerPanel.sourceChanged();
   source.value = restoreDraft(
     activity === "challenge" ? lesson.challenge.starter : lesson.starter,
   );
@@ -729,6 +809,7 @@ $("case-picker").replaceChildren(
     button.addEventListener("click", () => {
       if (busy || paused || batch) return;
       cancelExecution();
+      debuggerPanel.sourceChanged();
       caseIndex = index;
       $("case-picker")
         .querySelectorAll("button")
@@ -747,6 +828,7 @@ $("check-cases").addEventListener("click", async () => {
   stopped = false;
   controls();
   const submitted = source.value;
+  debuggerPanel.sourceChanged();
   caseRecords.clear();
   $("case-results").replaceChildren();
   let passed = 0;
@@ -805,6 +887,7 @@ $("check-cases").addEventListener("click", async () => {
 });
 $("restore").addEventListener("click", () => {
   cancelExecution();
+  debuggerPanel.sourceChanged();
   const fallback =
     activity === "challenge" ? lesson.challenge.starter : lesson.starter;
   if (undoSource !== null) {
@@ -828,6 +911,7 @@ $("next-hint").addEventListener("click", () => {
 });
 $("use-reference").addEventListener("click", () => {
   cancelExecution();
+  debuggerPanel.sourceChanged();
   source.value = lesson.challenge.reference;
   saveDraft();
   completeSource();

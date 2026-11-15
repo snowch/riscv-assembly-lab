@@ -18,7 +18,12 @@ let vm,
   activeStarted = 0,
   stopped = false,
   stepCount = 0,
-  initialSp = null;
+  initialSp = null,
+  inspection,
+  breakpointSelection = {},
+  selectedBreakpoints = [],
+  watches = [],
+  startAtBreakpoint = false;
 const decoder = new TextDecoder();
 const text = (value) =>
   "0x" + BigInt.asUintN(64, BigInt(value)).toString(16).padStart(16, "0");
@@ -89,15 +94,13 @@ function snapshot(when, trace = null) {
     lesson.registerNames.map((name, i) => [name, text(vm.read_register(i))]),
   );
   if (initialSp === null) initialSp = registers.sp;
+  const detail = inspection.inspectionState(vm, built, watches);
   const address =
-      lesson.memory === "stack" ? vm.read_register(2) : BigInt(built.data),
-    bytes = [];
-  for (let offset = 0; offset < 64; offset += 8) {
-    const error = new Uint8Array(1);
-    const value = vm.load_doubleword(address + BigInt(offset), error);
-    for (let i = 0; i < 8; i++)
-      bytes.push(error[0] ? null : Number((value >> BigInt(i * 8)) & 255n));
-  }
+    lesson.memory === "stack" ? vm.read_register(2) : BigInt(built.data);
+  const bytes =
+    lesson.memory === "stack"
+      ? detail.stack.bytes
+      : inspection.observedBytes(vm, address);
   const complete = vm.read_pc() === BigInt(built.end);
   let nextInstruction = null;
   if (!complete) {
@@ -109,6 +112,7 @@ function snapshot(when, trace = null) {
       registers,
       memory: { address: text(address), bytes },
       initial: { sp: initialSp },
+      ...detail,
     },
     pc: text(vm.read_pc()),
     when,
@@ -182,20 +186,38 @@ function tick() {
           snapshot("No lesson instructions; at the reporting checkpoint");
           mode = "fast";
         } else {
-          paused("Before the first lesson instruction");
-          return;
+          initialSp = text(vm.read_register(2));
+          if (
+            startAtBreakpoint &&
+            selectedBreakpoints.length &&
+            !selectedBreakpoints.includes(vm.read_pc())
+          ) {
+            mode = "continue";
+          } else {
+            paused(
+              startAtBreakpoint && selectedBreakpoints.includes(vm.read_pc())
+                ? "Breakpoint reached, before this instruction"
+                : "Before the first lesson instruction",
+            );
+            return;
+          }
         }
       }
     } else if (mode === "continue") {
       const found = vm.run_until_breakpoints(
-        new BigUint64Array([BigInt(built.end)]),
+        new BigUint64Array([...selectedBreakpoints, BigInt(built.end)]),
         100000,
       );
       consume();
       if (stopped) return;
       if (found) {
-        snapshot("After the last lesson instruction");
-        mode = "fast";
+        if (vm.read_pc() === BigInt(built.end)) {
+          snapshot("After the last lesson instruction");
+          mode = "fast";
+        } else {
+          paused("Breakpoint reached, before this instruction");
+          return;
+        }
       }
     } else {
       vm.run_cycles(100000);
@@ -207,6 +229,29 @@ function tick() {
   }
 }
 onmessage = async ({ data }) => {
+  if (data.action === "breakpoints") {
+    breakpointSelection = data.selection ?? {};
+    if (built && inspection)
+      selectedBreakpoints = inspection.resolveBreakpoints(
+        built,
+        breakpointSelection,
+      );
+    return;
+  }
+  if (data.action === "watches") {
+    watches = Array.isArray(data.watches) ? data.watches.slice(0, 8) : [];
+    return;
+  }
+  if (data.action === "inspect") {
+    if (mode === "paused" && !stopped) {
+      try {
+        snapshot("Observed at the current pause");
+      } catch (error) {
+        finish(error);
+      }
+    }
+    return;
+  }
   if (data.action === "step") {
     step();
     return;
@@ -225,6 +270,9 @@ onmessage = async ({ data }) => {
   }
   try {
     lesson = { ...data.lesson, debug: !!data.debug };
+    breakpointSelection = data.breakpoints ?? {};
+    watches = Array.isArray(data.watches) ? data.watches.slice(0, 8) : [];
+    startAtBreakpoint = !!data.startAtBreakpoint;
     send("phase", { phase: "loading", message: "Loading tools and xv6…" });
     const [
       as,
@@ -238,6 +286,7 @@ onmessage = async ({ data }) => {
       builder,
       filesystem,
       model,
+      debugging,
     ] = await Promise.all([
       asset("../vendor/binutils/as-new.wasm"),
       asset("../vendor/binutils/ld-new.wasm"),
@@ -252,8 +301,10 @@ onmessage = async ({ data }) => {
       import("./builder.js"),
       import("../filesystem.js"),
       import("./model.js"),
+      import("./debugging.js"),
     ]);
     lesson.registerNames = model.REGISTERS;
+    inspection = debugging;
     send("phase", {
       phase: "building",
       message:
@@ -269,6 +320,10 @@ onmessage = async ({ data }) => {
       { as: createAssembler, ld: createLinker, objdump: createObjdump },
     );
     built.breakpoints = built.allInstructions.map((i) => BigInt(i.address));
+    selectedBreakpoints = inspection.resolveBreakpoints(
+      built,
+      breakpointSelection,
+    );
     send("built", {
       bytes: built.elf.length,
       diagnostics: built.diagnostics,
@@ -277,6 +332,10 @@ onmessage = async ({ data }) => {
       segments: built.segments,
       entry: built.entry,
       lineOffset: built.lineOffset,
+      allInstructions: built.allInstructions,
+      symbols: built.symbols,
+      end: built.end,
+      data: built.data,
     });
     await runtime.default({
       module_or_path: "../vendor/runtime/riscv_emu_rust_wasm_bg.wasm",

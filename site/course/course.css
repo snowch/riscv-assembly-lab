@@ -864,3 +864,40 @@ input:not([type="checkbox"]) {
 .module-heading > div {
   min-width: 0;
 }
+
+/* The breakpoint gutter and source text share one row height. */
+.course-layout #line-numbers button {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  height: 1.8em;
+  line-height: 1.8;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+}
+.course-layout #line-numbers button.has-breakpoint {
+  background: var(--notice);
+  color: var(--accent);
+  box-shadow: inset 3px 0 var(--accent);
+}
+.course-layout #line-numbers button.active-line {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+@media (max-width: 520px) {
+  .course-layout .breakpoint-editor textarea,
+  .course-layout .breakpoint-editor #line-numbers {
+    line-height: 44px;
+  }
+  .course-layout .breakpoint-editor #line-numbers {
+    width: 3rem;
+  }
+  .course-layout .breakpoint-editor #line-numbers button {
+    height: 44px;
+    line-height: 44px;
+  }
+}

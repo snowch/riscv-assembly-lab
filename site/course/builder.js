@@ -45,6 +45,14 @@ export async function buildLesson(
       lesson.language === "c" ? symbol("lesson") : symbol("_lab_lesson_begin"),
     end: symbol("_lab_lesson_end"),
     data: symbol("lesson_data"),
+    symbols: [...elf.symbols.values()]
+      .filter(
+        (s) =>
+          s.name &&
+          !s.name.startsWith("_lab_") &&
+          text.some((t) => s.value >= t.start && s.value < t.end),
+      )
+      .map((s) => ({ name: s.name, address: s.value, size: s.size })),
     text,
     segments: readSegments(built.elf),
     ...(await disassemble(

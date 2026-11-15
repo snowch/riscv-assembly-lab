@@ -12,8 +12,8 @@ import {
 import { loadLessons } from "../tools/course-data.js";
 const lessons = await loadLessons();
 test("complete catalogue has stable unique routes, exercises and provenance", () => {
-  assert.equal(lessons.length, 54);
-  assert.equal(new Set(lessons.map((l) => l.id)).size, 54);
+  assert.equal(lessons.length, 58);
+  assert.equal(new Set(lessons.map((l) => l.id)).size, 58);
   for (const lesson of lessons) {
     assert.ok(lesson.originalityNote);
     assert.ok(lesson.sourceLessons.length);
