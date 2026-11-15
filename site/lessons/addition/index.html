@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Try a focused RISC-V addition lesson: edit three assembly lines, run them in xv6, and inspect actual register values.">
+  <meta name="theme-color" content="#087e72">
+  <title>Add two register values · RISC-V Assembly Lab</title>
+  <link rel="icon" href="../../icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../style.css">
+  <link rel="stylesheet" href="./lesson.css">
+  <script type="module" src="./lesson.js"></script>
+</head>
+<body class="focused-lesson">
+  <a class="skip" href="#main">Skip to lesson</a>
+  <header>
+    <a class="brand" href="../../"><span class="logo" aria-hidden="true">≋</span> RISC-V Assembly Lab</a>
+    <nav aria-label="Site"><a href="../../">Hello World</a><a href="https://github.com/snowch/riscv-assembly-lab">☆ <span>Star on GitHub</span></a>
+      <label class="theme-label">Theme <select id="theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
+    </nav>
+  </header>
+  <main id="main">
+    <div class="intro">
+      <p class="eyebrow">Sample lesson <span class="badge">Preview</span></p>
+      <h1>Add two register values</h1>
+      <p><code>add t2, t0, t1</code> adds the values in <code>t0</code> and <code>t1</code>, then stores the sum in <code>t2</code>.</p>
+      <p class="subtle">The first two lines load starting values. Predict the sum, then run the code to check.</p>
+    </div>
+    <noscript><p class="notice">JavaScript and WebAssembly are required to run. You can still <a href="./lesson.s">read the three-line example</a>.</p></noscript>
+    <div class="build-toolbar">
+      <div class="run-actions"><button id="run" class="primary" disabled>Build & Run</button><button id="stop" disabled>Stop</button><span class="shortcut">Ctrl / ⌘ + Enter</span></div>
+      <p id="run-status" role="status">Loading lesson…</p>
+    </div>
+    <p id="snapshot-note" class="notice" hidden>These register values belong to the source captured when you chose Build & Run. Run again to use your edits.</p>
+    <div class="workspace">
+      <section class="panel editor-panel" aria-labelledby="source-heading">
+        <div class="panel-heading"><div><span class="eyebrow">01 · Your code</span><h2 id="source-heading">Three lines. One sum.</h2></div><span class="tag">RV64GC · xv6</span></div>
+        <p id="source-help" class="panel-note">Change <code>7</code> or <code>5</code>, then build again. <code>li</code> loads a number into a register.</p>
+        <div class="editor"><div id="line-numbers" aria-hidden="true">1</div><textarea id="source" aria-label="Lesson assembly source" aria-describedby="source-help save-state" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" disabled></textarea></div>
+        <div class="editor-footer"><span id="save-state">Loading starter…</span><div><button id="restore" class="text-button" disabled>Restore starter</button><button id="download" class="text-button" disabled>Download .s</button></div></div>
+        <div class="instruction-note"><code>add <strong>t2</strong>, t0, t1</code><p>The destination comes first. This instruction leaves <code>t0</code> and <code>t1</code> unchanged.</p></div>
+      </section>
+      <section class="panel run-panel" aria-labelledby="register-heading">
+        <div class="panel-heading"><div><span class="eyebrow">02 · Observe</span><h2 id="register-heading">Registers after your code</h2></div><span id="state-badge" class="tag">Ready</span></div>
+        <div class="registers" aria-label="Register snapshot">
+          <div class="register"><h3><code>t0</code></h3><p id="t0-decimal" class="register-value">—</p><p id="t0-hex" class="register-hex">Not run yet</p></div>
+          <div class="register"><h3><code>t1</code></h3><p id="t1-decimal" class="register-value">—</p><p id="t1-hex" class="register-hex">Not run yet</p></div>
+          <div class="register destination"><h3><code>t2</code> <span>Destination</span></h3><p id="t2-decimal" class="register-value">—</p><p id="t2-hex" class="register-hex">Not run yet</p></div>
+        </div>
+        <p id="register-note" class="panel-note">Run your code to capture the actual register values.</p>
+        <details id="diagnostics"><summary>Diagnostics <span id="diagnostics-summary">Not built yet</span></summary><div id="diagnostic-lines"><p>Assembler and linker messages appear here.</p></div></details>
+        <details id="program-output"><summary>Program output <span>Register report from xv6</span></summary><pre id="console" tabindex="0" aria-label="Program output">Not run yet.</pre></details>
+        <details><summary>xv6 serial log <span>Boot and shell output</span></summary><pre id="serial" tabindex="0" aria-label="Full xv6 serial output">Not started yet.</pre></details>
+      </section>
+    </div>
+    <section class="next-step" aria-labelledby="try-heading"><div><h2 id="try-heading">Try a different sum</h2><p>Change the starting values to <code>19</code> and <code>23</code>. Predict <code>t2</code> before you run. Check whether <code>t0</code> and <code>t1</code> kept their values.</p></div></section>
+    <details id="complete-program" class="explanation complete-program">
+      <summary>View complete program <span>Entry, your code, reporting and exit</span></summary>
+      <div class="explanation-body"><p>The lab supplies the entry and reporting code so you can focus on <code>add</code>. It captures <code>t0</code>, <code>t1</code> and <code>t2</code> immediately after your fragment, before reporting changes the working registers.</p><p>This is the complete source for the <strong>current editor</strong>. Build & Run assembles this program with GNU tools and executes it in xv6. The result cards read its register report; they do not calculate an answer from your source.</p><button id="download-complete" disabled>Download complete program</button></div>
+      <pre id="complete-source" tabindex="0" aria-label="Complete assembly program">Loading source…</pre>
+    </details>
+    <details class="explanation"><summary>Instruction reference</summary><div class="explanation-body"><p><code>add rd, rs1, rs2</code> writes the sum of the two source registers into the destination. In this example <code>rd = t2</code>, <code>rs1 = t0</code> and <code>rs2 = t1</code>.</p><p><a href="https://docs.riscv.org/reference/isa/unpriv/rv32.html">RISC-V base integer instruction reference</a> · <a href="../../NOTICE.md">Runtime, toolchain and licences</a></p></div></details>
+  </main>
+  <footer><p>A preview of focused lessons in RISC-V Assembly Lab.</p><div><a href="../../">Back to Hello World</a><a href="https://github.com/snowch/riscv-assembly-lab/issues">Report a problem</a></div></footer>
+</body>
+</html>
