@@ -1,0 +1,2 @@
+li t0, 0x2a
+andi t2, t0, 0x08

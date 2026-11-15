@@ -23,7 +23,13 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check:assets
+      - name: Verify generated course pages
+        run: npm run build:course && git diff --exit-code -- site/index.html site/lessons/ site/course/catalog.json
       - run: npm test
+      - name: Install independent RISC-V execution checker
+        run: sudo apt-get update && sudo apt-get install -y qemu-user
+      - name: Check every lesson and challenge corpus
+        run: npm run test:course
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - uses: actions/upload-artifact@v4

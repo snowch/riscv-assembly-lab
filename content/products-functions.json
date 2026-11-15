@@ -1,0 +1,734 @@
+[
+  {
+    "id": "products",
+    "module": "multiply",
+    "title": "Keep the product bits you need",
+    "summary": "Multiply a pulse count by its scale and inspect the low 64 bits that survive.",
+    "objectives": [
+      "Explain which product bits mul keeps.",
+      "Combine multiplication and addition without losing an input."
+    ],
+    "before": [
+      "The trip computer turns sensor pulses into a distance by multiplying the pulse count by a scale. The answer to a multiplication is its product. Two 64-bit inputs can require 128 bits for their full product, but one register still has room for only 64.",
+      "`mul t2, t0, t1` multiplies the values in `t0` and `t1` and writes the low 64 product bits into `t2`. Any higher bits are discarded. This instruction uses the same low bits for signed and unsigned readings; it does not set an overflow flag.",
+      "The editor loads the two factors explicitly. Predict the hexadecimal pattern in `t2` after all three lines run. Read the whole 64-bit result, rather than assuming that multiplication makes the destination wider."
+    ],
+    "starter": "li t0, 0x100000000\nli t1, 0x100000000\nmul t2, t0, t1\n",
+    "observe": ["t0", "t1", "t2"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "What hexadecimal pattern does t2 hold after these three lines?",
+      "register": "t2",
+      "reading": "hex",
+      "hint": "Locate the set bit in the full product, then ask whether that position fits in 64 bits."
+    },
+    "explanation": [
+      "A destination register cannot retain bits above its width. Reading the result with a different interpretation changes what the retained pattern means; it cannot recover discarded product bits. Small examples can hide that loss because their full product already fits.",
+      "A multiply followed by an add implements a scaled running total. Keep the existing total until the addition reads it. The challenge uses `t3`, another temporary register, to hold the product while `t2` still holds its incoming total.",
+      "Unsigned C multiplication has a corresponding wrapping rule for its result type. Signed C multiplication is different: an unrepresentable mathematical result has undefined behaviour. The existence of a hardware low-bit result does not give that signed C expression a defined answer. Undefined behaviour means that C makes no promise about what that program does."
+    ],
+    "experiment": {
+      "task": "Load 0x7fffffff and 2. Run mul, then replace it with mulw and run again. Compare the full hexadecimal patterns.",
+      "hint": "mulw keeps a 32-bit product and sign-extends that result to 64 bits. It does not provide an unsigned wider product."
+    },
+    "challenge": {
+      "task": "Before your code, t0 holds an unsigned pulse count, t1 holds its unsigned scale and t2 holds an existing unsigned total. Write total + pulses * scale back to t2, keeping the low 64 bits. Preserve t0 and t1.",
+      "starter": "mul t2, t0, t1\n",
+      "reference": "mul t3, t0, t1\nadd t2, t3, t2\n",
+      "hints": [
+        "The existing total is an amount to add, not another multiplication factor.",
+        "Writing the product directly into t2 destroys that incoming total. Use another temporary register.",
+        "With zero pulses, the product contributes nothing, but the existing total must still be returned."
+      ],
+      "cases": [
+        {
+          "name": "A scaled reading plus its total",
+          "inputs": {
+            "t0": "7",
+            "t1": "6",
+            "t2": "10"
+          },
+          "expect": {
+            "t0": "7",
+            "t1": "6",
+            "t2": "52"
+          }
+        },
+        {
+          "name": "Zero new pulses",
+          "inputs": {
+            "t0": "0",
+            "t1": "9",
+            "t2": "7"
+          },
+          "expect": {
+            "t0": "0",
+            "t1": "9",
+            "t2": "7"
+          }
+        },
+        {
+          "name": "Product crosses the register width",
+          "inputs": {
+            "t0": "0x8000000000000000",
+            "t1": "2",
+            "t2": "9"
+          },
+          "expect": {
+            "t0": "0x8000000000000000",
+            "t1": "2",
+            "t2": "9"
+          }
+        }
+      ]
+    },
+    "c": "unsigned long scaled_total(unsigned long pulses, unsigned long scale, unsigned long total) {\n    return total + pulses * scale;\n}",
+    "references": ["multiply", "rv64", "c"],
+    "sourceLessons": ["products-and-widths", "widening-products"],
+    "originalityNote": "Adapt the trip computer pulse scale to RV64 low-half multiplication and an explicit multiply-then-add sequence, replacing Arm fused arithmetic."
+  },
+  {
+    "id": "high-products",
+    "module": "multiply",
+    "title": "Read both halves of a product",
+    "summary": "Use the signed or unsigned high-product instruction when a low half is not enough.",
+    "objectives": [
+      "Distinguish low and high halves of a 128-bit product.",
+      "Choose mulh or mulhu from the input interpretation."
+    ],
+    "before": [
+      "A full product of two 64-bit inputs can be split across two registers. The low half contains product bits 0 through 63. The high half contains bits 64 through 127. `mul` supplies the low half; a separate instruction supplies the high half.",
+      "`mulh` treats both factors as signed values. `mulhu` treats both as unsigned values. They can therefore produce different high halves for the same input bits. The editor applies both instructions to one pair of factors and also retains their common low half.",
+      "The `li` lines establish the inputs before either multiplication. Temporary registers `t3` and `t4` hold additional observations. Predict the unsigned value of `t3` after the entire fragment runs; its instruction is `mulhu`."
+    ],
+    "starter": "li t0, -1\nli t1, 2\nmulh t2, t0, t1\nmulhu t3, t0, t1\nmul t4, t0, t1\n",
+    "observe": ["t0", "t1", "t2", "t3", "t4"],
+    "result": "t3",
+    "prediction": {
+      "prompt": "What unsigned value does t3 hold after mulhu uses these input bits?",
+      "register": "t3",
+      "reading": "unsigned",
+      "hint": "The all-ones first input is the largest unsigned 64-bit value. Split its full product into 64-bit halves."
+    },
+    "explanation": [
+      "The high half records information that the low-half instruction discards. You cannot reconstruct that information by sign-extending the low result: different full products can share the same low pattern.",
+      "Keep both original factors until both instructions have read them. Using a source register as the destination of the first multiplication would change an input to the second. The challenge puts the two halves in distinct destinations, so neither factor is overwritten.",
+      "RISC-V also has `mulhsu` for a signed first factor and an unsigned second factor. The order of those roles matters. Choose from the required interpretation of each factor, rather than from whether a register happens to display a minus sign. The result cards also show hexadecimal patterns so the bits remain visible."
+    ],
+    "experiment": {
+      "task": "Set both inputs to -1. Compare mulh with mulhu, then change mulhu to mulhsu and run again. Keep the common mul result.",
+      "hint": "The same all-ones input represents a negative signed value or a large unsigned value. Changing only the high-product instruction changes which mathematical product is represented."
+    },
+    "challenge": {
+      "task": "t0 and t1 arrive as unsigned 64-bit factors. Put the low 64 bits of their full product in t2 and the high 64 bits in t3. Preserve both inputs. The two result registers together must retain all 128 product bits.",
+      "starter": "mul t2, t0, t1\nli t3, 0\n",
+      "reference": "mulhu t3, t0, t1\nmul t2, t0, t1\n",
+      "hints": [
+        "Small products have a zero high half, so they cannot establish that the high-half instruction is present.",
+        "Use the unsigned high-product instruction for these two unsigned inputs.",
+        "Calculate the high half without overwriting either factor; the low-half multiplication still needs both originals."
+      ],
+      "cases": [
+        {
+          "name": "A product that fits in one half",
+          "inputs": {
+            "t0": "7",
+            "t1": "6"
+          },
+          "expect": {
+            "t0": "7",
+            "t1": "6",
+            "t2": "42",
+            "t3": "0"
+          }
+        },
+        {
+          "name": "Carry into the high product half",
+          "inputs": {
+            "t0": "0x8000000000000000",
+            "t1": "2"
+          },
+          "expect": {
+            "t0": "0x8000000000000000",
+            "t1": "2",
+            "t2": "0",
+            "t3": "1"
+          }
+        },
+        {
+          "name": "Two maximal unsigned factors",
+          "inputs": {
+            "t0": "0xffffffffffffffff",
+            "t1": "0xffffffffffffffff"
+          },
+          "expect": {
+            "t0": "0xffffffffffffffff",
+            "t1": "0xffffffffffffffff",
+            "t2": "1",
+            "t3": "0xfffffffffffffffe"
+          }
+        }
+      ]
+    },
+    "references": ["multiply", "rv64"],
+    "sourceLessons": ["reading-product-halves", "products-and-widths"],
+    "originalityNote": "Retain the source course comparison of identical input bits while replacing Arm high-multiply mnemonics with RISC-V signed, unsigned and mixed high-product instructions."
+  },
+  {
+    "id": "division-remainders",
+    "module": "multiply",
+    "title": "Keep the quotient and the remainder",
+    "summary": "Choose signed or unsigned division and inspect the remainder left by the same operation.",
+    "objectives": [
+      "Explain signed division rounding and the remainder sign.",
+      "Distinguish RISC-V division edge results from C guarantees."
+    ],
+    "before": [
+      "An average divides a total by a count. The number being divided is the dividend; the number you divide by is the divisor. The whole-number result is the quotient. The remainder is what remains after subtracting quotient times divisor from the dividend.",
+      "`div t2, t0, t1` divides the signed value in `t0` by the signed value in `t1`. It discards the fractional part towards zero. `rem t3, t0, t1` supplies the corresponding remainder. Keep both original inputs until both instructions have read them.",
+      "`divu` and `remu` instead read both inputs as unsigned. The example uses signed instructions on a negative dividend. Predict the quotient in `t2` after the complete fragment, then inspect the remainder alongside it."
+    ],
+    "starter": "li t0, -17\nli t1, 5\ndiv t2, t0, t1\nrem t3, t0, t1\n",
+    "observe": ["t0", "t1", "t2", "t3"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "What signed quotient does t2 hold after the fragment runs?",
+      "register": "t2",
+      "reading": "signed",
+      "hint": "Discarding a negative fraction towards zero does not move the result down to the next more-negative integer."
+    },
+    "explanation": [
+      "For a nonzero divisor and a representable signed quotient, dividend equals quotient times divisor plus remainder. A nonzero signed remainder has the dividend\u2019s sign. Changing only the divisor\u2019s sign changes the quotient\u2019s sign without changing that rule.",
+      "RISC-V gives its integer instructions defined edge results. Dividing by zero writes an all-ones quotient; the remainder is the original dividend. Dividing the most-negative signed value by -1 returns that most-negative pattern and a zero remainder. These are architectural results, not overflow flags or C error handling.",
+      "C does not define integer division or remainder when the divisor is zero or the quotient is unrepresentable. Observe the hardware cases in this assembly exercise without treating them as valid outcomes of corresponding C expressions. Check the conditions before performing such an operation in C."
+    ],
+    "experiment": {
+      "task": "Replace div and rem with divu and remu while retaining the same loaded input bits. Compare the result patterns, then restore the signed instructions.",
+      "hint": "Unsigned division sees a large positive dividend where the signed reading sees a negative one. A later reinterpretation cannot undo that instruction choice."
+    },
+    "challenge": {
+      "task": "t0 holds a signed dividend and t1 holds a signed divisor. Put the RISC-V signed quotient in t2 and the corresponding remainder in t3, preserving both inputs. This assembly-only contract includes division by zero and the signed overflow case.",
+      "starter": "div t2, t0, t1\n",
+      "reference": "div t2, t0, t1\nrem t3, t0, t1\n",
+      "hints": [
+        "The two output registers need results from the same original dividend and divisor.",
+        "Do not replace the original dividend with its quotient before obtaining the remainder.",
+        "The zero-divisor case has a defined RISC-V remainder. It is not automatically cleared."
+      ],
+      "cases": [
+        {
+          "name": "Positive quotient with a remainder",
+          "inputs": {
+            "t0": "17",
+            "t1": "5"
+          },
+          "expect": {
+            "t0": "17",
+            "t1": "5",
+            "t2": "3",
+            "t3": "2"
+          }
+        },
+        {
+          "name": "Negative dividend",
+          "inputs": {
+            "t0": "-17",
+            "t1": "5"
+          },
+          "expect": {
+            "t0": "-17",
+            "t1": "5",
+            "t2": "-3",
+            "t3": "-2"
+          }
+        },
+        {
+          "name": "Architectural zero-divisor result",
+          "inputs": {
+            "t0": "9",
+            "t1": "0"
+          },
+          "expect": {
+            "t0": "9",
+            "t1": "0",
+            "t2": "-1",
+            "t3": "9"
+          }
+        },
+        {
+          "name": "Architectural signed-overflow result",
+          "inputs": {
+            "t0": "0x8000000000000000",
+            "t1": "-1"
+          },
+          "expect": {
+            "t0": "0x8000000000000000",
+            "t1": "-1",
+            "t2": "0x8000000000000000",
+            "t3": "0"
+          }
+        }
+      ]
+    },
+    "references": ["multiply", "c"],
+    "sourceLessons": ["division-and-remainders"],
+    "originalityNote": "Adapt the negative adjustment and paired quotient/remainder investigation while replacing Arm\u2019s zero quotient on division by zero with the RISC-V all-ones result."
+  },
+  {
+    "id": "safe-scaling",
+    "module": "multiply",
+    "title": "Scale before dividing",
+    "summary": "Calculate a consumption figure without discarding its fractional contribution or overflowing a narrow intermediate.",
+    "objectives": [
+      "Choose an intermediate width from the largest possible product.",
+      "Give a zero-distance case an explicit application result."
+    ],
+    "before": [
+      "The trip computer records fuel in millilitres and distance in metres. To obtain whole millilitres per 100 metres, multiply fuel by 100 and divide that product by distance. Integer division discards any fractional part, so the order of these operations matters.",
+      "For this activity both inputs are unsigned 32-bit values already placed in 64-bit registers with their upper bits clear. Their product with the scale fits in 64 bits. A normal RV64 `mul` retains that complete intermediate; `mulw` would discard needed bits and sign-extend its 32-bit result.",
+      "The example uses a nonzero distance. The challenge adds an application rule: zero distance must return zero. That rule is chosen by this calculation; it is not the result that a RISC-V unsigned divide by zero supplies."
+    ],
+    "starter": "li t0, 0xffffffff\nli t1, 1000\nli t2, 100\nmul t2, t0, t2\ndivu t2, t2, t1\n",
+    "observe": ["t0", "t1", "t2"],
+    "result": "t2",
+    "prediction": {
+      "prompt": "What unsigned whole-number consumption does t2 hold after the multiplication and division?",
+      "register": "t2",
+      "reading": "unsigned",
+      "hint": "Retain the full product with 100 before discarding the fraction in the final division."
+    },
+    "explanation": [
+      "A wide destination helps only when the arithmetic producing it keeps the needed bits. Multiplying with `mulw` and then using `divu` cannot recover the higher product bits lost by the earlier operation. Choose the multiplication width before the product is formed.",
+      "Dividing fuel by distance first introduces a different loss. A small fuel count can produce a zero quotient even though the scaled calculation would return a nonzero whole number. Multiplying that already-truncated quotient afterwards does not restore the discarded fraction.",
+      "The stated input bounds make the product safe here. For arbitrary unsigned 64-bit fuel, multiplication by the scale could itself wrap. Such a broader contract would need a range check or a multi-register calculation; changing the final division alone would not solve it. The challenge keeps the narrower, explicit input bounds."
+    ],
+    "experiment": {
+      "task": "Load fuel 1 and distance 3. Compare multiply-then-divide with divide-then-multiply. Restore the former order, then try mulw with the original large fuel reading.",
+      "hint": "The first comparison loses a fraction too early; the second loses high product bits. They are different mistakes."
+    },
+    "challenge": {
+      "task": "Before your code, t0 holds fuel and t1 holds distance, each an unsigned 32-bit value with upper register bits clear. Write whole fuel * 100 / distance into t2, rounding down. Return zero for zero distance. Preserve both inputs.",
+      "starter": "li t3, 100\nmul t2, t0, t3\ndivu t2, t2, t1\n",
+      "reference": "beqz t1, zero_distance\nli t3, 100\nmul t2, t0, t3\ndivu t2, t2, t1\nj consumption_done\nzero_distance:\nli t2, 0\nconsumption_done:\n",
+      "hints": [
+        "Handle the application\u2019s zero-distance rule on a separate branch.",
+        "The scaled product must be formed before division, with all needed 64-bit product bits retained.",
+        "With positive fuel and zero distance, allowing divu to run would return an all-ones quotient rather than the required application result."
+      ],
+      "cases": [
+        {
+          "name": "Scale retains a fractional contribution",
+          "inputs": {
+            "t0": "1",
+            "t1": "3"
+          },
+          "expect": {
+            "t0": "1",
+            "t1": "3",
+            "t2": "33"
+          }
+        },
+        {
+          "name": "Product exceeds 32 bits",
+          "inputs": {
+            "t0": "4294967295",
+            "t1": "1000"
+          },
+          "expect": {
+            "t0": "4294967295",
+            "t1": "1000",
+            "t2": "429496729"
+          }
+        },
+        {
+          "name": "Application rule for zero distance",
+          "inputs": {
+            "t0": "17",
+            "t1": "0"
+          },
+          "expect": {
+            "t0": "17",
+            "t1": "0",
+            "t2": "0"
+          }
+        },
+        {
+          "name": "Zero fuel with a nonzero distance",
+          "inputs": {
+            "t0": "0",
+            "t1": "9"
+          },
+          "expect": {
+            "t0": "0",
+            "t1": "9",
+            "t2": "0"
+          }
+        }
+      ]
+    },
+    "c": "unsigned long consumption(unsigned long fuel, unsigned long distance) {\n    if (distance == 0) return 0;\n    return fuel * 100UL / distance;\n}",
+    "references": ["multiply", "rv64", "c"],
+    "sourceLessons": ["consumption-calculation", "division-and-remainders"],
+    "originalityNote": "Reuse the fuel-per-distance contract with explicit zero-extended RV64 inputs and a branch for zero distance, replacing the source Arm instruction\u2019s different zero-divisor behaviour."
+  },
+  {
+    "id": "calls-and-returns",
+    "module": "functions",
+    "title": "Call a helper and come back",
+    "summary": "Pass an argument to a helper, receive its result and resume the caller.",
+    "objectives": [
+      "Identify the argument, result and return-address registers.",
+      "Separate a return from the end of the whole program."
+    ],
+    "before": [
+      "A function is a named part of a program that another part can call. The part making the call is the caller; the function receiving it is the callee. A caller supplies inputs called arguments and resumes when the callee returns.",
+      "The standard integer calling convention puts the first argument in `a0`, the next in `a1`, and further arguments in `a2` through `a7`. These simple one-result functions leave their result in `a0`. This convention is an agreement between functions, not a property that makes registers carry permanent types.",
+      "`call half_distance` transfers control to that label and records where to resume in `ra`, the return-address register. `ret` transfers control to the address in `ra`. The example uses an unsigned right shift inside the helper, then the caller adds a reserve after the return.",
+      "The outer fragment has no ordinary caller of its own. Its `j call_done` skips the helper body and reaches the lab\u2019s reporting code. A final top-level `ret` would not replace the supplied program exit."
+    ],
+    "starter": "li a0, 84\ncall half_distance\naddi a0, a0, 3\nj call_done\nhalf_distance:\nsrli a0, a0, 1\nret\ncall_done:\n",
+    "observe": ["a0", "ra"],
+    "result": "a0",
+    "prediction": {
+      "prompt": "What does a0 hold after the helper returns and the caller finishes its addition?",
+      "register": "a0",
+      "reading": "unsigned",
+      "hint": "The helper leaves its result where the caller originally placed the argument. The addition runs afterwards."
+    },
+    "explanation": [
+      "A return determines where execution continues. It does not choose a result register or copy a result for you. Here the helper writes `a0` deliberately, and the caller reads that same register after control comes back.",
+      "The helper calls no other function, so it can return through its incoming `ra` directly. Such a helper is called a leaf function. A call can change argument and temporary registers; a caller must not expect their old values to survive without a reason.",
+      "`call` and `ret` are assembler pseudo-instructions. GNU tools expand them into machine instructions as needed. Do not infer a fixed return-address increment from the number of source lines or assume that every pseudo-instruction occupies one instruction."
+    ],
+    "experiment": {
+      "task": "Change the starting argument to an odd distance, then change the reserve added by the caller. Move the caller\u2019s addition before the call and compare the result.",
+      "hint": "Adding before halving and adding after halving describe different calculations. Follow which value is in a0 at each operation."
+    },
+    "challenge": {
+      "task": "The supplied initial a0 is an unsigned pulse count. Call a helper that doubles it, then have the caller add one to the returned result. Leave the low 64 bits in a0 and continue to the lab reporter. Keep the helper as the callee.",
+      "starter": "call double_pulses\n# Add the caller\u2019s extra pulse here.\nj pulse_done\ndouble_pulses:\nslli a0, a0, 1\nret\npulse_done:\n",
+      "reference": "call double_pulses\naddi a0, a0, 1\nj pulse_done\ndouble_pulses:\nslli a0, a0, 1\nret\npulse_done:\n",
+      "hints": [
+        "The caller\u2019s addition belongs after control returns from the helper.",
+        "The helper\u2019s result is already in a0; there is no separate result-copy step.",
+        "A zero input still needs the caller\u2019s extra contribution, even though doubling contributes zero."
+      ],
+      "cases": [
+        {
+          "name": "Zero pulse count",
+          "inputs": {
+            "a0": "0"
+          },
+          "expect": {
+            "a0": "1"
+          }
+        },
+        {
+          "name": "A small pulse count",
+          "inputs": {
+            "a0": "7"
+          },
+          "expect": {
+            "a0": "15"
+          }
+        },
+        {
+          "name": "A different caller input",
+          "inputs": {
+            "a0": "14"
+          },
+          "expect": {
+            "a0": "29"
+          }
+        }
+      ]
+    },
+    "c": "unsigned long half_distance(unsigned long distance) {\n    return distance >> 1;\n}\nunsigned long report(unsigned long distance) {\n    return half_distance(distance) + 3;\n}",
+    "references": ["integer", "abi", "assembler"],
+    "sourceLessons": ["calls-and-returns", "returning-to-caller"],
+    "originalityNote": "Adapt the trip helper to a visible RISC-V caller using a0 and ra, with an explicit jump past the helper and no invented compiler listing."
+  },
+  {
+    "id": "preserving-return-address",
+    "module": "functions",
+    "title": "Keep the return address across a call",
+    "summary": "Save a function\u2019s incoming return address before it calls another helper.",
+    "objectives": [
+      "Explain why a nested call overwrites the return address.",
+      "Use an aligned stack frame to save and restore ra."
+    ],
+    "before": [
+      "A function that calls another function needs two return destinations at different times. It first receives the address of its own caller in `ra`. Its nested `call` then replaces `ra` with an address inside the current function. Save the first address before making that call.",
+      "The stack is memory used by active calls. Its current boundary is the stack pointer, `sp`; reserving space subtracts from that pointer because this stack grows towards lower addresses. The space reserved by one invocation is its stack frame.",
+      "The standard calling convention requires 16-byte stack alignment throughout a procedure: `sp` stays a multiple of 16. This example reserves 16 bytes, uses `sd ra, 8(sp)` to save the 64-bit address eight bytes above the new pointer, and uses `ld` to restore it. Releasing the frame adds the same size back to `sp`.",
+      "Run the whole fragment and inspect the final `a0` and `sp`. The snapshot is after both functions return, not a sequence of intermediate stack states. The lab supplies an aligned initial stack pointer and its reserved inspection area."
+    ],
+    "starter": "li a0, 64\ncall report_once\nj report_done\nreport_once:\naddi sp, sp, -16\nsd ra, 8(sp)\ncall half_distance\naddi a0, a0, 1\nld ra, 8(sp)\naddi sp, sp, 16\nret\nhalf_distance:\nsrli a0, a0, 1\nret\nreport_done:\n",
+    "observe": ["a0", "sp", "ra"],
+    "result": "a0",
+    "prediction": {
+      "prompt": "What does a0 hold once report_once returns to the outer fragment?",
+      "register": "a0",
+      "reading": "unsigned",
+      "hint": "The helper halves the incoming value; report_once resumes after that call and adds its own contribution."
+    },
+    "explanation": [
+      "The helper\u2019s return and the report\u2019s return need different addresses. Restoring the saved `ra` after the nested call lets the report\u2019s final `ret` reach the original caller. The call instruction does not allocate a frame or preserve an older return address automatically.",
+      "If the report returns through the nested call\u2019s address, it can revisit its own post-call instructions rather than leave the function. The helper may have returned correctly even though its caller can no longer return correctly.",
+      "Restoring `sp` releases the frame\u2019s space. It does not erase the saved bytes. Released storage is no longer a place where that function may keep live values. The challenge checks the actual stack pointer against its captured initial value, rather than relying on a fixed numerical stack address."
+    ],
+    "experiment": {
+      "task": "Temporarily remove the ra save and restore while keeping the nested call. Run the changed program, use Stop if it does not finish, and then restore the two instructions.",
+      "hint": "Identify which address the helper call leaves in ra. The final ret uses that address unless you restore the report\u2019s incoming one."
+    },
+    "challenge": {
+      "task": "a0 arrives as an unsigned distance. Complete report_once so it calls the supplied half_distance helper, adds one after the return, and returns its result in a0. Keep the supplied helper unchanged. Preserve the initial sp by balancing the frame reservation and release, and retain the ra save and restore.",
+      "starter": "call report_once\nj report_done\nreport_once:\naddi sp, sp, -16\nsd ra, 8(sp)\ncall half_distance\n# Finish the report\u2019s calculation here.\nld ra, 8(sp)\naddi sp, sp, 16\nret\nhalf_distance:\nsrli a0, a0, 1\nret\nreport_done:\n",
+      "reference": "call report_once\nj report_done\nreport_once:\naddi sp, sp, -16\nsd ra, 8(sp)\ncall half_distance\naddi a0, a0, 1\nld ra, 8(sp)\naddi sp, sp, 16\nret\nhalf_distance:\nsrli a0, a0, 1\nret\nreport_done:\n",
+      "hints": [
+        "Leave the frame machinery intact while you complete the arithmetic.",
+        "The extra amount must be added after the helper has replaced a0 with its result.",
+        "The zero-distance case still needs the report\u2019s added contribution."
+      ],
+      "cases": [
+        {
+          "name": "Zero distance still returns through both calls",
+          "inputs": {
+            "a0": "0"
+          },
+          "expect": {
+            "a0": "1"
+          },
+          "expectEqual": {
+            "sp": "initial:sp"
+          }
+        },
+        {
+          "name": "An even distance",
+          "inputs": {
+            "a0": "64"
+          },
+          "expect": {
+            "a0": "33"
+          },
+          "expectEqual": {
+            "sp": "initial:sp"
+          }
+        },
+        {
+          "name": "An odd distance",
+          "inputs": {
+            "a0": "127"
+          },
+          "expect": {
+            "a0": "64"
+          },
+          "expectEqual": {
+            "sp": "initial:sp"
+          }
+        }
+      ]
+    },
+    "references": ["integer", "abi"],
+    "sourceLessons": ["calls-and-returns", "preserving-values-across-calls"],
+    "originalityNote": "Replace Arm paired stack operations with explicit RV64 sd and ld while preserving the source lesson\u2019s distinct helper-return and caller-return failure mechanism."
+  },
+  {
+    "id": "stack-frames",
+    "module": "functions",
+    "title": "Keep values in a stack frame",
+    "summary": "Inspect an active frame and preserve a saved register while a helper changes its argument registers.",
+    "objectives": [
+      "Relate a frame offset to actual byte memory.",
+      "Preserve s0 and sp while keeping a value across a call."
+    ],
+    "before": [
+      "A return address is not the only value a caller may need after a helper runs. Argument registers such as `a1` are caller-saved: a callee is allowed to change them. Registers `s0` through `s11` are callee-preserved, so a function that changes one must restore its incoming value before returning.",
+      "The example first copies the starting `sp` into temporary register `t0`, then reserves a 64-byte frame. It saves `s0` at offset zero, changes the working `s0`, and loads the saved value into `t1`. Subtracting the current pointer from the earlier pointer records the reservation size in `t2`.",
+      "This example deliberately stops with the frame still active. Its memory view begins at the final `sp`, so the first eight bytes belong to the saved 64-bit value. Little-endian order puts its lowest byte at the lowest address. The challenge completes a returning function instead, and must release its frame."
+    ],
+    "starter": "li s0, 73\nmv t0, sp\naddi sp, sp, -64\nsd s0, 0(sp)\nli s0, 9\nld t1, 0(sp)\nsub t2, t0, sp\n",
+    "observe": ["s0", "t1", "t2", "sp"],
+    "result": "t1",
+    "memory": "stack",
+    "memoryLabels": [
+      {
+        "offset": 0,
+        "label": "saved s0, eight bytes"
+      }
+    ],
+    "prediction": {
+      "prompt": "What does t1 hold after it loads the saved frame value?",
+      "register": "t1",
+      "reading": "signed",
+      "hint": "Changing the working register does not change the separate value already stored in memory."
+    },
+    "explanation": [
+      "A saved value and the register currently used for a calculation are different storage locations. The load reads the frame bytes, so reusing `s0` afterwards does not destroy the saved copy. The byte view connects the offset in `sd` and `ld` to the addressed storage.",
+      "A callee-preserved register solves a different problem from a temporary register. A function may use `s0` to keep a reserve across a call because its helper must preserve `s0`. That function still owes its own caller the incoming `s0`, so it saves the old value before reusing it.",
+      "The challenge\u2019s helper deliberately clears `a1`. Keep the reserve somewhere that survives the call, then restore the saved register and release the frame before returning. The final snapshot shows the restored state; it does not promise that popped frame bytes below `sp` remain visible in the inspection window."
+    ],
+    "experiment": {
+      "task": "Change the value saved into the active frame and inspect its low-address bytes. Then load from offset 8 instead of offset 0 and compare the observation. Restore the correct offset afterwards.",
+      "hint": "Each 64-bit slot occupies eight bytes. Reserving a frame does not put the saved value into every slot."
+    },
+    "challenge": {
+      "task": "a0 holds an unsigned distance, a1 holds a reserve, and s0 holds a caller-owned value. Complete trip_report to return half the distance plus the original reserve in a0. The supplied helper clears a1. Keep its code unchanged. Preserve incoming s0 and sp, protect ra, and keep the 32-byte frame aligned.",
+      "starter": "call trip_report\nj stack_done\ntrip_report:\naddi sp, sp, -32\nsd ra, 24(sp)\nsd s0, 16(sp)\nli s0, 0\ncall half_distance\nadd a0, a0, s0\nld s0, 16(sp)\nld ra, 24(sp)\naddi sp, sp, 32\nret\nhalf_distance:\nsrli a0, a0, 1\nli a1, 0\nret\nstack_done:\n",
+      "reference": "call trip_report\nj stack_done\ntrip_report:\naddi sp, sp, -32\nsd ra, 24(sp)\nsd s0, 16(sp)\nmv s0, a1\ncall half_distance\nadd a0, a0, s0\nld s0, 16(sp)\nld ra, 24(sp)\naddi sp, sp, 32\nret\nhalf_distance:\nsrli a0, a0, 1\nli a1, 0\nret\nstack_done:\n",
+      "hints": [
+        "The helper may replace a1, so the original reserve must move before the call.",
+        "The frame already protects the incoming s0; use that register for the reserve, then restore its saved value.",
+        "With distance zero and a nonzero reserve, the final result still needs the original reserve."
+      ],
+      "cases": [
+        {
+          "name": "Reserve survives a helper that clears a1",
+          "inputs": {
+            "a0": "128",
+            "a1": "9",
+            "s0": "77"
+          },
+          "expect": {
+            "a0": "73",
+            "s0": "77"
+          },
+          "expectEqual": {
+            "sp": "initial:sp"
+          }
+        },
+        {
+          "name": "Zero distance and a preserved negative caller value",
+          "inputs": {
+            "a0": "0",
+            "a1": "6",
+            "s0": "-3"
+          },
+          "expect": {
+            "a0": "6",
+            "s0": "-3"
+          },
+          "expectEqual": {
+            "sp": "initial:sp"
+          }
+        },
+        {
+          "name": "Zero reserve",
+          "inputs": {
+            "a0": "15",
+            "a1": "0",
+            "s0": "0x1234"
+          },
+          "expect": {
+            "a0": "7",
+            "s0": "0x1234"
+          },
+          "expectEqual": {
+            "sp": "initial:sp"
+          }
+        }
+      ]
+    },
+    "references": ["abi", "integer"],
+    "sourceLessons": ["calls-and-returns", "preserving-values-across-calls"],
+    "originalityNote": "Carry the trip report\u2019s reserve-preservation problem into RV64 with byte-addressed stack slots and a separately observed active-frame example."
+  },
+  {
+    "id": "recursive-progress",
+    "module": "functions",
+    "title": "Make progress towards the base case",
+    "summary": "Use a fading display to follow saved values and a decreasing argument through recursive calls.",
+    "objectives": [
+      "Explain the base case and the progress made by each recursive argument.",
+      "Keep values and return addresses safe in separate active frames."
+    ],
+    "before": [
+      "The display repeatedly halves its unsigned brightness until it reaches zero. A function can add all the nonzero brightness levels by asking the same function to handle the remaining levels. A function that calls itself uses recursion.",
+      "Recursion needs a base case: an input the function can answer without another call. Here zero returns zero. `beqz a0, fade_zero` branches when `a0` is zero. It is a pseudo-instruction for `beq a0, zero, fade_zero`. Every nonzero call saves its own brightness and return address, halves the argument in `a0`, and calls `fade_sum` again.",
+      "When the smaller call returns, `a0` holds its result. The current call loads its saved original brightness, adds it to that result, restores `ra`, releases its frame and returns. Each active invocation has a separate 16-byte frame, even though every invocation runs the same instructions.",
+      "The editor supplies the starting brightness explicitly. Predict the final returned sum in `a0`. The result and restored stack pointer are final observations; do not read them as a drawing of every intermediate frame."
+    ],
+    "starter": "li a0, 7\ncall fade_sum\nj fade_done\nfade_sum:\nbeqz a0, fade_zero\naddi sp, sp, -16\nsd ra, 8(sp)\nsd a0, 0(sp)\nsrli a0, a0, 1\ncall fade_sum\nld t0, 0(sp)\nadd a0, a0, t0\nld ra, 8(sp)\naddi sp, sp, 16\nret\nfade_zero:\nli a0, 0\nret\nfade_done:\n",
+    "observe": ["a0", "sp", "ra"],
+    "result": "a0",
+    "prediction": {
+      "prompt": "What sum does fade_sum return in a0 after all the calls finish?",
+      "register": "a0",
+      "reading": "unsigned",
+      "hint": "List the nonzero brightness values reached by repeated logical right shifts. The zero call contributes no brightness."
+    },
+    "explanation": [
+      "The original brightness cannot stay in `a0` while the recursive call runs: that register carries both the smaller argument and its returned result. Saving the brightness in this call\u2019s frame keeps it available for the pending addition.",
+      "The deepest call returns first. Each caller then completes the addition it was waiting to perform and returns to the next caller. The saved `ra` identifies where that particular invocation resumes. Returning releases a frame but does not erase its bytes.",
+      "A base case works only if later arguments move towards it. Repeated logical right shifts eventually remove every set bit of an unsigned 64-bit value. Passing the unchanged nonzero input would keep allocating frames without reaching zero. A finite xv6 stack can run out; a run limit or Stop ends the experiment rather than completing the recursive calculation."
+    ],
+    "experiment": {
+      "task": "Change the brightness to 8 and compare the returned sum. Then temporarily remove the right shift before the recursive call; use Stop or inspect a guest fault, and restore the progressing version.",
+      "hint": "The smaller argument must change before the call. Adding after a call cannot help if that call never returns."
+    },
+    "challenge": {
+      "task": "a0 holds an unsigned 64-bit brightness. Complete lit_count so it returns the number of nonzero levels reached by repeatedly halving the brightness. Zero returns zero. Keep the recursive structure, the return-address save and restore, and the aligned frame. Preserve the initial sp.",
+      "starter": "call lit_count\nj count_done\nlit_count:\nbeqz a0, count_zero\naddi sp, sp, -16\nsd ra, 8(sp)\nsrli a0, a0, 1\ncall lit_count\n# Count this invocation\u2019s nonzero level here.\nld ra, 8(sp)\naddi sp, sp, 16\nret\ncount_zero:\nli a0, 0\nret\ncount_done:\n",
+      "reference": "call lit_count\nj count_done\nlit_count:\nbeqz a0, count_zero\naddi sp, sp, -16\nsd ra, 8(sp)\nsrli a0, a0, 1\ncall lit_count\naddi a0, a0, 1\nld ra, 8(sp)\naddi sp, sp, 16\nret\ncount_zero:\nli a0, 0\nret\ncount_done:\n",
+      "hints": [
+        "The base case counts no nonzero levels.",
+        "The recursive result counts only levels after the current one, so the current nonzero level is still missing.",
+        "For a starting brightness of 1, the smaller call immediately reaches zero. The caller must count its own lit level after that return."
+      ],
+      "cases": [
+        {
+          "name": "Already dark",
+          "inputs": {
+            "a0": "0"
+          },
+          "expect": {
+            "a0": "0"
+          },
+          "expectEqual": {
+            "sp": "initial:sp"
+          }
+        },
+        {
+          "name": "One nonzero level",
+          "inputs": {
+            "a0": "1"
+          },
+          "expect": {
+            "a0": "1"
+          },
+          "expectEqual": {
+            "sp": "initial:sp"
+          }
+        },
+        {
+          "name": "Several halving steps",
+          "inputs": {
+            "a0": "8"
+          },
+          "expect": {
+            "a0": "4"
+          },
+          "expectEqual": {
+            "sp": "initial:sp"
+          }
+        },
+        {
+          "name": "All 64 brightness bits initially set",
+          "inputs": {
+            "a0": "0xffffffffffffffff"
+          },
+          "expect": {
+            "a0": "64"
+          },
+          "expectEqual": {
+            "sp": "initial:sp"
+          }
+        }
+      ]
+    },
+    "c": "unsigned long fade_sum(unsigned long brightness) {\n    if (brightness == 0) return 0;\n    return brightness + fade_sum(brightness >> 1);\n}",
+    "references": ["abi", "integer"],
+    "sourceLessons": ["recursive-calls", "making-recursive-progress"],
+    "originalityNote": "Reuse the source fading-display situation with RV64 per-invocation stack storage and a fresh counting exercise, rather than a factorial or Fibonacci example."
+  }
+]
