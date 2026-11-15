@@ -26,3 +26,7 @@ Limitations: browser phone emulation, not physical-device or screen-reader testi
 ## Follow-up: remove home adaptation note
 
 Independently checked `fix/remove-home-adaptation-note` on 15 November 2026. A character-level comparison against HEAD confirmed the generator and generated home page each contain only the same 634-character deletion for the adaptation section, including its floating-point scope paragraph. In fresh Chromium pages at 1440 and 390 pixels, the section was absent, the Start link and decoded hero image remained visible, all 58 contents links remained present, and neither page overflowed horizontally. The footer retained Sources and licences, Arm Assembly Lab and Report a problem with their original targets; the local NOTICE target returned HTTP 200. No runtime recheck was needed or performed. No finding remains for this follow-up.
+
+## Follow-up: name assembly in the headline
+
+Independently checked `fix/name-assembly-in-hero` on 15 November 2026. Fresh Chromium pages at 1440 and 390 pixels in light and dark displayed the user-approved exact heading, “Learn RISC-V assembly by running it.” The `RISC-V` span remained one nonwrapping text rectangle. The heading, Start CTA, decoded image and contents summary fit the viewport without horizontal overflow. All 58 lesson links remained present, the removed adaptation section stayed absent, and the three footer links retained their original targets. No findings; no runtime checks were needed or performed for this copy change.
