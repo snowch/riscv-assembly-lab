@@ -1,21 +1,25 @@
 // Copyright © 2026 Christopher Snow
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { loadLessons, MODULES, REFERENCES } from "./course-data.js";
-import { debuggerMarkup } from "../site/course/debugger.js";
+import {
+  workbenchMarkup,
+  programResourcesMarkup,
+} from "../site/course/workbench-markup.js";
 import { REGISTERS, registerIndex } from "../site/course/model.js";
 const root = new URL("../site/", import.meta.url),
   lessons = await loadLessons();
-export const escape = (value) =>
-  String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+import { escape, icon, resourceSummary } from "../site/course/html.js";
+export { escape };
 const inline = (value) =>
   escape(value).replace(/`([^`]+)`/g, "<code>$1</code>");
 const paragraphs = (values) =>
   (values ?? []).map((value) => `<p>${inline(value)}</p>`).join("\n");
+const playgroundCopy = JSON.parse(
+  await readFile(
+    new URL("../content/guides/playground.json", import.meta.url),
+    "utf8",
+  ),
+);
 const theme =
   '<label class="theme-label">Theme <select id="theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>';
 function header(prefix) {
@@ -54,19 +58,6 @@ function navigation(current) {
     "",
   )}</nav></details></li><li><a href="../../#${module.id}">${escape(module.title)}</a></li><li><span aria-current="page">${escape(current.title)}</span></li></ol></nav>`;
 }
-const icons = {
-  code: '<path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-12-2 14"/>',
-  book: '<path d="M12 5v15M3 4c4-1 6 0 9 1 3-1 5-2 9-1v15c-4-1-6 0-9 1-3-1-5-2-9-1Z"/>',
-  layout:
-    '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M10 9v12"/>',
-  guide: '<circle cx="12" cy="12" r="9"/><path d="m16 8-3 5-5 3 3-5Z"/>',
-  calculator:
-    '<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8M8 10h1m3 0h1m3 0h1M8 14h1m3 0h1m3 0h1M8 18h1m3 0h1m3 0h1"/>',
-};
-const icon = (name) =>
-  `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name]}</svg>`;
-const resourceSummary = (label, name, description = "") =>
-  `<summary>${icon(name)}<span class="resource-label">${label}${description ? `<span class="resource-description">${description}</span>` : ""}</span><span class="resource-chevron" aria-hidden="true"></span></summary>`;
 function operandDiagram(lesson) {
   if (lesson.id !== "addition") return "";
   const instruction = lesson.starter
@@ -147,41 +138,17 @@ for (let index = 0; index < lessons.length; index++) {
   };
   const previous = lessons[index - 1],
     next = lessons[index + 1];
-  const memory = lesson.memory
-    ? `<section class="memory-section" aria-labelledby="memory-heading"><div class="section-heading"><h3 id="memory-heading">${lesson.memory === "stack" ? "Stack bytes" : "Memory bytes"}</h3>${lesson.memory === "data" ? '<div role="group" aria-label="Memory moment"><button id="memory-before" aria-pressed="true">Before</button><button id="memory-after" aria-pressed="false">After</button></div>' : ""}</div><p id="memory-note" class="panel-note">${lesson.memory === "stack" ? "Run or step to inspect 64 mapped bytes from the current stack pointer." : "Supplied bytes before your code. The labels give byte offsets from lesson_data."}</p><div id="memory-grid" class="memory-grid"></div><p id="byte-inspection" class="panel-note">Choose a byte to inspect its address and readings.</p></section>`
-    : "";
   const body = `<div class="course-layout"><main id="main">${navigation(lesson)}<div class="intro"><h1>${escape(lesson.title)}</h1><p>${inline(lesson.summary)}</p>${lesson.id === "addition" ? '<p class="optional-guide">Optional guide: <a href="../../using-the-workbench/">Using the workbench</a></p>' : ""}</div>
  <section class="lesson-guide" aria-label="Before you run">${paragraphs(lesson.before.slice(0, 2))}${operandDiagram(lesson)}${paragraphs(lesson.before.slice(2))}</section>
  <section id="prediction-block" class="prediction-block" aria-labelledby="prediction-heading"><h2 id="prediction-heading">Predict, then check</h2><p>${inline(lesson.prediction.prompt)}</p><div class="prediction-entry"><label for="prediction">Your prediction <span>(${escape(lesson.ui.signed || lesson.prediction.reading === "hex" ? (lesson.prediction.reading ?? "signed") : "decimal")} reading)</span></label><input id="prediction" inputmode="text" autocomplete="off" placeholder="Optional: predict before running"><button id="prediction-hint-button" type="button">Hint</button></div><p id="prediction-hint" hidden>${inline(lesson.prediction.hint)}</p><p id="prediction-feedback" role="status">Run the code to check against the CPU’s result.</p></section>
  <noscript><p>Building and stepping require JavaScript and WebAssembly. <a href="./${lesson.language === "c" ? "lesson.c" : "lesson.s"}">Read the starting code</a>.</p></noscript>
- <section id="workbench" class="workbench" aria-label="Code workbench">
- <div class="workbench-bar"><div class="workbench-context"><span id="editor-context" class="tag" tabindex="-1" aria-live="polite">Example</span><button id="return-example" class="text-button" hidden>Return to example</button></div><div class="workspace-tools"><button id="expand-editor" class="text-button" aria-expanded="false" aria-controls="source-editor">Expand editor</button><button id="fullscreen-workspace" class="text-button" aria-expanded="false" aria-controls="workbench">Full screen</button></div></div>
- <div class="build-toolbar lesson-toolbar"><div class="run-actions"><button id="run" class="primary" disabled>Build &amp; Run</button><button id="debug" disabled>Start debugging</button><button id="step" disabled>Start stepping</button><button id="continue" disabled hidden>Continue</button><button id="stop" disabled>Stop</button></div><p id="run-status" role="status">Loading lesson…</p><p id="sticky-operation" hidden></p><p id="step-location"></p></div>
- <p id="snapshot-note" class="notice" hidden>These observations belong to the source captured at the start of this run. Build again to use your edits.</p>
- <div id="starting-state" class="starting-state"></div>
- <div class="workspace"><section class="panel editor-panel" aria-labelledby="source-heading"><div class="panel-heading"><h2 id="source-heading">${lesson.language === "c" ? "lesson.c" : "lesson.s"}</h2><span class="tag">${lesson.language === "c" ? "TinyCC · RV64" : "RV64GC · xv6"}</span></div>
- <p id="source-help" class="panel-note">${lesson.language === "c" ? "Edit the function" : "Edit the code"}, then choose Build &amp; Run.</p>
- <div id="source-editor" class="editor ${lesson.language === "c" ? "" : "breakpoint-editor"}"><textarea id="source" aria-label="${lesson.language === "c" ? "C source" : "Lesson assembly source"}" aria-describedby="source-help save-state" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" disabled>${escape(lesson.starter)}</textarea></div>
- <div class="editor-footer"><span id="save-state">Draft saves in this browser</span><div><button id="restore" class="text-button">Restore starter</button><button id="download" class="text-button">Download code</button></div></div>
- <details class="lab-help"><summary>How this lab works</summary><div>${lesson.language === "c" ? "<p>The supplied caller passes the starting arguments to your function and reports its result." : "<p>The lab supplies entry, reporting and exit code."} Open <a href="#complete-program">View complete program</a> to inspect the full source.</p><p>Start stepping pauses before the first machine instruction. Step instruction executes one machine instruction. A source line can expand into several machine instructions.</p><p>Tab indents. Press Escape, then Tab to leave the editor. Ctrl / ⌘ + F opens Find. Ctrl / ⌘ + Z undoes an edit. Ctrl / ⌘ + Enter builds and runs.</p><p>Resize using the lower-right corner, or choose Expand editor.</p><p><a href="../../using-the-workbench/" target="_blank" rel="noopener" aria-label="Using the workbench (opens in a new tab)">Using the workbench ↗</a> <span class="subtle">(new tab)</span></p></div></details>
- </section>
- <section class="panel run-panel" aria-labelledby="inspection-heading"><div class="panel-heading"><h2 id="inspection-heading">Inspect</h2><span id="state-badge" class="tag">Ready</span></div>
- <div class="inspection-tabs" role="tablist" aria-label="Inspect">${[["registers", "Registers"], ...(lesson.memory ? [["memory", "Memory"]] : []), ["output", "Output"], ["diagnostics", "Diagnostics"], ["debugger", "Debugger"]].map(([id, title]) => `<button id="tab-${id}" role="tab" aria-selected="${id === "registers"}" aria-controls="inspect-${id}" tabindex="${id === "registers" ? "0" : "-1"}">${title}</button>`).join("")}</div>
- <section id="inspect-registers" class="inspection-view" role="tabpanel" aria-labelledby="tab-registers" tabindex="0"><div class="reading-select" ${lesson.ui.signed ? "" : "hidden"}><label>Decimal reading <select id="reading"><option value="signed">Signed</option><option value="unsigned">Unsigned</option></select></label></div><div id="registers" class="registers"></div><p id="register-note" class="panel-note">Run your code to capture the actual register values.</p></section>
- ${lesson.memory ? `<section id="inspect-memory" class="inspection-view" role="tabpanel" aria-labelledby="tab-memory" tabindex="0" hidden>${memory}</section>` : ""}
- <section id="inspect-output" class="inspection-view" role="tabpanel" aria-labelledby="tab-output" tabindex="0" hidden><details id="program-output" open><summary>Program output <span>Your code’s console text</span></summary><pre id="console" tabindex="0" aria-label="Program output">Not run yet.</pre></details><details id="serial-log"><summary>xv6 serial log <span>Boot, program and shell</span></summary><pre id="serial" tabindex="0">Not started yet.</pre></details></section>
- <section id="inspect-diagnostics" class="inspection-view" role="tabpanel" aria-labelledby="tab-diagnostics" tabindex="0" hidden><details id="diagnostics" open><summary>Build messages <span id="diagnostics-summary">Not built yet</span></summary><div id="diagnostic-lines"></div></details></section>
- <section id="inspect-debugger" class="inspection-view" role="tabpanel" aria-labelledby="tab-debugger" tabindex="0" hidden>${debuggerMarkup(lesson)}<section id="step-observations" class="step-observations" hidden><h3>Instruction path</h3><p>The program counter (PC) holds the address of the next machine instruction. Arrows record addresses observed during execution.</p><p id="current-instruction"></p><ol id="trace-list"></ol></section></section>
- </section></div></section>
- <details class="explanation" id="bit-view" ${lesson.ui.signed ? "" : "hidden"}><summary>Inspect the register bits</summary><div class="bit-controls"><label>Register <select id="bit-register"></select></label><button id="bits-high">High bits</button><button id="bits-low">Low bits</button></div><p id="bit-reading"></p><div id="bits-scroller" tabindex="0" aria-label="Register bits, highest on the left"><div id="bits"></div></div>${lesson.id === "floating-point-bits" ? '<p id="floating-reading"></p><p>Binary32 interpretation of the observed low 32 bits, not execution of a floating-point instruction.</p>' : ""}</details>
+ ${workbenchMarkup(lesson)}
  <section class="lesson-explanation" aria-labelledby="explanation-heading"><h2 id="explanation-heading">What the instructions do</h2>${paragraphs(lesson.explanation)}</section>
  <section id="experiment" class="next-step"><div><h2>Change it and run again</h2><p>${inline(lesson.experiment.task)}</p><details><summary>A hint</summary><p>${inline(lesson.experiment.hint)}</p></details></div></section>
  <details id="challenge" class="challenge-section"><summary>Optional exercise <span>Check your code on fresh inputs</span></summary><div class="exercise-body"><p>${inline(lesson.challenge.task)}</p><p>Load your saved exercise draft, or its starter code. Your example draft stays available through Return to example.</p><button id="start-challenge">Load exercise</button><div id="challenge-controls" hidden><p>Build &amp; Run uses the selected case. Check all cases runs your code against every case, each on a fresh machine.</p><div id="case-picker"></div><button id="check-cases" class="primary">Check all cases</button><p id="challenge-status" role="status">No cases checked yet.</p><ol id="case-results"></ol><div class="hint-controls"><button id="next-hint">Show a hint</button><ol id="challenge-hints"></ol></div><details id="reference-solution"><summary>Reference solution</summary><p>Compare the mechanism after you have tried the challenge. Your code can differ and still pass.</p><pre tabindex="0">${escape(lesson.challenge.reference)}</pre><button id="use-reference">Load reference into editor</button></details></div></div></details>
  ${lesson.c ? `<details class="explanation"><summary>Compare the C intent</summary><p>Equivalent intent for this target. This assembly was written for teaching; it is not presented as compiler output.</p><div class="paired-listing"><div><h3>C intent</h3><pre>${escape(lesson.c)}</pre></div><div><h3>Current assembly fragment</h3><pre id="c-intent-assembly">${escape(lesson.starter)}</pre></div></div></details>` : ""}
- <details id="compiled-listing" class="explanation" ${lesson.language === "c" ? "" : "hidden"}><summary>Inspect the real compiler output</summary><p>TinyCC builds the C locally. GNU objdump disassembles the resulting executable. This TinyCC build does not emit source-line mappings, so the page does not guess which C line produced each instruction.</p><div class="paired-listing"><div><h3>C used in this build</h3><pre id="compiled-source">Not compiled yet.</pre></div><div><h3>Machine instructions</h3><pre id="compiled-assembly">Not compiled yet.</pre></div></div></details>
- <section class="lesson-resources" aria-label="Lesson resources"><details id="complete-program" class="explanation complete-program resource-row">${resourceSummary("View complete program", "code", "Entry, your code, reporting and exit")}<div class="explanation-body"><p>This is the complete source for the current editor. The supplied code reserves an aligned inspection area, prepares the listed inputs, and captures registers and memory before formatting the report. It then uses xv6 write and exit calls.</p><button id="download-complete">Download complete program</button>${lesson.language === "c" ? '<h3>C function</h3><pre id="complete-c-source"></pre><h3>Supplied assembly caller and reporting code</h3>' : ""}</div><pre id="complete-source" tabindex="0" aria-label="Complete assembly program"></pre></details>
- <details class="explanation resource-row">${resourceSummary("Executable layout", "layout")}<p>The load regions below come from the ELF built for the last run. xv6 loads these regions and sets the initial stack before entering the program.</p><div id="elf-layout">Build once to inspect its actual load segments.</div></details>
- <details class="explanation resource-row">${resourceSummary("References", "book")}<ul>${[...new Set([...lesson.references, "assembler"])].map((key) => `<li><a href="${REFERENCES[key][1]}">${escape(REFERENCES[key][0])}</a></li>`).join("")}<li><a href="../../NOTICE.md">Runtime, source and licensing record</a></li></ul></details><a class="resource-link" href="../../using-the-workbench/">${icon("guide")}<span class="resource-label">Using the workbench</span><span class="resource-chevron" aria-hidden="true"></span></a></section>
+ ${programResourcesMarkup(lesson)}
+ <details class="explanation resource-row">${resourceSummary("References", "book")}<ul>${[...new Set([...lesson.references, "assembler"])].map((key) => `<li><a href="${REFERENCES[key][1]}">${escape(REFERENCES[key][0])}</a></li>`).join("")}<li><a href="../../NOTICE.md">Runtime, source and licensing record</a></li></ul></details><a id="open-playground" class="resource-link" href="../../playground/" target="_blank" rel="noopener" aria-label="${escape(playgroundCopy.links.lessonAccessibleLabel)}">${icon("code")}<span class="resource-label">${escape(playgroundCopy.links.lessonLabel)}<span class="resource-description">${escape(playgroundCopy.links.lessonDescription)}</span></span><span class="resource-chevron" aria-hidden="true"></span></a><a class="resource-link" href="../../using-the-workbench/">${icon("guide")}<span class="resource-label">Using the workbench</span><span class="resource-chevron" aria-hidden="true"></span></a></section>
  <div class="lesson-completion"><label><input type="checkbox" id="lesson-complete"> Mark lesson complete</label><p>Saved in this browser when storage is available.</p></div><nav class="lesson-navigation" aria-label="Lesson navigation">${previous ? `<a href="../${previous.id}/"><span>← Previous lesson</span>${escape(previous.title)}</a>` : '<a href="../../"><span>Course overview</span>Choose a lesson</a>'}${next ? `<a href="../${next.id}/"><span>Next lesson →</span>${escape(next.title)}</a>` : '<a href="../../"><span>Course overview</span>Choose another topic</a>'}</nav>
  </main></div>`;
   const dir = new URL(`lessons/${lesson.id}/`, root);
@@ -208,7 +175,7 @@ const courseContents = `<p id="course-progress" role="status"></p><details id="c
       )
       .join("")}</ol></details>`,
 ).join("")}</div></details>`;
-const home = `<main id="main" class="course-home"><section class="intro home-hero"><div class="home-hero-copy"><p class="eyebrow">Write it. Run it. Inspect the bits.</p><h1>Learn <span class="architecture-name">RISC-V</span> assembly by running it.</h1><p>Start with three instructions. Build towards functions, C and a working trip calculation in xv6.</p><p class="subtle">${lessons.length} focused lessons · real GNU tools · execution in your browser</p><a class="primary home-start" href="./lessons/${lessons[0].id}/">Start the course →</a> <a class="secondary-link" href="./lessons/hello-world/">Try Hello World</a></div><div class="home-hero-art"><img src="./assets/riscv-hero.webp" alt="" width="1536" height="1024" fetchpriority="high" decoding="async"></div></section>${courseContents}<section class="course-introduction"><p>Optional guide: <a href="./using-the-workbench/">Using the workbench</a>.</p><h2>Registers hold bits. Instructions decide what they mean.</h2><p>Predict a result, run or step the code, inspect registers and bytes, then change the example. Each challenge checks your code on fresh inputs. Supplied entry and reporting code stays available behind “View complete program”.</p><h2>Before you start</h2><p>You can read simple C: variables, if statements, loops, functions and arrays. You can read small binary numbers using place values. No assembly, hexadecimal, two’s complement or pointers are assumed. <a href="https://snowch.github.io/bit-lab/">Bit Lab</a> offers an optional binary refresher.</p><p>The target is 64-bit RISC-V with the RV64GC instruction set and the standard integer calling convention. Programs run as real xv6 user processes. RISC-V has no Arm condition flags; the arithmetic and branch lessons teach its own mechanisms.</p><p>An assembler turns assembly text into machine-code bytes. A linker joins those pieces and resolves their addresses to make an executable file. The GNU assembler and linker do that locally here. The C lessons add the pinned TinyCC compiler. Source drafts and completion marks stay in this browser; guest files are disposable. <a href="./NOTICE.md">Sources and runtime details</a>.</p></section></main>`;
+const home = `<main id="main" class="course-home"><section class="intro home-hero"><div class="home-hero-copy"><p class="eyebrow">Write it. Run it. Inspect the bits.</p><h1>Learn <span class="architecture-name">RISC-V</span> assembly by running it.</h1><p>Start with three instructions. Build towards functions, C and a working trip calculation in xv6.</p><p class="subtle">${lessons.length} focused lessons · real GNU tools · execution in your browser</p><a class="primary home-start" href="./lessons/${lessons[0].id}/">Start the course →</a> <a class="secondary-link" href="./lessons/hello-world/">Try Hello World</a></div><div class="home-hero-art"><img src="./assets/riscv-hero.webp" alt="" width="1536" height="1024" fetchpriority="high" decoding="async"></div></section>${courseContents}<section class="course-introduction"><p><a href="./playground/">${escape(playgroundCopy.links.homeLabel)}</a> · ${escape(playgroundCopy.links.homeDescription)}</p><p>Optional guide: <a href="./using-the-workbench/">Using the workbench</a>.</p><h2>Registers hold bits. Instructions decide what they mean.</h2><p>Predict a result, run or step the code, inspect registers and bytes, then change the example. Each challenge checks your code on fresh inputs. Supplied entry and reporting code stays available behind “View complete program”.</p><h2>Before you start</h2><p>You can read simple C: variables, if statements, loops, functions and arrays. You can read small binary numbers using place values. No assembly, hexadecimal, two’s complement or pointers are assumed. <a href="https://snowch.github.io/bit-lab/">Bit Lab</a> offers an optional binary refresher.</p><p>The target is 64-bit RISC-V with the RV64GC instruction set and the standard integer calling convention. Programs run as real xv6 user processes. RISC-V has no Arm condition flags; the arithmetic and branch lessons teach its own mechanisms.</p><p>An assembler turns assembly text into machine-code bytes. A linker joins those pieces and resolves their addresses to make an executable file. The GNU assembler and linker do that locally here. The C lessons add the pinned TinyCC compiler. Source drafts and completion marks stay in this browser; guest files are disposable. <a href="./NOTICE.md">Sources and runtime details</a>.</p></section></main>`;
 await writeFile(
   new URL("index.html", root),
   document("Course", home, { prefix: "./", script: "./course/home.js" }),
@@ -239,5 +206,57 @@ await writeFile(
     prefix: "../",
     script: "../course/home.js",
     styles: ["../course/guide.css"],
+  }),
+);
+
+// The independent app is generated from the same workbench markup as lessons.
+const { fromLesson, newProject, projectContext } =
+  await import("../site/playground/projects.js");
+const defaultProject = newProject("asm", "Register addition");
+defaultProject.id = "default-project";
+const examples = [
+  "addition",
+  "sum-array",
+  "stack-frames",
+  "c-return-values",
+  "system-calls",
+].map((id) => {
+  const lesson = lessons.find((l) => l.id === id);
+  const project = fromLesson(lesson, lesson.starter);
+  project.id = "example-" + id;
+  return project;
+});
+const completeExample = newProject("program", "Hello World");
+completeExample.id = "example-hello-world";
+completeExample.source = await readFile(new URL("hello.s", root), "utf8");
+examples.push(completeExample);
+const project = projectContext(defaultProject),
+  copy = playgroundCopy,
+  labels = copy.labels;
+const typeOptions = copy.projectTypes
+  .map((type) => `<option value="${type.id}">${escape(type.label)}</option>`)
+  .join("");
+const registerOptions = REGISTERS.map(
+  (name) => `<option value="${name}">${name}</option>`,
+).join("");
+const playgroundBody = `<main id="main" class="playground-shell"><div class="playground-intro"><div><h1>${escape(copy.title)}</h1><span id="project-kind" class="tag">Assembly fragment</span><p>${escape(copy.intro)}</p></div><a href="#playground-help">${escape(labels.help)}</a></div>
+<section class="project-tools" aria-label="Project tools"><label>${escape(labels.projects)}<select id="project-picker" disabled></select></label><button id="new-project" disabled>${escape(labels.newProject)}</button><details class="project-examples"><summary>${escape(labels.examples)}</summary><div><label class="project-example-label">${escape(labels.example)}<select id="project-example">${examples.map((project) => `<option value="${project.id}">${escape(project.name)}</option>`).join("")}</select></label><button id="open-example" disabled>${escape(labels.openExample)}</button></div></details><details class="project-actions"><summary>${escape(labels.projectActions)}</summary><div><label>${escape(labels.projectName)}<input id="project-name" maxlength="80" value="${escape(defaultProject.name)}" autocomplete="off"></label><button id="copy-project">${escape(labels.saveCopy)}</button><button id="import-file">${escape(labels.import)}</button><button id="export-project">${escape(labels.export)}</button><button id="delete-project">${escape(labels.delete)}</button></div></details><input type="file" id="project-file" accept=".json,.s,.asm,.c" hidden></section>
+<div class="project-origin-row"><span id="project-origin"></span><button id="undo-delete" class="text-button" hidden>${escape(labels.undoDelete)}</button></div><p id="project-message" role="status"></p>
+<details class="project-setup" id="project-setup"><summary>${escape(labels.setup)} <span id="setup-summary"></span></summary><div><p>${escape(copy.setup.intro)}</p><form id="setup-form"><fieldset id="fragment-setup"><div class="setup-fields"><label>${escape(labels.registers)}<textarea id="project-inputs" rows="3" aria-describedby="project-input-help" placeholder="${escape(copy.setup.registerPlaceholder)}" spellcheck="false"></textarea></label><label>${escape(labels.data)}<textarea id="project-bytes" rows="3" aria-describedby="project-data-help" placeholder="${escape(copy.setup.dataPlaceholder)}" spellcheck="false"></textarea></label></div><p id="project-input-help">${escape(copy.setup.registerHelp)} ${escape(copy.setup.reservedHelp)}</p><p id="project-data-help">${escape(copy.setup.dataHelp)}</p></fieldset><p id="full-program-help" hidden>${escape(copy.setup.fullProgramHelp)}</p><div class="setup-choices"><label>${escape(labels.memoryView)}<select id="project-memory"><option value="data">${escape(labels.dataView)}</option><option value="stack">${escape(labels.stackView)}</option></select></label><label>${escape(labels.highlight)}<select id="project-result">${registerOptions}</select></label><button type="submit">${escape(labels.applySetup)}</button></div><p id="setup-memory-help">${escape(copy.setup.memoryHelp)} ${escape(copy.setup.highlightHelp)}</p><p id="setup-error" class="project-error" role="status"></p></form></div></details>
+<noscript><p>JavaScript and WebAssembly are required to build and run code. <a href="../lessons/addition/lesson.s">Read the addition source</a>.</p></noscript>
+${workbenchMarkup(project, { prefix: "../", standalone: true })}
+<div id="project-resources">${programResourcesMarkup(project, { standalone: true })}</section></div>
+<details id="playground-help" class="playground-help"><summary>${escape(labels.help)}</summary><div>${copy.help.map((section) => `<section><h2>${escape(section.title)}</h2>${paragraphs(section.paragraphs)}</section>`).join("")}<p><a href="../NOTICE.md">Sources and licences</a> · <a href="../using-the-workbench/">Using the workbench</a></p></div></details>
+<dialog id="new-project-dialog" aria-labelledby="new-project-heading"><form id="new-project-form"><h2 id="new-project-heading">${escape(labels.newProject)}</h2><label>${escape(labels.projectName)}<input id="new-project-name" value="Untitled project" maxlength="80" required></label><label>${escape(labels.projectType)}<select id="new-project-kind">${typeOptions}</select></label><p id="new-project-description"></p><p id="new-project-error" class="project-error" role="status"></p><div class="dialog-actions"><button type="button" data-close-dialog>${escape(labels.cancel)}</button><button type="submit" class="primary">${escape(labels.createProject)}</button></div></form></dialog>
+<dialog id="import-project-dialog" aria-labelledby="import-heading"><form id="import-project-form"><h2 id="import-heading">${escape(labels.import)}</h2><label>${escape(labels.projectName)}<input id="import-project-name" maxlength="80" required></label><label>${escape(labels.importAs)}<select id="import-project-kind">${typeOptions}</select></label><pre id="import-preview" tabindex="0" aria-label="Source preview"></pre><p id="import-error" class="project-error" role="status"></p><div class="dialog-actions"><button type="button" data-close-dialog>${escape(labels.cancel)}</button><button type="submit" class="primary">${escape(labels.openImportedProject)}</button></div></form></dialog>
+</main>`;
+await mkdir(new URL("playground/", root), { recursive: true });
+await writeFile(
+  new URL("playground/index.html", root),
+  document(copy.title, playgroundBody, {
+    prefix: "../",
+    script: "../playground/app.js",
+    styles: ["../playground/playground.css"],
+    data: `<script type="application/json" id="playground-data">${JSON.stringify({ defaultProject, examples, copy }).replaceAll("<", "\\u003c")}</script>`,
   }),
 );

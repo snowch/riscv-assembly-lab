@@ -1,0 +1,523 @@
+/* Copyright © 2026 Christopher Snow */
+.playground-shell {
+  max-width: 1800px;
+  padding: 1rem 1.3rem 2rem;
+}
+.playground-intro {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.playground-intro h1 {
+  font-size: 1.6rem;
+  margin: 0.1rem 0;
+  letter-spacing: -0.03em;
+}
+.playground-intro p,
+.playground-intro > a {
+  font-size: 0.85rem;
+  margin: 0.35rem 0;
+}
+.project-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.6rem;
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.project-tools label,
+.project-meta label,
+.setup-choices label {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.project-tools label {
+  flex: 1 1 160px;
+  max-width: 320px;
+  min-width: 0;
+}
+.project-tools select {
+  max-width: 100%;
+  width: 100%;
+  font-size: 0.85rem;
+}
+.project-tools button {
+  font-size: 0.8rem;
+}
+.project-actions {
+  position: relative;
+  border: 0;
+}
+.project-actions > summary {
+  font-size: 0.8rem;
+  padding: 0.6rem;
+}
+.project-actions > div {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 12;
+  display: grid;
+  min-width: 200px;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 8px 25px #0002;
+}
+.project-actions:not([open]) > div {
+  display: none;
+}
+.project-actions button {
+  text-align: left;
+  border: 0;
+  padding: 0.6rem;
+  background: transparent;
+}
+.project-meta {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 0.8rem 0;
+  font-size: 0.8rem;
+}
+.project-meta label {
+  flex: 0 1 360px;
+  min-width: 0;
+}
+.project-meta input {
+  width: 100%;
+}
+.project-meta .tag {
+  white-space: normal;
+}
+#project-origin {
+  font-size: 0.78rem;
+}
+#project-message {
+  font-size: 0.85rem;
+  margin: 0.6rem 0;
+  color: var(--accent);
+}
+.project-error,
+#project-message.project-error {
+  color: var(--error);
+}
+.playground-shell [hidden] {
+  display: none !important;
+}
+.playground-shell [aria-invalid="true"] {
+  border-color: var(--error);
+}
+.project-setup {
+  margin: 1rem 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.project-setup > summary {
+  padding: 0.7rem 1rem;
+  font-size: 0.85rem;
+}
+.project-setup > div {
+  padding: 0 1rem 1rem;
+  font-size: 0.82rem;
+}
+.project-setup fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.setup-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.setup-fields label {
+  display: grid;
+  gap: 0.35rem;
+}
+.setup-fields textarea {
+  min-height: 100px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--code);
+  color: var(--ink);
+  font:
+    14px/1.7 ui-monospace,
+    monospace;
+  padding: 0.7rem;
+  resize: vertical;
+}
+.setup-choices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.8rem;
+}
+.playground-workbench {
+  margin-top: 1rem;
+}
+.playground-workbench .workspace {
+  display: grid;
+  grid-template-columns: minmax(0, var(--editor-share, 55%)) 10px minmax(0, 1fr);
+  gap: 0;
+  height: clamp(480px, 70vh, 850px);
+  min-height: 360px;
+  max-height: 1400px;
+  resize: vertical;
+  overflow: hidden;
+}
+.playground-workbench .editor-panel {
+  grid-column: 1;
+  grid-row: 1;
+  border: 0;
+}
+.playground-workbench .run-panel {
+  grid-column: 3;
+  grid-row: 1;
+}
+.playground-workbench .workspace > .panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.playground-workbench .workspace .editor {
+  flex: 1 1 auto;
+  min-height: 120px;
+  height: auto;
+  max-height: none;
+  resize: none;
+}
+.playground-workbench .panel-heading,
+.playground-workbench .inspection-tabs,
+.playground-workbench .editor-footer,
+.playground-workbench .reading-select {
+  flex-shrink: 0;
+}
+.playground-workbench .inspection-view {
+  flex: 1 1 auto;
+  overflow: auto;
+  min-height: 0;
+}
+.playground-workbench .registers {
+  display: block;
+  padding: 0 0.5rem;
+}
+.playground-workbench .register {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.4rem;
+  align-items: center;
+  padding: 0.4rem 0.5rem;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  margin: 0;
+  background: transparent;
+}
+.playground-workbench .register h3 {
+  font-size: 0.8rem;
+}
+.playground-workbench .register h3 span {
+  display: block;
+  margin: 0;
+  font-size: 11px;
+}
+.playground-workbench .register .register-value {
+  font-size: 0.8rem;
+  margin: 0;
+}
+.playground-workbench .register .register-hex {
+  font-size: 11px;
+}
+.playground-workbench .register.destination {
+  background: var(--notice);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+}
+.playground-workbench .lab-help > div {
+  max-height: 200px;
+  overflow: auto;
+}
+#workspace-divider {
+  grid-column: 2;
+  grid-row: 1;
+  background: var(--soft);
+  cursor: col-resize;
+  touch-action: none;
+  border-inline: 1px solid var(--border);
+}
+#workspace-divider:hover,
+#workspace-divider:focus-visible {
+  background: var(--accent);
+  outline: 0;
+}
+#workspace-divider::after {
+  content: "";
+  display: block;
+  height: 45px;
+  width: 2px;
+  margin: 200px auto 0;
+  background: var(--muted);
+}
+.playground-help {
+  margin-top: 1.5rem;
+}
+.playground-help > summary {
+  padding: 1rem 0.2rem;
+  font-size: 1rem;
+}
+.playground-help > div {
+  max-width: 850px;
+  font-size: 0.9rem;
+}
+.playground-help h2 {
+  margin-top: 1.4rem;
+}
+.playground-shell > dialog {
+  width: min(540px, calc(100% - 2rem));
+  max-height: 90dvh;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.4rem;
+}
+.playground-shell > dialog::backdrop {
+  background: #102c2370;
+}
+.playground-shell > dialog label {
+  display: grid;
+  gap: 0.35rem;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+.playground-shell > dialog select {
+  max-width: none;
+}
+.playground-shell > dialog p {
+  font-size: 0.85rem;
+}
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+#import-preview {
+  max-height: 200px;
+  background: var(--code);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+@media (max-width: 950px) {
+  .playground-workbench .workspace {
+    display: block;
+    height: auto;
+    max-height: none;
+    resize: none;
+    overflow: visible;
+  }
+  #workspace-divider {
+    display: none;
+  }
+  .playground-workbench .workspace > .panel {
+    height: auto;
+  }
+  .playground-workbench .workspace .editor {
+    flex: none;
+    min-height: 240px;
+    height: 360px;
+    max-height: 85vh;
+    resize: vertical;
+  }
+  .playground-workbench .run-panel {
+    border-top: 1px solid var(--border);
+  }
+  .playground-workbench .inspection-view {
+    max-height: 65vh;
+    min-height: 160px;
+  }
+  .playground-intro {
+    flex-wrap: wrap;
+    gap: 0.2rem;
+  }
+}
+@media (max-width: 520px) {
+  .playground-shell {
+    padding: 0.8rem;
+  }
+  .project-tools {
+    gap: 0.5rem;
+    padding: 0.65rem;
+  }
+  .project-tools label {
+    flex-basis: 180px;
+    max-width: none;
+  }
+  .project-tools .project-example-label {
+    flex-basis: 180px;
+  }
+  .project-tools button {
+    font-size: 0.75rem;
+  }
+  .setup-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .setup-fields textarea {
+    font-size: 16px;
+  }
+  .playground-workbench .register {
+    grid-template-columns: 60px minmax(0, 1fr);
+  }
+  .playground-workbench .register .register-hex {
+    grid-column: 2;
+  }
+  .playground-workbench .register h3 {
+    grid-row: span 2;
+  }
+  .playground-workbench .workspace .editor {
+    height: 352px;
+  }
+  .playground-shell > dialog input,
+  .playground-shell > dialog select,
+  #project-name {
+    font-size: 16px;
+  }
+}
+
+/* Project management stays secondary to the editor. */
+.playground-intro > div {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem 0.7rem;
+  flex-wrap: wrap;
+}
+.playground-intro > div > p {
+  flex: 1 0 100%;
+}
+.project-tools {
+  align-items: center;
+  padding: 0.55rem 0.7rem;
+}
+.project-tools > label {
+  max-width: 300px;
+}
+.project-origin-row {
+  font-size: 0.78rem;
+  margin: 0.4rem 0;
+}
+.project-origin-row:has(#project-origin:empty):not(
+    :has(#undo-delete:not([hidden]))
+  ) {
+  display: none;
+}
+.project-examples {
+  position: relative;
+  border: 0;
+}
+.project-examples > summary {
+  padding: 0.6rem;
+  font-size: 0.8rem;
+}
+.project-examples > div {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 12;
+  width: min(320px, calc(100vw - 3rem));
+  padding: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 8px 25px #0002;
+}
+.project-examples:not([open]) > div {
+  display: none;
+}
+.project-examples label,
+.project-actions label {
+  display: grid;
+  gap: 0.3rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.78rem;
+}
+.project-actions input {
+  width: 100%;
+}
+.project-examples button {
+  margin-top: 0.5rem;
+}
+.project-setup {
+  margin: 0.6rem 0;
+}
+.project-setup > summary {
+  min-height: 44px;
+  padding: 0.6rem 0.9rem;
+}
+.project-setup > summary span {
+  font-size: 0.75rem;
+}
+.playground-workbench .workbench-bar {
+  padding: 0;
+  border: 0;
+}
+.playground-workbench .workbench-context {
+  display: none;
+}
+.playground-workbench #expand-editor {
+  display: none;
+}
+.playground-workbench .workspace-tools {
+  margin-left: auto;
+}
+@media (max-width: 520px) {
+  .project-tools > label {
+    flex: 1 1 190px;
+  }
+  .project-tools > button {
+    align-self: end;
+  }
+  .project-tools > details {
+    margin-top: 0;
+  }
+  .project-examples > div {
+    left: 0;
+  }
+  .project-actions > div {
+    right: auto;
+    left: 0;
+    max-width: calc(100vw - 3rem);
+  }
+  .project-setup > summary span {
+    margin-left: 1rem;
+  }
+}
+.workbench-observation {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0.4rem 0.8rem;
+}
+@media (max-width: 520px) {
+  .playground-intro h1 {
+    font-size: 1.3rem;
+  }
+  .playground-intro {
+    margin-bottom: 0.6rem;
+  }
+  .playground-shell {
+    padding-top: 0.6rem;
+  }
+}

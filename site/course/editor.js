@@ -201,7 +201,8 @@ export function createSourceEditor(
 ) {
   const readOnly = new Compartment();
   const setDebug = StateEffect.define();
-  let lastReadOnly = false,
+  let alive = true,
+    lastReadOnly = false,
     changeQueued = false;
   let debug = { activeLine: null, breakpoints: [], disabled: false };
   const debugField = StateField.define({
@@ -343,7 +344,7 @@ export function createSourceEditor(
         changeQueued = true;
         queueMicrotask(() => {
           changeQueued = false;
-          onChange();
+          if (alive) onChange();
         });
       }
     }),
@@ -447,6 +448,7 @@ export function createSourceEditor(
       return view.scrollDOM;
     },
     destroy() {
+      alive = false;
       view.destroy();
       textarea.hidden = false;
       textarea.style.display = originalDisplay;

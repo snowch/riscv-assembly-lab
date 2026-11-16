@@ -92,6 +92,19 @@
         "The example and optional exercise keep separate drafts. Drafts save in this browser when storage is available; check the save message. Download code keeps a file.",
         "Restore starter replaces your edits; Undo restore recovers them. View complete program shows the supplied entry, reporting and exit code around your work."
       ]
+    },
+    {
+      "id": "independent-project",
+      "title": "Work on an independent project",
+      "paragraphs": [
+        "The playground uses the same editor, build tools and debugger as the lessons. It keeps named projects with their source and starting setup.",
+        "Choose Open in playground from a lesson to create a project from your current code. For an exercise, it also carries the selected case’s inputs and data. The playground opens in a new tab, so your lesson stays open.",
+        "Projects and lesson drafts are separate. Changes in the playground do not replace the lesson draft. Export project keeps the source and setup in one file."
+      ],
+      "link": {
+        "href": "../playground/",
+        "label": "Open the playground"
+      }
     }
   ],
   "endLink": {

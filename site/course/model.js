@@ -56,6 +56,8 @@ export function makeProgram(
   fixture = {},
   platform = "xv6",
 ) {
+  if (lesson.kind === "program")
+    return { source: fragment, lineOffset: 0, inputs: {} };
   const inputs = { ...(lesson.inputs ?? {}), ...(fixture.inputs ?? {}) };
   const data = fixture.data ?? lesson.data ?? [];
   if (
@@ -265,7 +267,14 @@ export function checkState(state, fixture) {
 export function diagnosticLocation(line, fragment, lesson = {}, fixture = {}) {
   if (lesson.language === "c") {
     const match = line.match(/lesson\.c:(\d+):/);
-    return match ? { line: Number(match[1]), label: line } : null;
+    return match
+      ? {
+          line: Number(match[1]),
+          label: lesson.sourceName
+            ? line.replaceAll("lesson.c", lesson.sourceName)
+            : line,
+        }
+      : null;
   }
   const match = line.match(/program\.s:(\d+)(?::\d+)?:/);
   if (!match) return null;
@@ -275,6 +284,9 @@ export function diagnosticLocation(line, fragment, lesson = {}, fixture = {}) {
     return null;
   return {
     line: position,
-    label: line.replace(/program\.s:\d+/, `lesson.s:${position}`),
+    label: line.replace(
+      /program\.s:\d+/,
+      `${lesson.sourceName ?? "lesson.s"}:${position}`,
+    ),
   };
 }

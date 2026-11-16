@@ -17,6 +17,8 @@ export function setupWorkbench() {
       document.getElementById("program-output").open = true;
     if (name === "diagnostics")
       document.getElementById("diagnostics").open = true;
+    if (name === "stack")
+      document.getElementById("debug-stack-section").open = true;
     if (name === "debugger")
       document.getElementById("debugger-panel").open = true;
     if (focus) next.focus();
@@ -89,14 +91,18 @@ export function setupWorkbench() {
     toggle.setAttribute("aria-expanded", "true");
     toggle.textContent = nativeFullscreen
       ? "Exit full screen"
-      : "Return to lesson";
+      : document.getElementById("playground-data")
+        ? "Return to playground"
+        : "Return to lesson";
     document.body.style.overflow = "hidden";
     if (nativeFullscreen) {
       try {
         await root.requestFullscreen();
       } catch {
         /* The modal still provides a full-window workspace. */
-        toggle.textContent = "Return to lesson";
+        toggle.textContent = document.getElementById("playground-data")
+          ? "Return to playground"
+          : "Return to lesson";
       }
     }
     toggle.focus({ preventScroll: true });

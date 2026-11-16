@@ -1,10 +1,20 @@
 # RISC-V Assembly Lab
 
-[Open the course](https://snowch.github.io/riscv-assembly-lab/) · [Start with addition](https://snowch.github.io/riscv-assembly-lab/lessons/addition/) · [Hello World](https://snowch.github.io/riscv-assembly-lab/lessons/hello-world/)
+[Open the course](https://snowch.github.io/riscv-assembly-lab/) · [Start with addition](https://snowch.github.io/riscv-assembly-lab/lessons/addition/) · [Hello World](https://snowch.github.io/riscv-assembly-lab/lessons/hello-world/) · [Playground](https://snowch.github.io/riscv-assembly-lab/playground/)
 
 A complete core course in reading, writing and running RISC-V assembly, adapted with the author's permission from [Assembly Lab](https://snowch.github.io/assembly-lab/). The 58 short lessons cover first instructions, register readings, range checks, masks, branches, loops, memory, arrays, multiplication, functions, debugging, C and real xv6 programs, followed by three further readings.
 
 The learner edits the relevant code. Supplied entry, capture and exit code stays behind **View complete program**. Predictions are checked against executed results; each programming challenge runs the same submitted code on fresh cases. No source interpreter or scripted result substitutes for machine execution.
+
+## Independent playground
+
+`/playground/` is a separate workspace in the same site. It shares `workbench-controller.js`, `workbench-markup.js`, the editor, debugger and execution worker with the lessons. It has no predictions, exercise gates or completion controls. Projects retain their source, type, starting registers, data bytes, memory view and highlighted register.
+
+Create assembly fragments, freestanding C functions or complete assembly programs defining `_start`. Fragments/functions use the course's supplied entry and reporter; complete programs use their own source unchanged and do not invent a final register report. Their displayed last paused state is explicitly labelled. All register/memory/stack observations still come from the real CPU.
+
+Named projects save separately in browser storage, with tab-only fallback and JSON export. Import validates JSON projects or previews `.s`, `.asm` and `.c` source before opening it as a new project. Per-project storage keys keep new projects from other tabs, and simultaneous edits preserve an additional recovery copy. Removal has Undo. The desktop splitter and lower edge resize the panes; phone views stack the same tools.
+
+**Open in playground** carries a lesson's current code and selected case setup in a bounded URL fragment, opening a new tab without changing its draft or paused machine. Hello World transfers its current complete source. The course overview and optional guide introduce this independent workspace. Project files contain source/setup, not VM snapshots. This is an original interface built from this repository's components; no AArch64 Playground source or assets were imported.
 
 ## What runs
 
@@ -51,7 +61,7 @@ npm run build:editor
 git diff --exit-code -- site/vendor/editor/ asset-manifest.json
 npm run check:assets
 npm run build:course
-git diff --exit-code -- site/index.html site/lessons/ site/using-the-workbench/ site/course/catalog.json
+git diff --exit-code -- site/index.html site/lessons/ site/using-the-workbench/ site/playground/index.html site/course/catalog.json
 npm test
 # Install qemu-user for qemu-riscv64, or set RISCV_QEMU to its path.
 npm run test:course
