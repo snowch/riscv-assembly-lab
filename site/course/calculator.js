@@ -49,7 +49,7 @@ ${["a", "b"].map((key) => `<div class="calculator-value"><label for="calc-${key}
 </form>
 <p id="calc-status" role="status"></p>
 <section id="calc-result" aria-labelledby="calc-result-heading" hidden><h3 id="calc-result-heading">${copy.retained}</h3><p class="calculator-note">${copy.sameBits}</p><div id="calc-result-readings" class="calculator-readings"></div><p id="calc-full-result"></p><p id="calc-alternate-full-result"></p><p id="calc-retained-note" class="calculator-note"></p><div id="calc-w-bridge" class="calculator-note" hidden><p>${copy.wBridge}</p><p id="calc-w-result"></p></div><button id="calc-use-result" type="button">Use result as A</button></section>
-<details id="calc-bits"><summary>Compare the bits</summary><div class="calculator-bit-tools"><p>Scroll the rows together to compare the same bit positions.</p><button id="calc-high" type="button">High bits</button><button id="calc-low" type="button">Low bits</button></div><p id="calc-bit-help">Choose a bit in A to switch it.</p><label id="calc-carry-control" hidden><input id="calc-carries" type="checkbox"> Show addition carries</label><div id="calc-bit-scroll" tabindex="0" role="region" aria-label="Aligned bits, highest on the left"><div id="calc-bit-rows"></div></div><div id="calc-carry-help" hidden></div></details>
+<details id="calc-bits"><summary>${copy.bits.summary}</summary><div class="calculator-bit-tools"><button id="calc-high" type="button">${copy.bits.high}</button><button id="calc-low" type="button">${copy.bits.low}</button><label id="calc-carry-control"><input id="calc-carries" type="checkbox" disabled aria-describedby="calc-carry-pending"> ${copy.bits.showCarries}</label></div><p id="calc-bit-help">${copy.bits.help}</p><p id="calc-carry-pending" class="calculator-note">${copy.bits.calculateForCarries}</p><div id="calc-bit-scroll" tabindex="0" role="region" aria-label="${copy.bits.region}"><div id="calc-bit-rows"></div></div><div id="calc-carry-help" hidden></div></details>
 <details class="calculator-help"><summary>Numbers and width</summary><p>Unsigned reads the bits as zero or a positive number. Signed uses the top bit to read negative numbers too.</p><p>Hexadecimal and binary entries describe bits. Shorter entries add zeros on the left. Selecting Signed changes how those bits are read; it does not copy their top bit into the added positions.</p><p>Values must fit the selected width. Extra leading zeros are allowed. Other extra upper bits are rejected, so a paste never changes the width or discards part of your value.</p><p>Changing from 64 bits to 32 bits keeps the low 32 bits and discards the upper bits. Changing from 32 bits to 64 bits adds upper zeros, even with Signed selected.</p><p>For Shift left, B is the number of positions to shift: zero to one less than the selected width. The full shift result uses the unsigned A bit pattern.</p></details>
 <div class="calculator-footer"><button id="calc-reset" type="button">Reset calculator</button><p>Values stay in this tab when browser storage is available.</p></div>`;
 document.body.append(dialog);
@@ -62,6 +62,40 @@ dialog.addEventListener("keydown", (event) => {
   }
 });
 const $ = (id) => dialog.querySelector("#" + id);
+let bitScrollLeft = 0,
+  bitGridWidth = null,
+  bitAtLow = false,
+  bitNeedsLow = true;
+function saveBitPosition() {
+  const scroller = $("calc-bit-scroll");
+  // Hidden disclosures and closed dialogs must not overwrite the last view.
+  if (!scroller.clientWidth) return;
+  bitScrollLeft = scroller.scrollLeft;
+  bitGridWidth = scroller.scrollWidth;
+  bitAtLow =
+    scroller.scrollWidth > scroller.clientWidth &&
+    Math.abs(
+      scroller.scrollWidth - scroller.clientWidth - scroller.scrollLeft,
+    ) < 2;
+}
+function restoreBitPosition() {
+  const scroller = $("calc-bit-scroll");
+  if (!dialog.open || !$("calc-bits").open) return;
+  // Out adds a column at the high end; keep the same retained bits in view.
+  scroller.scrollLeft =
+    bitNeedsLow || bitAtLow
+      ? scroller.scrollWidth
+      : bitScrollLeft === 0
+        ? 0
+        : bitScrollLeft +
+          (bitGridWidth === null ? 0 : scroller.scrollWidth - bitGridWidth);
+  bitNeedsLow = false;
+  saveBitPosition();
+}
+$("calc-bit-scroll").addEventListener("scroll", saveBitPosition);
+$("calc-bits").addEventListener("toggle", () => {
+  if ($("calc-bits").open) restoreBitPosition();
+});
 const encoded = (value, width = work.width) =>
   "0x" +
   BigInt(value)
@@ -136,6 +170,7 @@ function save() {
   } catch {}
 }
 function drawBits() {
+  saveBitPosition();
   const rows = $("calc-bit-rows");
   rows.replaceChildren();
   const a = parsed("a"),
@@ -144,13 +179,43 @@ function drawBits() {
     result && work.operation === "add" && $("calc-carries").checked
       ? carries(result.a, result.b, work.width)
       : null;
-  const row = (label, value, editable = false, indices = false) => {
+  const row = (
+    label,
+    value,
+    editable = false,
+    indices = false,
+    carryRow = false,
+  ) => {
     const line = document.createElement("div");
     line.className = "calculator-bit-row";
     const heading = document.createElement("span");
     heading.className = "calculator-bit-label";
     heading.textContent = label;
     line.append(heading);
+    if (addCarries) {
+      const out = document.createElement("span");
+      out.className =
+        "calculator-bit calculator-carry-out" +
+        (indices ? " bit-index" : "") +
+        (!indices && !carryRow ? " carry-out-spacer" : "");
+      out.dataset.carryOut = "";
+      out.textContent = indices
+        ? copy.bits.carryOut
+        : carryRow
+          ? String(addCarries.out)
+          : "";
+      if (indices || carryRow) {
+        out.setAttribute(
+          "aria-label",
+          (indices
+            ? copy.bits.carryOutLabel
+            : copy.bits.carryOutValue.replace("{value}", String(addCarries.out))
+          ).replace("{top}", String(work.width - 1)),
+        );
+        out.title = out.getAttribute("aria-label");
+      } else out.setAttribute("aria-hidden", "true");
+      line.append(out);
+    }
     for (let bit = work.width - 1; bit >= 0; bit--) {
       const digit = indices
         ? String(bit)
@@ -162,6 +227,9 @@ function drawBits() {
         "calculator-bit" +
         (digit === "1" && !indices ? " one" : "") +
         (indices ? " bit-index" : "");
+      cell.dataset.position = String(bit);
+      if (bit !== work.width - 1 && bit % 4 === 3)
+        cell.classList.add("nibble-start");
       cell.textContent = digit;
       if (editable) {
         cell.type = "button";
@@ -183,16 +251,31 @@ function drawBits() {
     rows.append(line);
   };
   row("Bit", null, false, true);
-  if (addCarries) row("Carry in", addCarries.carries);
+  if (addCarries)
+    row(copy.bits.carryIn, addCarries.carries, false, false, true);
   row("A", a.ok ? a.pattern : null, true);
   if (work.operation !== "shift-left")
     row(work.operation === "add" ? "+ B" : "− B", b.ok ? b.pattern : null);
   if (result) row("Result", result.pattern);
-  $("calc-carry-control").hidden = !(result && work.operation === "add");
+  $("calc-carry-control").hidden = work.operation !== "add";
+  $("calc-carries").disabled = !(result && work.operation === "add");
+  $("calc-carry-pending").hidden = Boolean(result) || work.operation !== "add";
+  if ($("calc-carry-pending").hidden)
+    $("calc-carries").removeAttribute("aria-describedby");
+  else $("calc-carries").setAttribute("aria-describedby", "calc-carry-pending");
   $("calc-carry-help").hidden = !addCarries;
   if (addCarries)
     $("calc-carry-help").textContent =
-      `Carry into bit ${work.width - 1}: ${addCarries.intoSign}. Carry out: ${addCarries.out}. Signed overflow: ${addCarries.v ? "Yes" : "No"}. Each column adds the two input bits and the carry from its right. A carry passes to the next column on the left. The carry out leaves the top bit, beyond the retained result. For addition, signed overflow occurs when the carry into the top bit differs from the carry out. These are properties of the addition; RISC-V does not record arithmetic condition flags.`;
+      copy.bits.carrySummary
+        .replace("{top}", String(work.width - 1))
+        .replace("{intoSign}", String(addCarries.intoSign))
+        .replace("{out}", String(addCarries.out))
+        .replace("{overflow}", addCarries.v ? "Yes" : "No") +
+      " " +
+      copy.bits.carryMechanism +
+      " " +
+      copy.bits.overflowMechanism;
+  restoreBitPosition();
 }
 function render() {
   $("calc-width").value = String(work.width);
@@ -283,6 +366,7 @@ $("calculator-form").addEventListener("submit", (event) => {
 });
 function settings(width, reading) {
   const oldWidth = work.width;
+  if (width !== oldWidth) bitNeedsLow = true;
   const previousResult = result;
   for (const key of ["a", "b"]) {
     const value = parsed(key);
@@ -342,14 +426,19 @@ $("calc-use-result").addEventListener("click", () => {
 $("calc-carries").addEventListener("change", drawBits);
 $("calc-high").addEventListener("click", () => {
   $("calc-bit-scroll").scrollLeft = 0;
+  bitNeedsLow = false;
+  saveBitPosition();
 });
 $("calc-low").addEventListener("click", () => {
   $("calc-bit-scroll").scrollLeft = $("calc-bit-scroll").scrollWidth;
+  bitNeedsLow = false;
+  saveBitPosition();
 });
 $("calc-reset").addEventListener("click", () => {
   work = defaults();
   for (const key of ["a", "b"]) $(`calc-${key}`).value = work[key];
   $("calc-carries").checked = false;
+  bitNeedsLow = true;
   invalidate("Calculator reset.");
 });
 let previousOverflow = "",
@@ -364,6 +453,7 @@ opener.addEventListener("click", () => {
     document.documentElement.style.paddingRight = `${parseFloat(getComputedStyle(document.documentElement).paddingRight) + scrollbar}px`;
   document.documentElement.style.overflow = "hidden";
   dialog.showModal();
+  restoreBitPosition();
   opener.setAttribute("aria-expanded", "true");
 });
 $("close-calculator").addEventListener("click", () => dialog.close());

@@ -91,6 +91,22 @@ export default {
     "hex": "Hex",
     "calculate": "Calculate",
     "carryNote": "Carries and signed overflow describe the addition. RISC-V does not store arithmetic condition flags.",
+    "bits": {
+      "summary": "Compare the bits",
+      "help": "Choose a bit in A to switch it. Scroll the aligned rows together to compare columns.",
+      "high": "High bits",
+      "low": "Low bits",
+      "region": "Aligned bits, highest on the left",
+      "showCarries": "Show carries",
+      "calculateForCarries": "Calculate to show carries.",
+      "carryIn": "Carry in",
+      "carryOut": "Out",
+      "carryOutLabel": "Carry out beyond bit {top}. This extra upper position is not part of the retained result.",
+      "carryOutValue": "Carry out: {value}. This extra upper position beyond bit {top} is not part of the retained result.",
+      "carrySummary": "Carry into bit {top}: {intoSign}. Carry out: {out}. Signed overflow: {overflow}.",
+      "carryMechanism": "Each column adds A, B and the carry from its right. A total of two or three sends a carry to the next column on the left. Out shows the carry beyond the top bit; the result keeps only the selected width.",
+      "overflowMechanism": "Signed overflow occurs when the carry into the top bit differs from the carry out. RISC-V does not record arithmetic condition flags."
+    },
     "wPatternNote": "This pattern shows W result formation, calculated from the retained low 32 bits. No CPU instruction was executed."
   },
   "bridge": {
