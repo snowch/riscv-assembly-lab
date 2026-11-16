@@ -24,6 +24,7 @@ export function createWorkbench(
     onDraft = () => {},
     onSnapshot = null,
     onView = () => {},
+    onPinsChange = () => {},
     messages = {},
   } = {},
 ) {
@@ -49,7 +50,8 @@ export function createWorkbench(
     memoryMoment = "before",
     predictionAtRun = "",
     debugFinalState = null,
-    currentPc = null;
+    currentPc = null,
+    observationWhen = "";
   let session = null;
   const tabDrafts = new Map();
   const caseRecords = new Map();
@@ -82,6 +84,7 @@ export function createWorkbench(
       onPins() {
         renderRegisters();
         publishView();
+        onPinsChange([...debuggerPanel.pins]);
       },
     });
   let source = mountEditor();
@@ -157,6 +160,12 @@ export function createWorkbench(
       pc: currentPc,
       stale: builtFingerprint !== null && fingerprint() !== builtFingerprint,
       pins: [...debuggerPanel.pins],
+      state,
+      observationWhen,
+      paused,
+      busy,
+      badge: $("state-badge").textContent,
+      readingMode: $("reading").value,
     });
   }
   function completeSource() {
@@ -207,6 +216,7 @@ export function createWorkbench(
     note = "Run your code to capture the actual register values.",
   ) {
     state = null;
+    observationWhen = "";
     if ($("observation-note")) $("observation-note").hidden = true;
     debuggerPanel.clear();
     currentPc = null;
@@ -279,6 +289,7 @@ export function createWorkbench(
   function showState(next, when) {
     const previous = state;
     state = next;
+    observationWhen = when;
     debuggerPanel.update(next, { pc: currentPc, when });
     renderRegisters(previous);
     memoryMoment = "after";
@@ -291,6 +302,7 @@ export function createWorkbench(
     $("register-note").textContent =
       when.replace(/\.$/, "") +
       ". Decimal readings interpret the same 64 bits.";
+    publishView();
   }
   function renderMemory() {
     if (!lesson.memory) return;
@@ -554,6 +566,7 @@ export function createWorkbench(
           paused: "Paused",
         }[event.phase],
       );
+      publishView();
     } else if (event.type === "built") {
       builtInfo = event;
       debuggerPanel.setBuild(event, builtSource);
@@ -679,6 +692,7 @@ export function createWorkbench(
       }
       renderOutput();
       stale();
+      publishView();
     } else if (event.type === "error") {
       busy = false;
       paused = false;
@@ -696,6 +710,7 @@ export function createWorkbench(
         "Stopped. Build or start stepping for a fresh machine.",
         "Stopped",
       );
+      publishView();
     }
   });
   async function runOnce({
@@ -1056,7 +1071,10 @@ export function createWorkbench(
   }
   $("reading").value =
     lesson.prediction?.reading === "unsigned" ? "unsigned" : "signed";
-  $("reading").addEventListener("change", () => renderRegisters());
+  $("reading").addEventListener("change", () => {
+    renderRegisters();
+    publishView();
+  });
   $("bit-register").replaceChildren(
     ...lesson.observe.map((name) => {
       const option = document.createElement("option");
@@ -1157,16 +1175,21 @@ export function createWorkbench(
   );
 
   return {
+    closeWorkspace() {
+      return workbench.close();
+    },
     togglePin(name) {
       if (debuggerPanel.pins.has(name)) debuggerPanel.pins.delete(name);
       else debuggerPanel.pins.add(name);
       debuggerPanel.renderRegisters();
       renderRegisters();
       publishView();
+      onPinsChange([...debuggerPanel.pins]);
     },
     snapshot() {
       return {
         source: source.value,
+        pins: [...debuggerPanel.pins],
         lesson,
         fixture: fixture(),
         activity: activity === "challenge" ? "exercise" : "example",

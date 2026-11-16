@@ -83,7 +83,7 @@ export class DebuggerPanel {
     this.onPins = onPins;
     this.lines = new Set();
     this.addresses = new Set();
-    this.pins = new Set([lesson.result]);
+    this.pins = new Set(lesson.pins ?? [lesson.result]);
     this.watches = [];
     this.nextWatch = 1;
     this.build = null;

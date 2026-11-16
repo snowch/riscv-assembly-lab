@@ -857,3 +857,218 @@
 .program-view > .program-note {
   flex: none;
 }
+.execution-context {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.2rem 0.6rem;
+  padding: 0.35rem 0.65rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--soft);
+}
+.execution-route {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+.execution-route button {
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.3rem 0.5rem;
+  min-height: 36px;
+  font-size: 0.72rem;
+  background: var(--surface);
+}
+.execution-route button + button::before {
+  content: "→ ";
+  color: var(--muted);
+}
+#execution-interval {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+#open-complete-guide {
+  font-size: 0.7rem;
+  align-self: center;
+}
+.phone-observation {
+  display: none;
+}
+.machine-outside {
+  flex: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.7rem;
+  padding: 0.35rem 0.7rem;
+  background: var(--notice);
+}
+.machine-outside p {
+  margin: 0;
+  font-size: 0.75rem;
+}
+.machine-outside button {
+  min-height: 36px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.73rem;
+}
+.playground-workbench .workspace {
+  height: clamp(400px, calc(100dvh - 395px), 1000px);
+}
+.complete-program-guide > div {
+  max-width: 850px;
+  padding: 0 0.8rem 1rem;
+  font-size: 0.85rem;
+}
+.complete-program-guide li {
+  margin: 0.4rem 0;
+}
+@media (max-width: 950px) {
+  .execution-context {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #open-complete-guide {
+    position: absolute;
+    right: 0.65rem;
+    top: 0.4rem;
+    font-size: 0;
+    width: 30px;
+    min-height: 30px;
+    padding: 0;
+  }
+  #open-complete-guide::before {
+    content: "?";
+    font-size: 0.85rem;
+  }
+  .execution-context {
+    position: relative;
+  }
+  .execution-route {
+    padding-right: 30px;
+    flex-wrap: nowrap;
+    gap: 0.15rem;
+  }
+  .execution-route button {
+    flex: 1;
+    padding: 0.25rem 0.2rem;
+    font-size: 0.65rem;
+    min-width: 0;
+    min-height: 40px;
+  }
+  .phone-observation {
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    height: 94px;
+    padding: 0.25rem 0.6rem;
+    gap: 0.1rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    overflow: auto;
+  }
+  .observation-heading {
+    display: flex;
+    align-items: start;
+    gap: 0.25rem;
+  }
+  #phone-observation-moment {
+    flex: 1;
+    margin: 0;
+    font-size: 0.65rem;
+    line-height: 1.35;
+    color: var(--muted);
+  }
+  #phone-show-registers {
+    font-size: 0.62rem;
+    min-height: 26px;
+    padding: 0.1rem 0.3rem;
+    white-space: nowrap;
+  }
+  #phone-observation-next {
+    margin: 0;
+    font:
+      0.65rem/1.4 ui-monospace,
+      monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #phone-observation-next:empty {
+    display: none;
+  }
+  #phone-observation-registers {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 28px;
+    overflow-x: auto;
+    font-size: 0.7rem;
+  }
+  #phone-observation-registers > span {
+    display: flex;
+    gap: 0.3rem;
+    align-items: baseline;
+    flex: 0 0 auto;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    background: var(--soft);
+  }
+  #phone-observation-registers .observation-result {
+    background: var(--notice);
+    color: var(--accent);
+  }
+  .playground-workbench .workspace {
+    height: clamp(350px, 52dvh, 650px);
+    min-height: 330px;
+  }
+}
+@media (max-width: 950px) {
+  .execution-route {
+    padding-right: 0;
+  }
+  #execution-interval {
+    padding-right: 105px;
+  }
+  #open-complete-guide {
+    position: absolute;
+    top: auto;
+    bottom: 0.35rem;
+    right: 0.65rem;
+    width: 100px;
+    font-size: 0.65rem;
+    min-height: 28px;
+    line-height: 1.3;
+    text-align: right;
+  }
+  #open-complete-guide::before {
+    content: none;
+  }
+  .phone-observation {
+    height: 80px;
+  }
+}
+@media (max-width: 950px) {
+  .phone-observation-values {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+  #phone-observation-reading {
+    flex: 0 0 auto;
+    color: var(--muted);
+    font-size: 0.62rem;
+  }
+  #phone-observation-registers {
+    flex: 1;
+    min-width: 0;
+  }
+  #phone-observation-next {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    max-height: 2.8em;
+  }
+}

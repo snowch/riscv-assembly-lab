@@ -1,6 +1,8 @@
 // Copyright © 2026 Christopher Snow
 import { escape } from "../course/html.js";
 import { hex, registerIndex } from "../course/model.js";
+import toolCopy from "../course/tool-context-copy.js";
+import { createExecutionContext } from "./context-view.js";
 
 // These views retain the editor and inspector DOM, including their scroll state.
 export function createPlaygroundLayout(copy) {
@@ -28,6 +30,24 @@ export function createPlaygroundLayout(copy) {
   left.append(program);
   $("program-view-note").after($("machine-note"), $("machine-c-note"));
   $("machine-note").hidden = true;
+  const outside = document.createElement("div");
+  outside.id = "machine-outside";
+  outside.className = "machine-outside";
+  outside.hidden = true;
+  const outsideNote = document.createElement("p"),
+    outsideAction = document.createElement("button");
+  outsideNote.id = "machine-outside-note";
+  outsideAction.id = "machine-show-current";
+  outsideAction.type = "button";
+  outsideAction.textContent = toolCopy.scope.showCurrent;
+  outsideAction.addEventListener("click", () => {
+    $("machine-scope").value = "all";
+    renderInstructions(true);
+    requestAnimationFrame(jumpToPc);
+    $("machine-jump").focus({ preventScroll: true });
+  });
+  outside.append(outsideNote, outsideAction);
+  $("machine-c-note").after(outside);
   const tabs = document.createElement("div");
   tabs.className = "workspace-view-tabs";
   tabs.setAttribute("role", "tablist");
@@ -48,6 +68,7 @@ export function createPlaygroundLayout(copy) {
     buildSource = null,
     lastView = null,
     togglePin = () => {},
+    closeWorkspace = async () => {},
     registerFilter = "all";
   function select(name, focus = false) {
     selected = name;
@@ -114,6 +135,7 @@ export function createPlaygroundLayout(copy) {
     $("machine-note").hidden = !instructions;
     $("machine-c-note").hidden =
       !instructions || lastView?.context.language !== "c";
+    outside.hidden = !instructions || !outside.dataset.available;
     if (instructions) requestAnimationFrame(jumpToPc);
   });
   $("machine-scope").addEventListener("change", () => renderInstructions(true));
@@ -129,9 +151,16 @@ export function createPlaygroundLayout(copy) {
     if (!row || program.hidden || $("program-machine-view").hidden) return;
     const scroller = $("program-machine-view"),
       bounds = scroller.getBoundingClientRect(),
-      item = row.getBoundingClientRect();
+      item = row.getBoundingClientRect(),
+      tools = scroller
+        .querySelector(".machine-tools")
+        .getBoundingClientRect().height;
     scroller.scrollBy({
-      top: item.top - bounds.top - (bounds.height - item.height) / 2,
+      top:
+        item.top -
+        bounds.top -
+        tools -
+        (bounds.height - tools - item.height) / 2,
       behavior: "instant",
     });
   }
@@ -232,8 +261,11 @@ export function createPlaygroundLayout(copy) {
       ),
     );
     const sections = [];
-    if (view.context.language === "c")
-      sections.push(sourceBlock(view.source, copy.cSource));
+    if (view.context.language === "c") {
+      const cSource = sourceBlock(view.source, copy.cSource);
+      cSource.dataset.section = "c";
+      sections.push(cSource);
+    }
     let line = 1;
     for (const part of view.program.sections) {
       const title = copy.parts[part.id],
@@ -272,6 +304,10 @@ export function createPlaygroundLayout(copy) {
     $("machine-c-note").textContent =
       $("machine-scope").value === "all" ? copy.cAllMapping : copy.cMapping;
     $("machine-scope").parentElement.hidden = full;
+    $("machine-scope-note").textContent =
+      $("machine-scope").value === "all"
+        ? toolCopy.scope.allMeaning
+        : copy.allScope;
     $("machine-scope-note").hidden = full;
     $("machine-c-note").hidden =
       !c || $("program-mode").value !== "instructions";
@@ -301,12 +337,24 @@ export function createPlaygroundLayout(copy) {
         address.className = "machine-address";
         address.textContent = "0x" + instruction.address.toString(16);
         text.textContent = instruction.text;
-        const sourceLine =
-          lastView.context.language === "c"
-            ? null
-            : instruction.sourceLine - lastBuild.lineOffset;
-        line.textContent =
-          sourceLine > 0 ? `${copy.sourceLine} ${sourceLine}` : "";
+        const sourceLine = instruction.sourceLine;
+        if (sourceLine && instruction.sourceFile?.endsWith("program.s")) {
+          const projectLine = sourceLine - lastBuild.lineOffset;
+          const project =
+            full ||
+            (!c &&
+              projectLine > 0 &&
+              projectLine <=
+                buildSource.split("\n").length -
+                  (buildSource.endsWith("\n") ? 1 : 0));
+          line.textContent = (
+            project
+              ? toolCopy.execution.sourceLabels.project
+              : toolCopy.execution.sourceLabels.supplied
+          ).replace("{line}", String(project ? projectLine : sourceLine));
+        } else if (sourceLine && instruction.sourceFile) {
+          line.textContent = `${instruction.sourceFile}:${sourceLine}`;
+        } else line.textContent = "";
         line.className = "machine-source-line";
         row.append(pc, address, text, line);
         rows.push(row);
@@ -333,6 +381,25 @@ export function createPlaygroundLayout(copy) {
       '[aria-current="step"]',
     )?.dataset.address;
     jump.disabled = !currentPc;
+    const known =
+      lastView.pc &&
+      lastBuild?.allInstructions.some(
+        (row) => BigInt(row.address) === BigInt(lastView.pc),
+      );
+    const symbol =
+      known &&
+      lastBuild.symbols?.find(
+        (symbol) =>
+          symbol.size > 0 &&
+          BigInt(lastView.pc) >= BigInt(symbol.address) &&
+          BigInt(lastView.pc) < BigInt(symbol.address + symbol.size),
+      );
+    const missing = known && !currentPc;
+    outside.dataset.available = missing ? "true" : "";
+    outside.hidden = !missing || $("program-mode").value !== "instructions";
+    outsideNote.textContent = symbol
+      ? toolCopy.scope.outsideNamed.replace("{symbol}", symbol.name)
+      : toolCopy.scope.outsideAddress.replace("{pc}", lastView.pc ?? "");
     if (rebuild || previousPc !== currentPc) requestAnimationFrame(jumpToPc);
   }
   function update(view) {
@@ -353,13 +420,43 @@ export function createPlaygroundLayout(copy) {
     renderSource(view);
     renderInstructions(changedContext || buildChanged);
     filterRegisters();
+    execution.update(view);
   }
+  const execution = createExecutionContext(root, toolCopy, {
+    beforeGuide() {
+      return closeWorkspace();
+    },
+    revealSection(id) {
+      $("program-mode").value = "source";
+      $("program-mode").dispatchEvent(new Event("change"));
+      select("program");
+      const section = $("program-sections").querySelector(
+        `[data-section="${id}"]`,
+      );
+      if (section?.tagName === "DETAILS") section.open = true;
+      requestAnimationFrame(() => {
+        if (!section) return;
+        const scroller = $("program-source-view");
+        scroller.scrollTop +=
+          section.getBoundingClientRect().top -
+          scroller.getBoundingClientRect().top;
+        scroller.focus({ preventScroll: true });
+      });
+    },
+    inspect() {
+      select("inspect", true);
+      $("tab-registers").click();
+    },
+  });
   select("code");
   return {
     update,
     select,
     bindPin(handler) {
       togglePin = handler;
+    },
+    bindWorkspaceClose(handler) {
+      closeWorkspace = handler;
     },
   };
 }

@@ -112,7 +112,7 @@ test("actual machine instructions expose expansion and track the next PC and sta
   expect(
     await page
       .locator(".machine-source-line")
-      .filter({ hasText: "Source line 1" })
+      .filter({ hasText: "Project source line 1" })
       .count(),
   ).toBeGreaterThan(1);
   await page.locator("#step").click();
@@ -173,6 +173,7 @@ test("pinned and changed register filters retain their comparison when readings 
   await expect(
     page.locator('#registers .register[data-register="t0"]'),
   ).toBeVisible();
+  await page.getByRole("button", { name: "Unpin t0", exact: true }).click();
   await page.getByRole("button", { name: "Pin t0", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Unpin t0", exact: true }),

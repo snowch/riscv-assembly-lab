@@ -70,6 +70,15 @@ const controller = createWorkbench(projectContext(store.current), {
   curriculum: false,
   messages: copy.messages,
   onView: layout.update,
+  onPinsChange(pins) {
+    try {
+      store.update({ ...current(), pins });
+      showSaveState();
+    } catch (error) {
+      $("save-state").textContent =
+        error.message + " Export project to keep your pins.";
+    }
+  },
   onDraft(source, context) {
     const project = store.projects.find((project) => project.id === context.id);
     if (!project) return;
@@ -84,6 +93,7 @@ const controller = createWorkbench(projectContext(store.current), {
   },
 });
 layout.bindPin(controller.togglePin);
+layout.bindWorkspaceClose(controller.closeWorkspace);
 function current() {
   return { ...store.current, source: controller.snapshot().source };
 }
@@ -229,6 +239,21 @@ $("open-example").addEventListener("click", () =>
     );
   }),
 );
+for (const [button, id] of [
+  ["open-worked-counts", "example-complete-counts"],
+  ["open-fresh-counts", "example-fresh-counts"],
+])
+  $(button).addEventListener("click", () =>
+    safely(() => {
+      const example = config.examples.find((project) => project.id === id);
+      add(
+        normaliseProject(example, { freshId: true }),
+        copy.messages.exampleOpened,
+      );
+      layout.select("code", true);
+      $("workbench").scrollIntoView({ block: "start", behavior: "instant" });
+    }),
+  );
 $("copy-project").addEventListener("click", () =>
   safely(() =>
     add(

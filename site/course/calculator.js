@@ -6,6 +6,8 @@ import {
   calculatorCompute as compute,
   calculatorAdditionCarries as carries,
 } from "./calculator-model.js";
+import toolCopy from "./tool-context-copy.js";
+const copy = toolCopy.calculator;
 const opener = document.getElementById("open-calculator");
 const storageKey = "riscv-assembly-lab:calculator:v1";
 const defaults = () => ({
@@ -34,16 +36,19 @@ try {
 const dialog = document.createElement("dialog");
 dialog.id = "calculator-dialog";
 dialog.setAttribute("aria-labelledby", "calculator-heading");
-dialog.innerHTML = `<div class="calculator-heading"><h2 id="calculator-heading">Programmer calculator</h2><button type="button" id="close-calculator" autofocus>Close</button></div>
-<p class="calculator-note">Scratch work with numbers and bits. These controls do not run instructions or change your lesson code.</p>
-<div class="calculator-settings"><label>Width <select id="calc-width"><option value="64">64 bits</option><option value="32">32 bits</option></select></label><label>Decimal reading <select id="calc-reading"><option value="unsigned">Unsigned</option><option value="signed">Signed</option></select></label></div>
+dialog.innerHTML = `<div class="calculator-heading"><div><h2 id="calculator-heading">Programmer calculator</h2><span id="calc-context" class="calculator-note"></span></div><button type="button" id="close-calculator" autofocus>Close</button></div>
+<p class="calculator-note calculator-intro">${copy.intro}</p>
+<div class="calculator-settings"><label>${copy.width} <select id="calc-width" aria-describedby="calc-width-note"><option value="64">64 bits</option><option value="32">32 bits</option></select></label><label>${copy.reading} <select id="calc-reading"><option value="unsigned">Unsigned</option><option value="signed">Signed</option></select></label></div>
+<p id="calc-width-note" class="calculator-note"></p>
 <p id="calc-entry-help">Decimal by default. Use <code>0x</code> for hexadecimal or <code>0b</code> for binary. Spaces, commas and underscores may separate digits.</p>
 <form id="calculator-form" novalidate>
+<div class="calculator-operands">
 ${["a", "b"].map((key) => `<div class="calculator-value"><label for="calc-${key}" id="calc-${key}-label">Value ${key.toUpperCase()}</label><input id="calc-${key}" maxlength="300" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" aria-describedby="calc-entry-help calc-${key}-error"><p id="calc-${key}-error" class="calculator-error" hidden></p><div id="calc-${key}-readings" class="calculator-readings"></div></div>`).join("")}
+</div>
 <div class="calculator-operation"><label>Operation <select id="calc-operation"><option value="add">Add</option><option value="subtract">Subtract</option><option value="shift-left">Shift left</option></select></label><button class="primary" type="submit">Calculate</button></div>
 </form>
 <p id="calc-status" role="status"></p>
-<section id="calc-result" aria-labelledby="calc-result-heading" hidden><h3 id="calc-result-heading">Retained result</h3><div id="calc-result-readings" class="calculator-readings"></div><p id="calc-full-result"></p><p id="calc-retained-note" class="calculator-note"></p><button id="calc-use-result" type="button">Use result as A</button></section>
+<section id="calc-result" aria-labelledby="calc-result-heading" hidden><h3 id="calc-result-heading">${copy.retained}</h3><p class="calculator-note">${copy.sameBits}</p><div id="calc-result-readings" class="calculator-readings"></div><p id="calc-full-result"></p><p id="calc-alternate-full-result"></p><p id="calc-retained-note" class="calculator-note"></p><div id="calc-w-bridge" class="calculator-note" hidden><p>${copy.wBridge}</p><p id="calc-w-result"></p></div><button id="calc-use-result" type="button">Use result as A</button></section>
 <details id="calc-bits"><summary>Compare the bits</summary><div class="calculator-bit-tools"><p>Scroll the rows together to compare the same bit positions.</p><button id="calc-high" type="button">High bits</button><button id="calc-low" type="button">Low bits</button></div><p id="calc-bit-help">Choose a bit in A to switch it.</p><label id="calc-carry-control" hidden><input id="calc-carries" type="checkbox"> Show addition carries</label><div id="calc-bit-scroll" tabindex="0" role="region" aria-label="Aligned bits, highest on the left"><div id="calc-bit-rows"></div></div><div id="calc-carry-help" hidden></div></details>
 <details class="calculator-help"><summary>Numbers and width</summary><p>Unsigned reads the bits as zero or a positive number. Signed uses the top bit to read negative numbers too.</p><p>Hexadecimal and binary entries describe bits. Shorter entries add zeros on the left. Selecting Signed changes how those bits are read; it does not copy their top bit into the added positions.</p><p>Values must fit the selected width. Extra leading zeros are allowed. Other extra upper bits are rejected, so a paste never changes the width or discards part of your value.</p><p>Changing from 64 bits to 32 bits keeps the low 32 bits and discards the upper bits. Changing from 32 bits to 64 bits adds upper zeros, even with Signed selected.</p><p>For Shift left, B is the number of positions to shift: zero to one less than the selected width. The full shift result uses the unsigned A bit pattern.</p></details>
 <div class="calculator-footer"><button id="calc-reset" type="button">Reset calculator</button><p>Values stay in this tab when browser storage is available.</p></div>`;
@@ -57,14 +62,14 @@ dialog.addEventListener("keydown", (event) => {
   }
 });
 const $ = (id) => dialog.querySelector("#" + id);
-const encoded = (value) =>
+const encoded = (value, width = work.width) =>
   "0x" +
   BigInt(value)
     .toString(16)
-    .padStart(work.width / 4, "0")
+    .padStart(width / 4, "0")
     .toUpperCase()
     .replace(/(.{4})(?=.)/g, "$1 ");
-function readings(target, value) {
+function readings(target, value, both = false) {
   target.replaceChildren();
   for (const [label, text] of [
     [
@@ -73,6 +78,18 @@ function readings(target, value) {
         ? "—"
         : read(BigInt(value), work.width, work.reading).toLocaleString("en-GB"),
     ],
+    ...(both
+      ? [
+          [
+            `Decimal (${work.reading === "signed" ? "unsigned" : "signed"})`,
+            read(
+              BigInt(value),
+              work.width,
+              work.reading === "signed" ? "unsigned" : "signed",
+            ).toLocaleString("en-GB"),
+          ],
+        ]
+      : []),
     ["Hexadecimal", value === null ? "—" : encoded(value)],
   ]) {
     const block = document.createElement("div"),
@@ -181,6 +198,9 @@ function render() {
   $("calc-width").value = String(work.width);
   $("calc-reading").value = work.reading;
   $("calc-operation").value = work.operation;
+  $("calc-context").textContent = `${work.width} bits · ${work.reading}`;
+  $("calc-width-note").textContent =
+    `${work.width === 32 ? copy.width32 : copy.width64} ${copy.widthIndependence}`;
   $("calc-b-label").textContent =
     work.operation === "shift-left" ? "Value B (shift amount)" : "Value B";
   for (const key of ["a", "b"]) {
@@ -194,11 +214,29 @@ function render() {
   }
   $("calc-result").hidden = !result;
   if (result) {
-    readings($("calc-result-readings"), result.pattern);
+    readings($("calc-result-readings"), result.pattern, true);
     $("calc-full-result").textContent =
-      `Full mathematical result: ${BigInt(result.full).toLocaleString("en-GB")}`;
+      `${copy.full} (${work.operation === "shift-left" ? "unsigned shift" : work.reading}): ${BigInt(result.full).toLocaleString("en-GB")}`;
+    const otherReading = work.reading === "signed" ? "unsigned" : "signed";
+    const other = compute(
+      result.a,
+      work.operation,
+      result.b,
+      work.width,
+      otherReading,
+    );
+    $("calc-alternate-full-result").hidden = other.full === result.full;
+    $("calc-alternate-full-result").textContent =
+      `${copy.full} (${otherReading}): ${BigInt(other.full).toLocaleString("en-GB")}`;
     $("calc-retained-note").textContent =
       `The retained result keeps the low ${work.width} bits. ${work.operation === "shift-left" ? "The full shift result uses the unsigned A bit pattern." : "The full mathematical result uses your selected decimal reading."}`;
+    $("calc-w-bridge").hidden = work.width !== 32;
+    if (work.width === 32) {
+      const signed = read(BigInt(result.pattern), 32, "signed"),
+        extended = BigInt.asUintN(64, signed);
+      $("calc-w-result").textContent =
+        `${copy.wResult}: ${encoded(extended, 64)}. ${copy.wReading}: ${signed.toLocaleString("en-GB")}. ${copy.wPatternNote}`;
+    }
   }
   drawBits();
   save();
@@ -245,6 +283,7 @@ $("calculator-form").addEventListener("submit", (event) => {
 });
 function settings(width, reading) {
   const oldWidth = work.width;
+  const previousResult = result;
   for (const key of ["a", "b"]) {
     const value = parsed(key);
     if (!value.ok) continue;
@@ -261,9 +300,25 @@ function settings(width, reading) {
   }
   work.width = width;
   work.reading = reading;
+  if (width === oldWidth && previousResult) {
+    result = {
+      ...compute(
+        previousResult.a,
+        work.operation,
+        previousResult.b,
+        width,
+        reading,
+      ),
+      a: previousResult.a,
+      b: previousResult.b,
+    };
+    $("calc-status").textContent = copy.readingChanged;
+    render();
+    return;
+  }
   invalidate(
     width === oldWidth
-      ? "Decimal reading changed. The bits are unchanged."
+      ? copy.inputReadingChanged
       : width === 32
         ? "Now 32 bits. Upper bits were discarded from valid values."
         : "Now 64 bits. Upper zeros were added to valid values.",

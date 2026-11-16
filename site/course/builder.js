@@ -142,16 +142,25 @@ async function disassemble(
     : lesson.language === "c"
       ? start.value + start.size
       : elf.symbols.get("_lab_lesson_end").value;
-  let sourceLine = null;
+  let sourceLine = null,
+    sourceFile = null;
   const result = [],
     allInstructions = [];
   for (const line of output.split("\n")) {
-    const location = line.match(/(?:program\.s|lesson\.c):(\d+)/);
-    if (location) sourceLine = Number(location[1]);
+    if (/^[0-9a-f]+\s+<[^>]+>:/i.test(line.trim())) {
+      sourceLine = null;
+      sourceFile = null;
+    }
+    const location = line.match(/^(.+\.(?:s|S|c)):(\d+)(?:\s.*)?$/);
+    if (location) {
+      sourceFile = location[1];
+      sourceLine = Number(location[2]);
+    }
     const instruction = line.match(/^\s*([0-9a-f]+):\s+(.+)$/);
     if (!instruction) continue;
     const address = parseInt(instruction[1], 16);
-    allInstructions.push({ address, text: instruction[2] });
+    const record = { address, text: instruction[2], sourceLine, sourceFile };
+    allInstructions.push(record);
     if (
       full
         ? elf.sections.some(
@@ -163,8 +172,7 @@ async function disassemble(
         : address >= start.value && address < end
     )
       result.push({
-        address,
-        text: instruction[2],
+        ...record,
         sourceLine: lesson.language === "c" ? null : sourceLine,
       });
   }
