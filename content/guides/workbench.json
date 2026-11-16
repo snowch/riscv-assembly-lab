@@ -6,7 +6,7 @@
       "id": "run-an-example",
       "title": "Edit, run and compare",
       "paragraphs": [
-        "Registers are the processor’s working storage. Open the addition workbench in Explore mode. If a saved draft differs from the example below, choose Restore starter; Undo restore recovers your draft. This example’s first two lines load values into registers; the third adds them into t2.",
+        "Registers are the processor’s working storage. Open the addition workbench. If a saved draft differs from the example below, choose Restore starter; Undo restore recovers your draft. This example’s first two lines load values into registers; the third adds them into t2.",
         "Predict what t2 will hold, then choose Build & Run. Inspect Registers after the code finishes. Change a starting number in the editor, predict again, and run the edited code. Each run starts a fresh machine. Stop ends the current run."
       ],
       "example": true,
@@ -54,6 +54,13 @@
       ]
     },
     {
+      "id": "optional-exercise",
+      "title": "Try an optional exercise",
+      "paragraphs": [
+        "After Change it and run again, open Optional exercise. Read the task, then choose Load exercise. The editor opens your saved exercise draft, or the starter if none exists. Check all cases runs your code on fresh inputs. Return to example brings back your example draft."
+      ]
+    },
+    {
       "id": "keyboard-shortcuts",
       "title": "Use familiar editing controls",
       "paragraphs": [
@@ -82,7 +89,7 @@
       "id": "keep-your-work",
       "title": "Keep or restore your work",
       "paragraphs": [
-        "Explore and Challenge keep separate drafts. Drafts save in this browser when storage is available; check the save message. Download code keeps a file.",
+        "The example and optional exercise keep separate drafts. Drafts save in this browser when storage is available; check the save message. Download code keeps a file.",
         "Restore starter replaces your edits; Undo restore recovers them. View complete program shows the supplied entry, reporting and exit code around your work."
       ]
     }

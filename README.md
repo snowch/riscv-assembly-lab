@@ -18,7 +18,7 @@ GNU `as` and `ld`, compiled to WebAssembly, produce real ELF64 executables. The 
 - Pinned register comparisons, memory watches sampled at pauses and 64 observed stack bytes with exact symbol/address matches. Stack rows are not an inferred call stack.
 - Four debugging investigations: loop boundaries, load width, return-address preservation and access order. A source line can expand into several instructions.
 - Multi-case challenges, specific hints, reference solutions and case inspection.
-- Source-line diagnostics, separate exploration/challenge drafts, completion marks and an explicit tab-only fallback when storage is unavailable.
+- Source-line diagnostics, separate example/exercise drafts, completion marks and an explicit tab-only fallback when storage is unavailable.
 - Phone/desktop layouts, light/dark/system themes, course navigation and source downloads.
 - Complete assembly downloads; C functions and their supplied assembly/linker script download together as ZIP.
 

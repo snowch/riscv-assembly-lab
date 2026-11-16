@@ -1,5 +1,10 @@
 // Copyright © 2026 Christopher Snow
-import { fillSource, selectedSource } from "./editor-helpers.js";
+import {
+  fillSource,
+  selectedSource,
+  loadExercise,
+  returnToExample,
+} from "./editor-helpers.js";
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { loadLessons } from "../../tools/course-data.js";
@@ -78,7 +83,7 @@ test("step, continue, challenge feedback and case inspection use actual observat
   await expect(page.locator("#current-instruction")).toContainText(
     "reporting checkpoint",
   );
-  await page.locator("#start-challenge").click();
+  await loadExercise(page);
   await fillSource(page, "sub t2,t0,t1");
   await page.locator("#check-cases").click();
   await expect(page.locator("#state-badge")).toHaveText("Try again", {
@@ -272,7 +277,7 @@ test("fixture controls stay locked while paused and restoring code starts a fres
   });
   await page.locator("#step").click();
   await expect(page.locator("#t0-decimal")).toHaveText("7");
-  await page.locator("#challenge-mode").click();
+  await loadExercise(page);
   await page.locator("#step").click();
   await expect(page.locator("#state-badge")).toHaveText("Paused", {
     timeout: 45000,
@@ -288,7 +293,7 @@ test("recorded system-call cases restore their own output and state", async ({
 }) => {
   test.setTimeout(90000);
   await go(page, "system-calls");
-  await page.locator("#challenge-mode").click();
+  await loadExercise(page);
   await page.locator("#reference-solution > summary").click();
   await page.locator("#use-reference").click();
   await page.locator("#check-cases").click();
@@ -319,8 +324,8 @@ test("compiler warnings and download failures remain visible, tab drafts survive
   await go(page, "c-return-values");
   const code = "long lesson(long a,long b){long *p=a;return a+b;}";
   await fillSource(page, code);
-  await page.locator("#challenge-mode").click();
-  await page.locator("#explore-mode").click();
+  await loadExercise(page);
+  await returnToExample(page);
   await expect(page.locator("#source")).toHaveValue(code);
   await page.locator("#run").click();
   await expect(page.locator("#state-badge")).toHaveText("Finished", {

@@ -49,7 +49,7 @@ export function setupWorkbench() {
   );
   toggle.textContent = nativeFullscreen ? "Full screen" : "Expand workspace";
   let placeholder,
-    previousScroll = 0,
+    previousTop = 0,
     closing = false;
 
   async function close() {
@@ -67,7 +67,10 @@ export function setupWorkbench() {
     toggle.textContent = nativeFullscreen ? "Full screen" : "Expand workspace";
     toggle.setAttribute("aria-expanded", "false");
     document.body.style.overflow = "";
-    window.scrollTo({ top: previousScroll, behavior: "instant" });
+    window.scrollBy({
+      top: root.getBoundingClientRect().top - previousTop,
+      behavior: "instant",
+    });
     toggle.focus({ preventScroll: true });
     window.dispatchEvent(new Event("resize"));
     closing = false;
@@ -77,7 +80,7 @@ export function setupWorkbench() {
       await close();
       return;
     }
-    previousScroll = window.scrollY;
+    previousTop = root.getBoundingClientRect().top;
     placeholder = document.createComment("Workbench position");
     root.before(placeholder);
     dialog.append(root);
@@ -106,5 +109,45 @@ export function setupWorkbench() {
   document.addEventListener("fullscreenchange", () => {
     if (!document.fullscreenElement && dialog.open && !closing) close();
   });
-  return { inspect, close };
+  const anchorRestorations = new WeakMap();
+  function preservePosition(change) {
+    const scroller =
+      document.fullscreenElement === root
+        ? root
+        : dialog.open
+          ? dialog
+          : document.scrollingElement;
+    const bar = root.querySelector(".workbench-bar");
+    const top = bar.getBoundingClientRect().top;
+    const previousAnchor =
+      anchorRestorations.get(scroller)?.previous ??
+      scroller.style.overflowAnchor;
+    const restoration = { previous: previousAnchor };
+    anchorRestorations.set(scroller, restoration);
+    scroller.style.overflowAnchor = "none";
+    try {
+      change();
+      scroller.scrollBy({
+        top: bar.getBoundingClientRect().top - top,
+        behavior: "instant",
+      });
+    } finally {
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          if (anchorRestorations.get(scroller) === restoration) {
+            scroller.style.overflowAnchor = previousAnchor;
+            anchorRestorations.delete(scroller);
+          }
+        }),
+      );
+    }
+  }
+  return {
+    inspect,
+    close,
+    preservePosition,
+    get expanded() {
+      return dialog.open;
+    },
+  };
 }
