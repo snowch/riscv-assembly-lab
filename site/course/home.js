@@ -58,4 +58,13 @@ export function renderCompletion() {
 if (!document.getElementById("lesson-data")) {
   setupTheme();
   renderCompletion();
+  const revealModule = () => {
+    const target = document.getElementById(location.hash.slice(1));
+    if (!target?.matches(".course-module")) return;
+    document.getElementById("course-contents").open = true;
+    target.open = true;
+    target.scrollIntoView({ block: "start" });
+  };
+  revealModule();
+  window.addEventListener("hashchange", revealModule);
 }

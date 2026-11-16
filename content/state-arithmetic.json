@@ -10,8 +10,9 @@
     ],
     "before": [
       "A register is a small store inside the processor. RISC-V integer registers hold 64 bits each. The names `t0`, `t1` and `t2` select three of these registers. They are temporary registers, used for working values.",
-      "An instruction tells the processor to perform an operation. In `add t2, t0, t1`, the last two operands are inputs. The first operand names the destination, the register that receives the sum. Reading an input does not replace its value.",
-      "`li` loads a number into a register. It is assembler shorthand: the assembler, which translates this text into machine instructions, may expand it into more than one instruction. Read the three lines from top to bottom. Build & Run assembles and executes them; the result cards show the registers after all three lines."
+      "An instruction tells the processor to perform an operation. The parts after its name are its operands. In `add t2, t0, t1`, the last two operands name the input registers. The first names the destination, the register that receives the sum. Reading an input does not replace its value.",
+      "`li` (load immediate) puts a number into a register. An immediate is a number written directly in the instruction. In `li t0, 7`, that number is `7`. The assembler translates assembly text into machine instructions. `li` is shorthand that it may expand into more than one machine instruction.",
+      "Read the three lines from top to bottom. Build & Run assembles and executes them. The result cards show the registers after all three lines."
     ],
     "starter": "li t0, 7\nli t1, 5\nadd t2, t0, t1\n",
     "observe": ["t0", "t1", "t2"],

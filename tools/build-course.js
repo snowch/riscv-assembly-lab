@@ -19,7 +19,7 @@ const paragraphs = (values) =>
 const theme =
   '<label class="theme-label">Theme <select id="theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>';
 function header(prefix) {
-  return `<a class="skip" href="#main">Skip to content</a><header><a class="brand" href="${prefix}"><span class="logo" aria-hidden="true">≋</span> RISC-V Assembly Lab</a><nav aria-label="Site"><a href="${prefix}">Course</a><a href="https://github.com/snowch/riscv-assembly-lab">☆ <span>Star on GitHub</span></a>${theme}</nav></header>`;
+  return `<a class="skip" href="#main">Skip to content</a><header><a class="brand" href="${prefix}"><span class="logo" aria-hidden="true">≋</span> RISC-V Assembly Lab</a><nav aria-label="Site"><a href="${prefix}">Course</a><button id="open-calculator" type="button" aria-haspopup="dialog" aria-controls="calculator-dialog" aria-expanded="false" disabled>${icon("calculator")}Calculator</button><a href="https://github.com/snowch/riscv-assembly-lab" aria-label="Star on GitHub">☆ <span>Star<span class="github-long"> on GitHub</span></span></a>${theme}</nav></header>`;
 }
 function footer(prefix) {
   return `<footer><p>Copyright © 2026 Christopher Snow</p><div><a href="${prefix}NOTICE.md">Sources and licences</a><a href="https://snowch.github.io/assembly-lab/">Arm Assembly Lab</a><a href="https://github.com/snowch/riscv-assembly-lab/issues">Report a problem</a></div></footer>`;
@@ -34,22 +34,48 @@ function document(
     styles = [],
   } = {},
 ) {
-  return `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#087e72"><meta name="description" content="Learn RISC-V by writing and running real assembly and C in your browser."><title>${escape(title)} · RISC-V Assembly Lab</title><link rel="icon" href="${prefix}icon.svg" type="image/svg+xml"><link rel="stylesheet" href="${prefix}style.css"><link rel="stylesheet" href="${prefix}course/course.css"><link rel="stylesheet" href="${prefix}course/debugger.css"><link rel="stylesheet" href="${prefix}course/workbench.css">${styles.map((path) => `<link rel="stylesheet" href="${escape(path)}">`).join("")}<script type="module" src="${script}"></script></head><body class="course-page">${header(prefix)}${body}${footer(prefix)}${data}</body></html>\n`
+  return `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#087e72"><meta name="description" content="Learn RISC-V by writing and running real assembly and C in your browser."><title>${escape(title)} · RISC-V Assembly Lab</title><link rel="icon" href="${prefix}icon.svg" type="image/svg+xml"><link rel="stylesheet" href="${prefix}style.css"><link rel="stylesheet" href="${prefix}course/course.css"><link rel="stylesheet" href="${prefix}course/debugger.css"><link rel="stylesheet" href="${prefix}course/workbench.css">${styles.map((path) => `<link rel="stylesheet" href="${escape(path)}">`).join("")}<link rel="stylesheet" href="${prefix}course/calculator.css"><script type="module" src="${prefix}course/calculator.js"></script><script type="module" src="${script}"></script></head><body class="course-page">${header(prefix)}${body}${footer(prefix)}${data}</body></html>\n`
     .split("\n")
     .map((line) => line.trimEnd())
     .join("\n");
 }
 function navigation(current) {
-  return `<aside class="course-sidebar"><details id="course-navigation"><summary>Course lessons</summary><nav aria-label="Course lessons">${MODULES.map(
+  const module = MODULES.find((m) => m.id === current.module);
+  return `<nav class="lesson-breadcrumbs" aria-label="Breadcrumb"><ol><li><details id="course-navigation"><summary>Course</summary><nav class="course-menu" aria-label="Course lessons"><a class="course-overview" href="../../">Course overview</a>${MODULES.map(
     (module) =>
-      `<details ${current?.module === module.id ? "open" : ""}><summary>${module.label} · ${escape(module.title)}</summary><ol>${lessons
+      `<details ${current.module === module.id ? "open" : ""}><summary>${module.label} · ${escape(module.title)}</summary><ol>${lessons
         .filter((l) => l.module === module.id)
         .map(
           (l) =>
-            `<li><a href="../${l.id}/" ${l.id === current?.id ? 'aria-current="page"' : ""}>${escape(l.title)}</a><span data-completion="${l.id}" aria-label="Completed" hidden>✓</span></li>`,
+            `<li><a href="../${l.id}/" ${l.id === current.id ? 'aria-current="page"' : ""}>${escape(l.title)}</a><span data-completion="${l.id}" aria-label="Completed" hidden>✓</span></li>`,
         )
         .join("")}</ol></details>`,
-  ).join("")}</nav></details></aside>`;
+  ).join(
+    "",
+  )}</nav></details></li><li><a href="../../#${module.id}">${escape(module.title)}</a></li><li><span aria-current="page">${escape(current.title)}</span></li></ol></nav>`;
+}
+const icons = {
+  code: '<path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-12-2 14"/>',
+  book: '<path d="M12 5v15M3 4c4-1 6 0 9 1 3-1 5-2 9-1v15c-4-1-6 0-9 1-3-1-5-2-9-1Z"/>',
+  layout:
+    '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M10 9v12"/>',
+  guide: '<circle cx="12" cy="12" r="9"/><path d="m16 8-3 5-5 3 3-5Z"/>',
+  calculator:
+    '<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8M8 10h1m3 0h1m3 0h1M8 14h1m3 0h1m3 0h1M8 18h1m3 0h1m3 0h1"/>',
+};
+const icon = (name) =>
+  `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name]}</svg>`;
+const resourceSummary = (label, name, description = "") =>
+  `<summary>${icon(name)}<span class="resource-label">${label}${description ? `<span class="resource-description">${description}</span>` : ""}</span><span class="resource-chevron" aria-hidden="true"></span></summary>`;
+function operandDiagram(lesson) {
+  if (lesson.id !== "addition") return "";
+  const instruction = lesson.starter
+    .split("\n")
+    .find((line) => /^add\s/.test(line));
+  const [, destination, left, right] = instruction.match(
+    /^add\s+(\w+),\s*(\w+),\s*(\w+)/,
+  );
+  return `<figure class="operand-diagram"><figcaption>Reading <code>${escape(instruction)}</code></figcaption><div class="operand-flow" role="img" aria-label="add reads ${left} and ${right}, then writes their sum to ${destination}."><div class="operand-box"><code>${left}</code><span>Input</span></div><span class="operand-symbol" aria-hidden="true">+</span><div class="operand-box"><code>${right}</code><span>Input</span></div><span class="operand-symbol" aria-hidden="true">→</span><div class="operand-box operand-destination"><code>${destination}</code><span>Destination</span></div></div><p>The last two operands are read. The first operand is written.</p></figure>`;
 }
 function validate() {
   const ids = new Set();
@@ -119,14 +145,13 @@ for (let index = 0; index < lessons.length; index++) {
     signed: index >= lessons.findIndex((l) => l.id === "signed-readings"),
     hex: index >= lessons.findIndex((l) => l.id === "hexadecimal"),
   };
-  const module = MODULES.find((m) => m.id === lesson.module),
-    previous = lessons[index - 1],
+  const previous = lessons[index - 1],
     next = lessons[index + 1];
   const memory = lesson.memory
     ? `<section class="memory-section" aria-labelledby="memory-heading"><div class="section-heading"><h3 id="memory-heading">${lesson.memory === "stack" ? "Stack bytes" : "Memory bytes"}</h3>${lesson.memory === "data" ? '<div role="group" aria-label="Memory moment"><button id="memory-before" aria-pressed="true">Before</button><button id="memory-after" aria-pressed="false">After</button></div>' : ""}</div><p id="memory-note" class="panel-note">${lesson.memory === "stack" ? "Run or step to inspect 64 mapped bytes from the current stack pointer." : "Supplied bytes before your code. The labels give byte offsets from lesson_data."}</p><div id="memory-grid" class="memory-grid"></div><p id="byte-inspection" class="panel-note">Choose a byte to inspect its address and readings.</p></section>`
     : "";
-  const body = `<div class="course-layout">${navigation(lesson)}<main id="main"><div class="intro"><p class="eyebrow">${module.label === "A" ? "Further reading" : `Module ${module.label}`} · ${escape(module.title)}</p><h1>${escape(lesson.title)}</h1><p>${inline(lesson.summary)}</p>${lesson.id === "addition" ? '<p class="optional-guide">Optional guide: <a href="../../using-the-workbench/">Using the workbench</a></p>' : ""}</div>
- <section class="lesson-guide" aria-label="Before you run">${paragraphs(lesson.before)}</section>
+  const body = `<div class="course-layout"><main id="main">${navigation(lesson)}<div class="intro"><h1>${escape(lesson.title)}</h1><p>${inline(lesson.summary)}</p>${lesson.id === "addition" ? '<p class="optional-guide">Optional guide: <a href="../../using-the-workbench/">Using the workbench</a></p>' : ""}</div>
+ <section class="lesson-guide" aria-label="Before you run">${paragraphs(lesson.before.slice(0, 2))}${operandDiagram(lesson)}${paragraphs(lesson.before.slice(2))}</section>
  <section id="prediction-block" class="prediction-block" aria-labelledby="prediction-heading"><h2 id="prediction-heading">Predict, then check</h2><p>${inline(lesson.prediction.prompt)}</p><div class="prediction-entry"><label for="prediction">Your prediction <span>(${escape(lesson.ui.signed || lesson.prediction.reading === "hex" ? (lesson.prediction.reading ?? "signed") : "decimal")} reading)</span></label><input id="prediction" inputmode="text" autocomplete="off" placeholder="Optional: predict before running"><button id="prediction-hint-button" type="button">Hint</button></div><p id="prediction-hint" hidden>${inline(lesson.prediction.hint)}</p><p id="prediction-feedback" role="status">Run the code to check against the CPU’s result.</p></section>
  <noscript><p>Building and stepping require JavaScript and WebAssembly. <a href="./${lesson.language === "c" ? "lesson.c" : "lesson.s"}">Read the starting code</a>.</p></noscript>
  <section id="workbench" class="workbench" aria-label="Code workbench">
@@ -154,9 +179,9 @@ for (let index = 0; index < lessons.length; index++) {
  <details id="challenge" class="challenge-section"><summary>Optional exercise <span>Check your code on fresh inputs</span></summary><div class="exercise-body"><p>${inline(lesson.challenge.task)}</p><p>Load your saved exercise draft, or its starter code. Your example draft stays available through Return to example.</p><button id="start-challenge">Load exercise</button><div id="challenge-controls" hidden><p>Build &amp; Run uses the selected case. Check all cases runs your code against every case, each on a fresh machine.</p><div id="case-picker"></div><button id="check-cases" class="primary">Check all cases</button><p id="challenge-status" role="status">No cases checked yet.</p><ol id="case-results"></ol><div class="hint-controls"><button id="next-hint">Show a hint</button><ol id="challenge-hints"></ol></div><details id="reference-solution"><summary>Reference solution</summary><p>Compare the mechanism after you have tried the challenge. Your code can differ and still pass.</p><pre tabindex="0">${escape(lesson.challenge.reference)}</pre><button id="use-reference">Load reference into editor</button></details></div></div></details>
  ${lesson.c ? `<details class="explanation"><summary>Compare the C intent</summary><p>Equivalent intent for this target. This assembly was written for teaching; it is not presented as compiler output.</p><div class="paired-listing"><div><h3>C intent</h3><pre>${escape(lesson.c)}</pre></div><div><h3>Current assembly fragment</h3><pre id="c-intent-assembly">${escape(lesson.starter)}</pre></div></div></details>` : ""}
  <details id="compiled-listing" class="explanation" ${lesson.language === "c" ? "" : "hidden"}><summary>Inspect the real compiler output</summary><p>TinyCC builds the C locally. GNU objdump disassembles the resulting executable. This TinyCC build does not emit source-line mappings, so the page does not guess which C line produced each instruction.</p><div class="paired-listing"><div><h3>C used in this build</h3><pre id="compiled-source">Not compiled yet.</pre></div><div><h3>Machine instructions</h3><pre id="compiled-assembly">Not compiled yet.</pre></div></div></details>
- <details id="complete-program" class="explanation complete-program"><summary>View complete program <span>Entry, your code, reporting and exit</span></summary><div class="explanation-body"><p>This is the complete source for the current editor. The supplied code reserves an aligned inspection area, prepares the listed inputs, and captures registers and memory before formatting the report. It then uses xv6 write and exit calls.</p><button id="download-complete">Download complete program</button>${lesson.language === "c" ? '<h3>C function</h3><pre id="complete-c-source"></pre><h3>Supplied assembly caller and reporting code</h3>' : ""}</div><pre id="complete-source" tabindex="0" aria-label="Complete assembly program"></pre></details>
- <details class="explanation"><summary>Executable layout</summary><p>The load regions below come from the ELF built for the last run. xv6 loads these regions and sets the initial stack before entering the program.</p><div id="elf-layout">Build once to inspect its actual load segments.</div></details>
- <details class="explanation"><summary>References</summary><ul>${[...new Set([...lesson.references, "assembler"])].map((key) => `<li><a href="${REFERENCES[key][1]}">${escape(REFERENCES[key][0])}</a></li>`).join("")}<li><a href="../../NOTICE.md">Runtime, source and licensing record</a></li></ul></details>
+ <section class="lesson-resources" aria-label="Lesson resources"><details id="complete-program" class="explanation complete-program resource-row">${resourceSummary("View complete program", "code", "Entry, your code, reporting and exit")}<div class="explanation-body"><p>This is the complete source for the current editor. The supplied code reserves an aligned inspection area, prepares the listed inputs, and captures registers and memory before formatting the report. It then uses xv6 write and exit calls.</p><button id="download-complete">Download complete program</button>${lesson.language === "c" ? '<h3>C function</h3><pre id="complete-c-source"></pre><h3>Supplied assembly caller and reporting code</h3>' : ""}</div><pre id="complete-source" tabindex="0" aria-label="Complete assembly program"></pre></details>
+ <details class="explanation resource-row">${resourceSummary("Executable layout", "layout")}<p>The load regions below come from the ELF built for the last run. xv6 loads these regions and sets the initial stack before entering the program.</p><div id="elf-layout">Build once to inspect its actual load segments.</div></details>
+ <details class="explanation resource-row">${resourceSummary("References", "book")}<ul>${[...new Set([...lesson.references, "assembler"])].map((key) => `<li><a href="${REFERENCES[key][1]}">${escape(REFERENCES[key][0])}</a></li>`).join("")}<li><a href="../../NOTICE.md">Runtime, source and licensing record</a></li></ul></details><a class="resource-link" href="../../using-the-workbench/">${icon("guide")}<span class="resource-label">Using the workbench</span><span class="resource-chevron" aria-hidden="true"></span></a></section>
  <div class="lesson-completion"><label><input type="checkbox" id="lesson-complete"> Mark lesson complete</label><p>Saved in this browser when storage is available.</p></div><nav class="lesson-navigation" aria-label="Lesson navigation">${previous ? `<a href="../${previous.id}/"><span>← Previous lesson</span>${escape(previous.title)}</a>` : '<a href="../../"><span>Course overview</span>Choose a lesson</a>'}${next ? `<a href="../${next.id}/"><span>Next lesson →</span>${escape(next.title)}</a>` : '<a href="../../"><span>Course overview</span>Choose another topic</a>'}</nav>
  </main></div>`;
   const dir = new URL(`lessons/${lesson.id}/`, root);

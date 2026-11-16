@@ -53,3 +53,9 @@ Each challenge runs the submitted code on fresh xv6 guests for its listed cases.
 ## Front-page illustration
 
 The processor-and-code illustration was generated for this site and exported as a WebP asset of about 80 KiB. It is decorative artwork. Digital Design supplied the visual reference for the hero layout and grouped navigation; the illustration is original to this site.
+
+## Programmer calculator
+
+The exact integer parsing, bit-pattern arithmetic and addition-carries helpers in `course/calculator-model.js` are adapted with the author's permission from [Christopher Snow's Assembly Lab calculator model](https://github.com/snowch/assembly-lab/blob/2988f4d002195734c4eb9c0082b9e88a41cbb037/packages/machine/src/programmer-calculator.ts). This file retains **Copyright © 2026 Christopher Snow, all rights reserved**. The source's mask, clamp, signed reading and compute attribution to [snowch/programmer-calculator at efa1584](https://github.com/snowch/programmer-calculator/tree/efa1584bd6deb69b2e287aae579739c4a73bf052) is preserved in the file. The new dialog and RISC-V-specific integration are part of this site's MIT-licensed interface.
+
+This calculator performs separate mathematical scratch work using exact integers. It does not execute instructions, update guest registers or supply prediction answers. Width changes and input validation are calculator controls. Optional carry and signed-overflow readings describe the addition's bit patterns; they are not processor condition flags.
