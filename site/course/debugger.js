@@ -9,7 +9,7 @@ const escape = (value) =>
     .replaceAll('"', "&quot;");
 const option = (value, label = value) =>
   `<option value="${escape(value)}">${escape(label)}</option>`;
-export function debuggerMarkup(lesson) {
+export function debuggerMarkup(lesson, { separateStack = false } = {}) {
   const c = lesson.language === "c";
   return `<details id="debugger-panel" class="debugger" ${lesson.module === "debugging" ? "open" : ""}>
   <summary>Debugger <span>Breakpoints, watches and stack bytes</span></summary>
@@ -25,15 +25,18 @@ export function debuggerMarkup(lesson) {
     <section aria-labelledby="debug-watch-heading"><h3 id="debug-watch-heading">Pinned registers</h3><p>Pin a register to keep its readings together. “Changed” compares the current observation with the preceding pause or captured result. Watches do not stop execution.</p>
     <form id="debug-register-form" class="debug-form"><label>Register<select id="debug-register">${REGISTERS.map((name) => option(name)).join("")}</select></label><button id="debug-pin-register" type="submit">Pin register</button></form><div id="debug-register-watches" class="debug-register-watches"></div></section>
     <section aria-labelledby="debug-memory-heading"><h3 id="debug-memory-heading">Memory watches</h3><p>A memory watch reads bytes when the machine pauses. Choose a base address, a signed byte offset and a width. Bytes are read in little-endian order: the first byte holds the lowest eight bits of the value. New watches refresh at the current pause without executing an instruction.</p>
-    <form id="debug-memory-form" class="debug-form"><label>Base<select id="debug-memory-base">${option("lesson_data", "lesson_data")}${REGISTERS.map(
+    <form id="debug-memory-form" class="debug-form"><label>Base<select id="debug-memory-base">${option("lesson_data", lesson.kind === "program" ? "Program memory base" : "lesson_data")}${REGISTERS.map(
       (name) => option(name),
     ).join(
       "",
     )}</select></label><label>Byte offset<input id="debug-memory-offset" type="number" min="-4096" max="4096" step="1" value="0" required></label><label>Width<select id="debug-memory-width">${[1, 2, 4, 8].map((width) => option(width, `${width} ${width === 1 ? "byte" : "bytes"}`)).join("")}</select></label><button id="debug-memory-add" type="submit">Add memory watch</button></form>
     <p id="debug-memory-status" class="debug-note" role="status">Up to eight watches. Offsets range from −4096 to +4096 bytes.</p><div id="debug-memory-watches" class="debug-memory-watches"></div></section>
-    <details id="debug-stack-section" ${lesson.ui?.stack === false ? "hidden" : ""}><summary>Inspect the stack</summary><p class="debug-note">The stack pointer, sp, addresses the current stack storage. ra holds the current return address. The slots below show eight observed doublewords from sp. Matching an instruction address does not establish a call frame or a saved return address.</p><p id="debug-stack-registers" class="debug-stack-registers">Pause to inspect sp and ra.</p><p id="debug-stack-moment" class="debug-note"></p><div class="debug-table-scroll" tabindex="0" aria-label="Stack doublewords"><table id="debug-stack"><thead><tr><th scope="col">Byte offset</th><th scope="col">Address</th><th scope="col">Observed bits</th><th scope="col">Exact address match</th></tr></thead><tbody></tbody></table></div></details>
+    ${separateStack ? "" : stackMarkup(lesson)}
     <p id="debug-observation" class="debug-note" role="status">No debugger observation yet. Start debugging or start stepping.</p>
   </div></details>`;
+}
+export function stackMarkup(lesson) {
+  return `<details id="debug-stack-section" ${lesson.ui?.stack === false ? "hidden" : ""}><summary>Inspect the stack</summary><p class="debug-note">The stack pointer, sp, addresses the current stack storage. ra holds the current return address. The slots below show eight observed doublewords from sp. Matching an instruction address does not establish a call frame or a saved return address.</p><p id="debug-stack-registers" class="debug-stack-registers">Pause to inspect sp and ra.</p><p id="debug-stack-moment" class="debug-note"></p><div class="debug-table-scroll" tabindex="0" aria-label="Stack doublewords"><table id="debug-stack"><thead><tr><th scope="col">Byte offset</th><th scope="col">Address</th><th scope="col">Observed bits</th><th scope="col">Exact address match</th></tr></thead><tbody></tbody></table></div></details>`;
 }
 function el(tag, text, className) {
   const node = document.createElement(tag);
@@ -65,6 +68,7 @@ export class DebuggerPanel {
     rootElement,
     {
       lesson,
+      stackRoot = null,
       onBreakpoints = () => {},
       onWatches = () => {},
       onInspect = () => {},
@@ -88,7 +92,8 @@ export class DebuggerPanel {
     this.busy = false;
     this.paused = false;
     this.batch = false;
-    this.$ = (id) => this.root.querySelector("#" + id);
+    this.$ = (id) =>
+      this.root.querySelector("#" + id) ?? stackRoot?.querySelector("#" + id);
     this.$("debug-line-form")?.addEventListener("submit", (event) => {
       event.preventDefault();
       this.toggleLine(Number(this.$("debug-line").value));
@@ -122,6 +127,10 @@ export class DebuggerPanel {
   }
   setBuild(built, source) {
     this.build = built;
+    const option = this.$("debug-memory-base").querySelector(
+      '[value="lesson_data"]',
+    );
+    if (option) option.textContent = this.memoryBaseLabel("lesson_data");
     this.source = source;
     this.renderBreakpoints();
     this.renderInstructions();
@@ -242,7 +251,7 @@ export class DebuggerPanel {
     this.$("debug-breakpoint-status").textContent =
       this.lines.size + this.addresses.size
         ? `${this.lines.size + this.addresses.size} selected breakpoint${this.lines.size + this.addresses.size === 1 ? "" : "s"}.${unresolved ? ` ${unresolved} source line${unresolved === 1 ? " has" : "s have"} no machine instruction and will not pause.` : ""}`
-        : "No breakpoints selected. Start debugging pauses at the first lesson instruction.";
+        : `No breakpoints selected. Start debugging pauses at the first ${this.lesson.module === "playground" ? "project" : "lesson"} instruction.`;
   }
   renderInstructions() {
     const list = this.$("debug-instructions");
@@ -289,7 +298,8 @@ export class DebuggerPanel {
       list.append(button);
     }
     if (!(this.build.disassembly ?? []).length)
-      list.textContent = "This fragment emitted no lesson instructions.";
+      list.textContent =
+        "This source emitted no instructions in the inspected range.";
     if (focusedAddress) {
       const replacement = [
         ...list.querySelectorAll("button[data-address]"),
@@ -395,6 +405,13 @@ export class DebuggerPanel {
     if (this.paused) this.onInspect();
     this.applyBusy();
   }
+  memoryBaseLabel(base) {
+    return base === "lesson_data" &&
+      this.lesson.kind === "program" &&
+      !this.build?.hasDataSymbol
+      ? "Program memory base"
+      : base;
+  }
   renderMemory() {
     const list = this.$("debug-memory-watches");
     list.replaceChildren();
@@ -425,14 +442,14 @@ export class DebuggerPanel {
       heading.append(
         el(
           "h4",
-          `${watch.base} ${watch.offset < 0 ? "−" : "+"} ${Math.abs(watch.offset)} · ${watch.width} ${watch.width === 1 ? "byte" : "bytes"}`,
+          `${this.memoryBaseLabel(watch.base)} ${watch.offset < 0 ? "−" : "+"} ${Math.abs(watch.offset)} · ${watch.width} ${watch.width === 1 ? "byte" : "bytes"}`,
         ),
       );
       remove.type = "button";
       remove.className = "debug-remove";
       remove.setAttribute(
         "aria-label",
-        `Remove memory watch ${watch.base} ${watch.offset}`,
+        `Remove memory watch ${this.memoryBaseLabel(watch.base)} ${watch.offset}`,
       );
       remove.addEventListener("click", () => {
         if (this.locked()) return;

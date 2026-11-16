@@ -1200,7 +1200,8 @@ input:not([type="checkbox"]) {
   font-weight: 650;
   min-width: 0;
 }
-.resource-row .resource-description {
+.resource-row .resource-description,
+.resource-link .resource-description {
   display: block;
   margin: 0.2rem 0 0;
   font-size: 0.78rem;

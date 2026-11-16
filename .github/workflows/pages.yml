@@ -26,7 +26,7 @@ jobs:
         run: npm run build:editor && git diff --exit-code -- site/vendor/editor/ asset-manifest.json
       - run: npm run check:assets
       - name: Verify generated course pages
-        run: npm run build:course && git diff --exit-code -- site/index.html site/lessons/ site/using-the-workbench/ site/course/catalog.json
+        run: npm run build:course && git diff --exit-code -- site/index.html site/lessons/ site/using-the-workbench/ site/playground/index.html site/course/catalog.json
       - run: npm test
       - name: Install independent RISC-V execution checker
         run: sudo apt-get update && sudo apt-get install -y qemu-user

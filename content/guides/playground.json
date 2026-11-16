@@ -1,0 +1,175 @@
+{
+  "title": "RISC-V playground",
+  "intro": "Write and run your own code. Inspect the machine, then change the program and run again.",
+  "links": {
+    "homeLabel": "Open the playground",
+    "homeDescription": "Write your own programs with the course editor and debugger. Projects keep their source and starting setup together.",
+    "lessonLabel": "Open in playground",
+    "lessonDescription": "New tab · current code and starting setup",
+    "lessonAccessibleLabel": "Open current code and starting setup in the playground (new tab)",
+    "guideTitle": "Work on an independent project",
+    "guideParagraphs": [
+      "The playground uses the same editor, build tools and debugger as the lessons. It keeps named projects with their source and starting setup.",
+      "Choose Open in playground from a lesson to create a project from your current code. For an exercise, it also carries the selected case’s inputs and data. The playground opens in a new tab, so your lesson stays open.",
+      "Projects and lesson drafts are separate. Changes in the playground do not replace the lesson draft. Export project keeps the source and setup in one file."
+    ]
+  },
+  "projectTypes": [
+    {
+      "id": "asm",
+      "label": "Assembly fragment",
+      "description": "Write the instructions you want to investigate. Supplied code starts the program, captures registers and exits.",
+      "sourceHelp": "Write assembly instructions. View complete program shows the supplied entry, reporting and exit code.",
+      "entryHelp": "The lab supplies entry, register capture and exit code around your assembly fragment.",
+      "completeSourceDescription": "This is your fragment inside the supplied entry, capture and exit code. The supplied code prepares the listed inputs and records registers and memory before printing the report."
+    },
+    {
+      "id": "c",
+      "label": "C function",
+      "description": "Write a function named lesson. The supplied caller passes its arguments and captures its result.",
+      "signature": "long lesson(long a, long b)",
+      "sourceHelp": "Define lesson with two long arguments. Starting registers a0 and a1 supply the arguments; a0 receives the returned value.",
+      "entryHelp": "The lab supplies a caller that passes the starting arguments to lesson, captures registers and exits.",
+      "completeSourceDescription": "This view contains your C function and its supplied assembly caller. The caller prepares the listed arguments, captures registers and memory, prints the report and exits."
+    },
+    {
+      "id": "program",
+      "label": "Complete assembly program",
+      "description": "Define _start, the program’s entry label. Your source controls initialisation, data and exit.",
+      "sourceHelp": "Define _start and include your program’s exit code. Start stepping or Start debugging to inspect registers while it runs.",
+      "entryHelp": "Your program defines _start and supplies its own initialisation, data and exit code. No entry or reporting code is added.",
+      "completeSourceDescription": "This is your complete assembly source, used unchanged for the build. Its entry, initialisation, data and exit belong to the program. No final register report is added."
+    }
+  ],
+  "labels": {
+    "projects": "Projects",
+    "projectName": "Project name",
+    "newProject": "New project",
+    "projectType": "Project type",
+    "createProject": "Create project",
+    "cancel": "Cancel",
+    "example": "Example",
+    "chooseExample": "Choose an example",
+    "openExample": "Open example",
+    "saveCopy": "Save a copy",
+    "projectActions": "Project actions",
+    "import": "Import file",
+    "importAs": "Import as",
+    "openImportedProject": "Open imported project",
+    "export": "Export project",
+    "downloadSource": "Download source",
+    "delete": "Delete project",
+    "undoDelete": "Undo delete",
+    "setup": "Starting setup",
+    "registers": "Starting registers",
+    "data": "Data bytes at lesson_data",
+    "memoryView": "Memory view",
+    "dataView": "Data bytes",
+    "stackView": "Stack bytes",
+    "highlight": "Highlighted register",
+    "applySetup": "Apply setup",
+    "restoreLoaded": "Restore loaded source",
+    "undoRestore": "Undo restore",
+    "allRegisters": "All integer registers",
+    "lastPausedPC": "Last paused PC",
+    "editorWidth": "Editor width",
+    "resizePanes": "Resize editor and inspector",
+    "help": "Using the playground",
+    "sourceLesson": "Source lesson",
+    "mainAssembly": "main.s",
+    "mainC": "main.c",
+    "examples": "Examples",
+    "renameProject": "Rename project",
+    "observation": "Observation"
+  },
+  "setup": {
+    "intro": "Set the values supplied before your code starts. Apply setup ends the current run; the next build starts a fresh machine.",
+    "registerHelp": "Use one assignment per line, such as t0 = 7. Decimal is the default; use 0x for hexadecimal or 0b for binary. Values must fit 64 bits.",
+    "reservedHelp": "The starting setup does not accept zero, sp, gp or tp. The supplied code prepares the stack pointer; zero always reads zero.",
+    "registerPlaceholder": "t0 = 7\nt1 = 5",
+    "dataHelp": "Use pairs of hexadecimal digits separated by spaces, such as 01 FF. Up to 64 bytes; remaining bytes start at zero.",
+    "dataPlaceholder": "01 02 03 04",
+    "memoryHelp": "Data shows 64 bytes from lesson_data. Stack shows 64 bytes from the observed stack pointer, sp.",
+    "highlightHelp": "Marks a register in the inspector. It does not change execution.",
+    "fullProgramHelp": "A complete assembly program supplies its own initialisation and data. Set those values in the source.",
+    "fullProgramMemoryHelp": "The Data view starts at lesson_data if your program defines that symbol. Otherwise it starts at the first loaded writable region, or the first code region if none is writable. Stack starts at the observed sp.",
+    "summary": {
+      "zeroRegisters": "Working registers start at zero",
+      "presets": "Registers (unsigned decimal): {values}",
+      "moreRegisters": "; {count} more",
+      "dataBytes": "{count} supplied data bytes",
+      "zeroData": "64 zero data bytes",
+      "fullProgram": "Defined in source"
+    }
+  },
+  "messages": {
+    "saved": "Project saved in this browser.",
+    "tabOnly": "Project is tab-only. Export project to keep it.",
+    "setupApplied": "Setup applied. Build or start stepping for a fresh machine.",
+    "exampleOpened": "Example opened as a new project. Your other projects are kept.",
+    "projectOpened": "Project opened. Build or start stepping for a fresh machine.",
+    "copyCreated": "Project copied. Your original project is kept.",
+    "imported": "File opened as a new project. Your other projects are kept.",
+    "importFailed": "Could not import this file. Your current project is unchanged.",
+    "setupFailed": "Correct the setup entries, then apply them again. Your current setup is unchanged.",
+    "unsupportedVersion": "This project file uses an unsupported version.",
+    "invalidProject": "This file is not a valid RISC-V Assembly Lab project.",
+    "projectDeleted": "Project deleted. Undo delete recovers it.",
+    "deleteUndone": "Project restored.",
+    "transferOpened": "Lesson code and starting setup opened as a new project. Your lesson draft is unchanged.",
+    "transferFailed": "Could not open the transferred project. Your saved projects are unchanged.",
+    "programFinished": "Program finished. Inspect Output, or start stepping to capture register observations.",
+    "lastPause": "Last observed at a pause before the program finished. These are not exit register values.",
+    "notObserved": "Start stepping or Start debugging to observe this program’s registers.",
+    "lastPausedObservation": "Registers, memory and stack show the last pause before this program finished. They do not show the exit state.",
+    "noPausedObservation": "No paused observation was captured. Start stepping or Start debugging to inspect registers, memory and stack."
+  },
+  "help": [
+    {
+      "id": "project-and-source",
+      "title": "Choose the source you want to write",
+      "paragraphs": [
+        "An assembly fragment is a group of instructions inside a supplied program. You can concentrate on those instructions; View complete program shows the entry, reporting and exit code around them.",
+        "A C project defines a function named lesson, such as long lesson(long a, long b). The supplied caller passes a0 and a1 as its arguments and captures the return value in a0. Do not add main, system headers or library calls.",
+        "A complete assembly program defines _start and includes its own exit code. Its registers and data come from its source and xv6, so the fragment’s starting-register and data controls do not apply."
+      ]
+    },
+    {
+      "id": "run-and-observe",
+      "title": "Run and inspect",
+      "paragraphs": [
+        "Build & Run assembles and links your source, then runs it as an xv6 user process. C projects first compile their function with TinyCC. Every new run starts a fresh machine.",
+        "Start stepping pauses before your first machine instruction. Step instruction executes one machine instruction. A source line can expand into several machine instructions.",
+        "A breakpoint pauses before its instruction runs. Choose an assembly line number, then use Start debugging. Continue runs to a selected breakpoint or the end of your code. For C, select actual instruction addresses in Debugger; this compiler does not provide C source-line mappings.",
+        "Register and memory readings belong to the observation named beside them. Assembly fragments and C functions capture a report after their code. Complete programs can exit without that report: a last paused observation is not an exit state."
+      ]
+    },
+    {
+      "id": "starting-values",
+      "title": "Supply starting values",
+      "paragraphs": [
+        "For fragments and C functions, Starting setup supplies register values before your source runs. Use assignments such as t0 = 7, one per line. Apply setup commits the entries and ends the current run. Editing the setup form alone does not change a paused machine.",
+        "Data bytes fills the area named lesson_data. Hexadecimal uses digits 0–9 and A–F; two hexadecimal digits describe one byte. Unspecified bytes start at zero.",
+        "Memory view chooses the 64-byte region shown in Memory. Data starts at lesson_data. Stack starts at the observed stack pointer, sp. The Stack tab and memory watches provide further observed readings."
+      ]
+    },
+    {
+      "id": "keep-projects",
+      "title": "Keep your projects",
+      "paragraphs": [
+        "Source and setup save together in this browser when storage is available. Check the save message. A project saves your code and setup, not a running or paused machine.",
+        "Open example and Import file create a new project. They keep your other projects. Save a copy creates another project from the current source and setup.",
+        "Export project saves the source and setup in one JSON file. Download source saves only the code. Import file accepts project JSON, assembly source (.s or .asm), or C source (.c). Check Import as before opening a source file.",
+        "If storage is unavailable, you can keep working in this tab. Export project before leaving to keep that work. Delete project can be reversed with Undo delete."
+      ]
+    },
+    {
+      "id": "environment",
+      "title": "Know the execution environment",
+      "paragraphs": [
+        "Programs target 64-bit RISC-V and run in xv6. Its system calls differ from Linux and teaching simulators. In this guest, write is system call 16 and exit is system call 2.",
+        "The playground supplies console output, but no console input. The guest does not provide floating-point process state. Stepping shows functional execution, not physical hardware timing."
+      ]
+    }
+  ]
+}

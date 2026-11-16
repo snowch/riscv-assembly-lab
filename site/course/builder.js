@@ -42,9 +42,20 @@ export async function buildLesson(
     program: program.source,
     lineOffset: program.lineOffset,
     entry:
-      lesson.language === "c" ? symbol("lesson") : symbol("_lab_lesson_begin"),
-    end: symbol("_lab_lesson_end"),
-    data: symbol("lesson_data"),
+      lesson.kind === "program"
+        ? symbol("_start")
+        : lesson.language === "c"
+          ? symbol("lesson")
+          : symbol("_lab_lesson_begin"),
+    // Complete programs exit themselves. Address zero is outside this linker
+    // script's user text and is never presented as a reporting checkpoint.
+    end: lesson.kind === "program" ? 0 : symbol("_lab_lesson_end"),
+    data:
+      symbol("lesson_data") ??
+      readSegments(built.elf).find((s) => s.flags & 2)?.address ??
+      text[0]?.start ??
+      0,
+    hasDataSymbol: symbol("lesson_data") !== undefined,
     symbols: [...elf.symbols.values()]
       .filter(
         (s) =>
@@ -118,11 +129,17 @@ async function disassemble(
     throw new Error(
       "Could not disassemble the executable. " + output.slice(-1000),
     );
+  const full = lesson.kind === "program";
   const start = elf.symbols.get(
-    lesson.language === "c" ? "lesson" : "_lab_lesson_begin",
+    full ? "_start" : lesson.language === "c" ? "lesson" : "_lab_lesson_begin",
   );
-  const end =
-    lesson.language === "c"
+  const end = full
+    ? Math.max(
+        ...elf.sections
+          .filter((s) => s.flags & 4)
+          .map((s) => s.address + s.size),
+      )
+    : lesson.language === "c"
       ? start.value + start.size
       : elf.symbols.get("_lab_lesson_end").value;
   let sourceLine = null;
@@ -135,7 +152,16 @@ async function disassemble(
     if (!instruction) continue;
     const address = parseInt(instruction[1], 16);
     allInstructions.push({ address, text: instruction[2] });
-    if (address >= start.value && address < end)
+    if (
+      full
+        ? elf.sections.some(
+            (s) =>
+              s.flags & 4 &&
+              address >= s.address &&
+              address < s.address + s.size,
+          )
+        : address >= start.value && address < end
+    )
       result.push({
         address,
         text: instruction[2],

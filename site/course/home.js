@@ -55,7 +55,10 @@ export function renderCompletion() {
   if (progress)
     progress.textContent = `${document.querySelectorAll("[data-completion]").length} lessons · ${ids.size} marked complete in this browser.`;
 }
-if (!document.getElementById("lesson-data")) {
+if (
+  !document.getElementById("lesson-data") &&
+  !document.getElementById("playground-data")
+) {
   setupTheme();
   renderCompletion();
   const revealModule = () => {

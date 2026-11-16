@@ -23,6 +23,7 @@ let vm,
   breakpointSelection = {},
   selectedBreakpoints = [],
   watches = [],
+  pendingStep = null,
   startAtBreakpoint = false;
 const decoder = new TextDecoder();
 const text = (value) =>
@@ -101,7 +102,8 @@ function snapshot(when, trace = null) {
     lesson.memory === "stack"
       ? detail.stack.bytes
       : inspection.observedBytes(vm, address);
-  const complete = vm.read_pc() === BigInt(built.end);
+  const complete =
+    lesson.kind !== "program" && vm.read_pc() === BigInt(built.end);
   let nextInstruction = null;
   if (!complete) {
     vm.disassemble_next_instruction();
@@ -138,25 +140,38 @@ function step() {
     vm.disassemble_next_instruction();
     const instruction = drain().trim();
     vm.run_cycles(1);
+    // A user ecall enters xv6. Returning to user text or completing exit can
+    // take several chunks; neither is an execution fault or a new user step.
+    if (!insideText(vm.read_pc()) && /\becall\b/i.test(instruction)) {
+      pendingStep = { before, instruction };
+      mode = "step-system-call";
+      activeStarted = performance.now();
+      send("phase", { phase: "running", message: "Executing system call…" });
+      schedule();
+      return;
+    }
     if (!insideText(vm.read_pc()))
       vm.run_until_breakpoints(new BigUint64Array(built.breakpoints), 1000000);
     consume();
     if (stopped) return;
-    const after = vm.read_pc();
-    if (!insideText(after))
-      throw new Error(
-        "Execution left the user program before reaching another instruction. Inspect the serial log.",
-      );
-    const trace = { from: text(before), to: text(after), instruction };
-    if (after === BigInt(built.end)) {
-      snapshot("After the last lesson instruction", trace);
-      mode = "fast";
-      activeStarted = performance.now();
-      schedule();
-    } else paused("After one machine instruction", trace);
+    observeStep(before, instruction);
   } catch (error) {
     finish(error);
   }
+}
+function observeStep(before, instruction) {
+  const after = vm.read_pc();
+  if (!insideText(after))
+    throw new Error(
+      "Execution left the user program before reaching another instruction. Inspect the serial log.",
+    );
+  const trace = { from: text(before), to: text(after), instruction };
+  if (lesson.kind !== "program" && after === BigInt(built.end)) {
+    snapshot("After the last lesson instruction", trace);
+    mode = "fast";
+    activeStarted = performance.now();
+    schedule();
+  } else paused("After one machine instruction", trace);
 }
 let scheduled = false;
 function schedule() {
@@ -174,7 +189,20 @@ function tick() {
       throw new Error(
         "Stopped after 30 seconds of active execution. Check the loop or use Stop.",
       );
-    if (mode === "seek") {
+    if (mode === "step-system-call") {
+      const found = vm.run_until_breakpoints(
+        new BigUint64Array(built.breakpoints),
+        100000,
+      );
+      consume();
+      if (stopped) return;
+      if (found) {
+        const { before, instruction } = pendingStep;
+        pendingStep = null;
+        observeStep(before, instruction);
+        if (mode === "paused") return;
+      }
+    } else if (mode === "seek") {
       const found = vm.run_until_breakpoints(
         new BigUint64Array([BigInt(built.entry)]),
         100000,
@@ -182,7 +210,7 @@ function tick() {
       consume();
       if (stopped) return;
       if (found) {
-        if (built.entry === built.end) {
+        if (lesson.kind !== "program" && built.entry === built.end) {
           snapshot("No lesson instructions; at the reporting checkpoint");
           mode = "fast";
         } else {
@@ -197,7 +225,9 @@ function tick() {
             paused(
               startAtBreakpoint && selectedBreakpoints.includes(vm.read_pc())
                 ? "Breakpoint reached, before this instruction"
-                : "Before the first lesson instruction",
+                : lesson.kind === "program"
+                  ? "Before the program entry instruction"
+                  : "Before the first lesson instruction",
             );
             return;
           }
@@ -205,13 +235,17 @@ function tick() {
       }
     } else if (mode === "continue") {
       const found = vm.run_until_breakpoints(
-        new BigUint64Array([...selectedBreakpoints, BigInt(built.end)]),
+        new BigUint64Array(
+          lesson.kind === "program"
+            ? selectedBreakpoints
+            : [...selectedBreakpoints, BigInt(built.end)],
+        ),
         100000,
       );
       consume();
       if (stopped) return;
       if (found) {
-        if (vm.read_pc() === BigInt(built.end)) {
+        if (lesson.kind !== "program" && vm.read_pc() === BigInt(built.end)) {
           snapshot("After the last lesson instruction");
           mode = "fast";
         } else {
@@ -336,6 +370,7 @@ onmessage = async ({ data }) => {
       symbols: built.symbols,
       end: built.end,
       data: built.data,
+      hasDataSymbol: built.hasDataSymbol,
     });
     await runtime.default({
       module_or_path: "../vendor/runtime/riscv_emu_rust_wasm_bg.wasm",
