@@ -2,6 +2,7 @@
 import { createWorkbench } from "../course/workbench-controller.js";
 import { setupTheme } from "../course/home.js";
 import { createPlaygroundLayout } from "./layout.js";
+import toolCopy from "../course/tool-context-copy.js";
 import {
   ProjectStore,
   newProject,
@@ -105,6 +106,8 @@ function metadata() {
   $("project-name").value = project.name;
   $("project-name").setAttribute("aria-invalid", "false");
   $("project-kind").textContent = type.label;
+  $("workspace-name").textContent = project.name;
+  $("workspace-name").title = project.name;
   const presets = Object.entries(project.inputs),
     summary = copy.setup.summary;
   $("setup-summary").textContent =
@@ -167,10 +170,14 @@ function metadata() {
   if (project.origin) {
     const link = document.createElement("a");
     link.href = `../lessons/${project.origin.id}/`;
-    link.textContent = `${copy.labels.sourceLesson}: ${project.origin.title}`;
+    link.textContent = copy.labels.sourceLesson;
+    link.title = project.origin.title;
     link.target = "_blank";
     link.rel = "noopener";
-    link.setAttribute("aria-label", `${link.textContent} (new tab)`);
+    link.setAttribute(
+      "aria-label",
+      toolCopy.identity.originNewTab.replace("{title}", project.origin.title),
+    );
     $("project-origin").append(link);
     if (project.origin.caseName) {
       const note = document.createElement("span");

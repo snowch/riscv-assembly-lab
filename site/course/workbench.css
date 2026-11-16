@@ -77,6 +77,53 @@
   gap: 0.5rem;
   background: var(--surface);
 }
+.workspace-identity {
+  display: flex;
+  flex: 1 0 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 0.55rem;
+  min-width: 0;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+#workspace-kind {
+  flex: none;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  background: var(--soft);
+  font-weight: 650;
+}
+.workspace-identity[data-context="project"] #workspace-kind {
+  background: var(--notice);
+  color: var(--accent);
+}
+#workspace-name {
+  flex: 1 1 120px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#project-origin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.72rem;
+}
+#project-origin:empty {
+  display: none;
+}
+#project-origin a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+}
 .workbench .run-actions {
   gap: 0.35rem;
 }

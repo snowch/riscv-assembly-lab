@@ -197,7 +197,9 @@ test("lesson exercise transfer creates an independent project with selected case
   const popup = await popupEvent;
   await popup.waitForLoadState();
   await expect(popup.locator("#source")).toHaveValue(code);
-  await expect(popup.locator("#project-origin")).toContainText("Source lesson");
+  await expect(popup.locator("#project-origin")).toContainText(
+    "Back to source lesson",
+  );
   const selected = await page
     .locator("#case-picker button[aria-pressed=true]")
     .textContent();

@@ -97,9 +97,9 @@
       "id": "independent-project",
       "title": "Work on an independent project",
       "paragraphs": [
-        "The playground uses the same editor, build tools and debugger as the lessons. It keeps named projects with their source and starting setup.",
-        "Choose Open in playground from a lesson to create a project from your current code. For an exercise, it also carries the selected case’s inputs and data. The playground opens in a new tab, so your lesson stays open.",
-        "Projects and lesson drafts are separate. Changes in the playground do not replace the lesson draft. Export project keeps the source and setup in one file."
+        "Use the lesson workspace for guided examples and exercises. Use a Playground project to work independently with the same editor, build tools and debugger.",
+        "Choose Open a copy in Playground to copy your current code and starting setup into a new project in a new tab. For an exercise, the copy uses the selected case’s inputs and data.",
+        "Project edits and lesson drafts stay separate. Back to source lesson returns to the lesson the project came from. Export project keeps the project’s source and setup in one file."
       ],
       "link": {
         "href": "../playground/",
