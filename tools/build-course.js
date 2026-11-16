@@ -19,7 +19,7 @@ const paragraphs = (values) =>
 const theme =
   '<label class="theme-label">Theme <select id="theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>';
 function header(prefix) {
-  return `<a class="skip" href="#main">Skip to content</a><header><a class="brand" href="${prefix}"><span class="logo" aria-hidden="true">≋</span> RISC-V Assembly Lab</a><nav aria-label="Site"><a href="${prefix}">Course</a><button id="open-calculator" type="button" aria-haspopup="dialog" aria-controls="calculator-dialog" aria-expanded="false" disabled>${icon("calculator")}Calculator</button><a href="https://github.com/snowch/riscv-assembly-lab" aria-label="Star on GitHub">☆ <span>Star<span class="github-long"> on GitHub</span></span></a>${theme}</nav></header>`;
+  return `<a class="skip" href="#main">Skip to content</a><header><a class="brand" href="${prefix}"><span class="logo" aria-hidden="true">≋</span> RISC-V Assembly Lab</a><nav aria-label="Site"><button id="open-calculator" type="button" aria-haspopup="dialog" aria-controls="calculator-dialog" aria-expanded="false" disabled>${icon("calculator")}Calculator</button><a href="https://github.com/snowch/riscv-assembly-lab" aria-label="Star on GitHub">☆ <span>Star<span class="github-long"> on GitHub</span></span></a>${theme}</nav></header>`;
 }
 function footer(prefix) {
   return `<footer><p>Copyright © 2026 Christopher Snow</p><div><a href="${prefix}NOTICE.md">Sources and licences</a><a href="https://snowch.github.io/assembly-lab/">Arm Assembly Lab</a><a href="https://github.com/snowch/riscv-assembly-lab/issues">Report a problem</a></div></footer>`;
