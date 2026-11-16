@@ -57,7 +57,12 @@ export function makeProgram(
   platform = "xv6",
 ) {
   if (lesson.kind === "program")
-    return { source: fragment, lineOffset: 0, inputs: {} };
+    return {
+      source: fragment,
+      lineOffset: 0,
+      inputs: {},
+      sections: [{ id: "user", source: fragment }],
+    };
   const inputs = { ...(lesson.inputs ?? {}), ...(fixture.inputs ?? {}) };
   const data = fixture.data ?? lesson.data ?? [];
   if (
@@ -74,12 +79,13 @@ export function makeProgram(
       throw new Error("Unsupported initial register: " + name);
     initialise.push(`    li ${REGISTERS[index]}, ${hex(value)}`);
   }
-  const prefix = `# Supplied entry: aligned stack, inspection space and starting registers.
+  const entry = `# Supplied entry: aligned stack, inspection space and starting registers.
 .option norvc
 .text
 .global _start
 _start:
-    addi sp, sp, -64
+`;
+  const setup = `    addi sp, sp, -64
 ${Array.from({ length: 8 }, (_, i) => `    sd zero, ${i * 8}(sp)`).join("\n")}
     la t6, _lab_initial_sp
     sd sp, 0(t6)
@@ -88,6 +94,7 @@ ${initialise.join("\n")}
 _lab_lesson_begin:
 # Your lesson code begins here.
 `;
+  const prefix = entry + setup;
   const body =
     lesson.language === "c"
       ? "    call lesson\n"
@@ -178,15 +185,23 @@ _lab_report: .ascii "\\nRVLAB_STATE_V2\\n"
 _lab_values: .ascii "${"0000000000000000\\n".repeat(42)}"
     .ascii "RVLAB_END\\n"
 _lab_report_end:
-# This region ends at a page boundary; xv6 places a guard page after it.
+`;
+  const dataSource = `# This region ends at a page boundary; xv6 places a guard page after it.
 .section .lesson_data, "aw"
 .global lesson_data
 lesson_data: .byte ${[...data, ...Array(64 - data.length).fill(0)].join(",")}
 `;
   return {
-    source: prefix + body + suffix,
+    source: prefix + body + suffix + dataSource,
     lineOffset: prefix.split("\n").length - 1,
     inputs,
+    sections: [
+      { id: "entry", source: entry },
+      { id: "setup", source: setup, folded: true },
+      { id: lesson.language === "c" ? "caller" : "user", source: body },
+      { id: "report", source: suffix, folded: true },
+      { id: "data", source: dataSource },
+    ],
   };
 }
 // Hide only the owned instrumentation frame; raw serial remains available.

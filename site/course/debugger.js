@@ -72,6 +72,7 @@ export class DebuggerPanel {
       onBreakpoints = () => {},
       onWatches = () => {},
       onInspect = () => {},
+      onPins = () => {},
     },
   ) {
     this.root = rootElement;
@@ -79,6 +80,7 @@ export class DebuggerPanel {
     this.onBreakpoints = onBreakpoints;
     this.onWatches = onWatches;
     this.onInspect = onInspect;
+    this.onPins = onPins;
     this.lines = new Set();
     this.addresses = new Set();
     this.pins = new Set([lesson.result]);
@@ -103,6 +105,7 @@ export class DebuggerPanel {
       if (this.locked()) return;
       this.pins.add(this.$("debug-register").value);
       this.renderRegisters();
+      this.onPins();
     });
     this.$("debug-memory-form").addEventListener("submit", (event) => {
       event.preventDefault();
@@ -335,6 +338,7 @@ export class DebuggerPanel {
         if (this.locked()) return;
         this.pins.delete(name);
         this.renderRegisters();
+        this.onPins();
         this.applyBusy();
       });
       heading.append(remove);

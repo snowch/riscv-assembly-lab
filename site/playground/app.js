@@ -1,6 +1,7 @@
 // Copyright © 2026 Christopher Snow
 import { createWorkbench } from "../course/workbench-controller.js";
 import { setupTheme } from "../course/home.js";
+import { createPlaygroundLayout } from "./layout.js";
 import {
   ProjectStore,
   newProject,
@@ -64,9 +65,11 @@ function projectList() {
 document
   .querySelector(".build-toolbar")
   .append(document.querySelector(".workspace-tools"));
+const layout = createPlaygroundLayout(copy.workspace);
 const controller = createWorkbench(projectContext(store.current), {
   curriculum: false,
   messages: copy.messages,
+  onView: layout.update,
   onDraft(source, context) {
     const project = store.projects.find((project) => project.id === context.id);
     if (!project) return;
@@ -80,6 +83,7 @@ const controller = createWorkbench(projectContext(store.current), {
     }
   },
 });
+layout.bindPin(controller.togglePin);
 function current() {
   return { ...store.current, source: controller.snapshot().source };
 }
@@ -461,7 +465,7 @@ for (const menu of projectMenus) {
   });
   for (const button of menu.querySelectorAll("button"))
     button.addEventListener("click", () => {
-      menu.open = false;
+      if (menu.id !== "project-setup") menu.open = false;
     });
 }
 $("import-project-dialog").addEventListener("close", () =>

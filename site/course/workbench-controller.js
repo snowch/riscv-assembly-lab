@@ -23,6 +23,7 @@ export function createWorkbench(
     curriculum = true,
     onDraft = () => {},
     onSnapshot = null,
+    onView = () => {},
     messages = {},
   } = {},
 ) {
@@ -77,6 +78,10 @@ export function createWorkbench(
       },
       onInspect() {
         if (paused) session?.inspect();
+      },
+      onPins() {
+        renderRegisters();
+        publishView();
       },
     });
   let source = mountEditor();
@@ -142,6 +147,18 @@ export function createWorkbench(
     $("snapshot-note").hidden =
       builtFingerprint === null || fingerprint() === builtFingerprint;
   }
+  function publishView(program = makeProgram(source.value, lesson, fixture())) {
+    onView({
+      program,
+      source: source.value,
+      context: lesson,
+      build: builtInfo,
+      buildSource: builtSource,
+      pc: currentPc,
+      stale: builtFingerprint !== null && fingerprint() !== builtFingerprint,
+      pins: [...debuggerPanel.pins],
+    });
+  }
   function completeSource() {
     const program = makeProgram(source.value, lesson, fixture());
     $("complete-source").textContent = program.source;
@@ -152,6 +169,7 @@ export function createWorkbench(
     sizeEditor();
     lineNumbers();
     stale();
+    publishView(program);
     onSnapshot?.({
       source: source.value,
       lesson,
@@ -166,7 +184,7 @@ export function createWorkbench(
     lineNumbers();
     $("step").disabled = (busy && !paused) || batch;
     $("step").textContent = paused ? "Step instruction" : "Start stepping";
-    $("continue").hidden = !paused;
+    $("continue").hidden = curriculum && !paused;
     $("continue").disabled = !paused || batch;
     $("stop").disabled = !busy && !paused && !batch;
     source.readOnly = batch;
@@ -192,12 +210,14 @@ export function createWorkbench(
     if ($("observation-note")) $("observation-note").hidden = true;
     debuggerPanel.clear();
     currentPc = null;
+    comparisonState = null;
     activeLine = null;
     $("register-note").textContent = note;
     renderRegisters();
     renderMemory();
     renderBits();
     lineNumbers();
+    publishView();
   }
   function observed() {
     return [
@@ -209,7 +229,10 @@ export function createWorkbench(
       ]),
     ];
   }
-  function renderRegisters(previous = null) {
+  let comparisonState = null;
+  function renderRegisters(previous = undefined) {
+    if (previous !== undefined) comparisonState = previous;
+    previous = comparisonState;
     const mode = $("reading").value;
     $("registers").replaceChildren(
       ...observed().map((name) => {
@@ -218,6 +241,9 @@ export function createWorkbench(
           card = document.createElement("div");
         card.className =
           "register" + (name === lesson.result ? " destination" : "");
+        card.dataset.register = canonical;
+        if (!curriculum && debuggerPanel.pins.has(canonical))
+          card.classList.add("pinned");
         if (
           value &&
           previous?.registers[canonical] &&
@@ -543,6 +569,7 @@ export function createWorkbench(
           .map((i) => `${i.address.toString(16)}: ${i.text}`)
           .join("\n");
       }
+      publishView();
     } else if (event.type === "serial") {
       serial += event.text;
       $("serial").textContent = serial;
@@ -582,8 +609,13 @@ export function createWorkbench(
       $("step-location").textContent = event.complete
         ? `Lesson code ended at PC ${event.pc}. The supplied reporting code runs next.`
         : `PC ${event.pc}${activeLine && activeLine > 0 ? ` · ${curriculum ? "lesson" : "project"} source line ${activeLine}` : ""}. One source line may expand into several machine instructions.`;
+      if (!curriculum)
+        $("run-status").textContent = event.complete
+          ? "Your code finished. The supplied reporter runs next."
+          : `Paused · PC ${event.pc} · ${instruction?.text ?? event.nextInstruction ?? ""}`;
       lineNumbers();
-      if (activeLine > 0) source.scrollToLine(activeLine);
+      if (activeLine > 0)
+        source.scrollToLine(activeLine, { contained: !curriculum });
       $("trace-list").replaceChildren(
         ...trace.map((item) => {
           const li = document.createElement("li");
@@ -592,6 +624,7 @@ export function createWorkbench(
         }),
       );
       stale();
+      publishView();
     } else if (event.type === "done") {
       busy = false;
       paused = false;
@@ -1124,6 +1157,13 @@ export function createWorkbench(
   );
 
   return {
+    togglePin(name) {
+      if (debuggerPanel.pins.has(name)) debuggerPanel.pins.delete(name);
+      else debuggerPanel.pins.add(name);
+      debuggerPanel.renderRegisters();
+      renderRegisters();
+      publishView();
+    },
     snapshot() {
       return {
         source: source.value,

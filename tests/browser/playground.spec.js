@@ -72,6 +72,8 @@ test("standalone workspace runs assembly, C and complete programs with real obse
   await expect(page.locator("#state-badge")).toHaveText("Paused", {
     timeout: 45000,
   });
+  if (await page.locator("#workspace-inspect").isVisible())
+    await page.locator("#workspace-inspect").click();
   await page.locator("#tab-stack").click();
   await expect(page.locator("#debug-stack tbody tr")).toHaveCount(8);
   await page.locator("#tab-memory").click();
@@ -79,6 +81,7 @@ test("standalone workspace runs assembly, C and complete programs with real obse
   await finished(page);
   await expect(page.locator("#observation-note")).toBeVisible();
   await expect(page.locator("#observation-note")).toContainText("not");
+  await page.locator("#workspace-code").click();
   await page.locator(".lab-help > summary").click();
   await expect(page.locator("#entry-copy")).not.toContainText("supplies entry");
 });
@@ -166,7 +169,8 @@ test("invalid setup and imports leave a paused program unchanged; source import 
   await page.locator("#import-project-dialog [data-close-dialog]").click();
   await expect(page.locator("#state-badge")).toHaveText("Paused");
   await expect(page.locator("#step-location")).toHaveText(pc);
-  await page.locator("#project-setup > summary").click();
+  if (await page.locator("#project-setup").evaluate((el) => el.open))
+    await page.locator("#project-setup > summary").click();
   await page.locator("#continue").click();
   await finished(page);
   await expect(page.locator("#t2-decimal")).toHaveText("19");
