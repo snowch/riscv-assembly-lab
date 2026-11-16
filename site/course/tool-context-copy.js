@@ -1,0 +1,149 @@
+// Copyright © 2026 Christopher Snow
+// Generated from content/guides/tool-context.json.
+export default {
+  "execution": {
+    "label": "Where your code runs",
+    "structureNote": "Program structure, not an execution trace. Select a stage to inspect its source.",
+    "fragmentContract": "The lab prepares the inputs, runs your fragment, captures registers and memory, then reports and exits through xv6.",
+    "cContract": "The supplied caller prepares the arguments, calls lesson, captures the returned state, then reports and exits through xv6.",
+    "programContract": "xv6 starts your program at _start. Your source supplies its data, initialisation and exit.",
+    "fragmentInterval": "Stepping starts at your fragment. At its end, the lab captures state and runs the reporter automatically.",
+    "cInterval": "Stepping starts at lesson. Calls can enter other functions. At the supplied checkpoint, the lab captures state and runs the reporter automatically.",
+    "programInterval": "Stepping starts at _start. Your program ends when its exit call completes.",
+    "dataNote": "Program source also shows the data used by your code.",
+    "stages": {
+      "entry": "xv6 starts _start",
+      "setup": "Supplied setup",
+      "fragment": "Your fragment",
+      "function": "Your C function",
+      "capture": "Capture state",
+      "report": "Report and exit",
+      "program": "Your program",
+      "exit": "Your exit call"
+    },
+    "sourceLabels": {
+      "project": "Project source line {line}",
+      "supplied": "Supplied source line {line}",
+      "compiledC": "Compiled C function",
+      "unknown": "No source-line association"
+    },
+    "compactStages": {
+      "setup": "Entry + setup",
+      "fragment": "Your code",
+      "function": "Your C function",
+      "capture": "Capture",
+      "report": "Report + exit",
+      "programEntry": "Entry",
+      "programSource": "Your source",
+      "programExit": "Own exit"
+    },
+    "programRouteNote": "Your source controls entry and termination. Inspect it to see whether and how the program exits.",
+    "fragmentSummary": "Supplied setup prepares inputs. Step covers your code; capture, reporting and exit run automatically afterwards.",
+    "cSummary": "The supplied caller prepares arguments. Step starts at lesson and can enter helpers; capture, reporting and exit follow.",
+    "programSummary": "Step starts at _start. Your source supplies inputs and data and controls how execution ends."
+  },
+  "observation": {
+    "label": "Observed execution",
+    "notObserved": "Run or start stepping to observe register values.",
+    "registers": "Pinned registers",
+    "noPins": "Pin registers in Inspect to keep their values here.",
+    "nextAtPause": "Next at the last pause: {instruction}",
+    "pcAtPause": "Last paused PC: {pc}",
+    "captured": "Captured after your code, before supplied reporting.",
+    "lastPause": "Last paused observation. These are not exit register values.",
+    "stale": "Source changed. These observations belong to the earlier build.",
+    "duringRun": "Last observation shown. The program is running.",
+    "reading": "{reading} reading",
+    "showInspect": "Inspect registers",
+    "previewLabel": "Pinned observations",
+    "morePins": "+{count} more",
+    "beforeObservation": "No observation yet",
+    "unobservedValue": "—",
+    "nextCompact": "Next: {instruction}",
+    "noPausedObservation": "Start stepping or Start debugging to observe this program’s registers."
+  },
+  "scope": {
+    "outsideNamed": "The last paused PC is in {symbol}, outside this scope.",
+    "outsideAddress": "The last paused PC, {pc}, is outside this scope.",
+    "showCurrent": "Show current instruction in All",
+    "allMeaning": "All changes the listing scope. It does not change where stepping starts or where the supplied capture occurs.",
+    "noInstruction": "No instruction in this listing matches the last paused PC."
+  },
+  "calculator": {
+    "intro": "Scratch work with numbers and bits. It does not run instructions or change the program in the editor.",
+    "width": "Scratch width",
+    "reading": "Decimal reading",
+    "width32": "Keeps 32 bits. Widening adds upper zeros; narrowing discards upper bits.",
+    "width64": "Keeps 64 bits. Selecting 32 bits discards valid values’ upper bits.",
+    "widthIndependence": "Calculator width does not change the RV64 processor or the instructions in your program.",
+    "wBridge": "RV64 W instructions keep a 32-bit result, then copy bit 31 through the upper 32 positions of a 64-bit register.",
+    "wResult": "Calculated RV64 W register pattern",
+    "wReading": "Signed reading after W sign extension",
+    "sameBits": "Signed and unsigned read the same retained bits.",
+    "readingChanged": "Decimal reading changed. The retained bits are unchanged; the mathematical reading is updated.",
+    "inputReadingChanged": "Decimal reading changed. The input bits are unchanged.",
+    "retained": "Retained result",
+    "full": "Full mathematical result",
+    "fullNote": "The full mathematical result uses the selected reading of both inputs.",
+    "shiftNote": "The full shift result uses A’s unsigned bit pattern. B is a shift amount.",
+    "signed": "Signed",
+    "unsigned": "Unsigned",
+    "hex": "Hex",
+    "calculate": "Calculate",
+    "carryNote": "Carries and signed overflow describe the addition. RISC-V does not store arithmetic condition flags.",
+    "wPatternNote": "This pattern shows W result formation, calculated from the retained low 32 bits. No CPU instruction was executed."
+  },
+  "bridge": {
+    "id": "complete-program-guide",
+    "title": "From a fragment to a complete program",
+    "entryLabel": "Complete-program guide",
+    "intro": "A fragment uses supplied setup and exit code. A complete program makes those choices in its own source.",
+    "preparationLabel": "Preparation",
+    "preparationIntro": "This example combines memory loads, a helper call and an xv6 exit. Use these lessons if those operations are new.",
+    "preparation": [
+      {
+        "label": "Array addresses and memory loads",
+        "href": "../lessons/array-addresses/"
+      },
+      {
+        "label": "Calls and returns",
+        "href": "../lessons/calls-and-returns/"
+      },
+      {
+        "label": "xv6 system calls",
+        "href": "../lessons/system-calls/"
+      },
+      {
+        "label": "Executable entry",
+        "href": "../lessons/elf-entry/"
+      }
+    ],
+    "workedTitle": "Own the inputs and exit",
+    "workedProject": "Complete program: combine two counts",
+    "workedIntro": "The worked program stores two counts in its data section. _start loads them into a0 and a1, then calls combine.",
+    "workedDetails": [
+      "The label _start names the program’s entry. The .data section defines its count values; no Starting setup values are added.",
+      "combine puts its result in a0. ret returns to the instruction after the call. The caller copies that value into s0 before using a0 for exit.",
+      "The exit request puts zero in a0 and the xv6 exit number in a7. Its ecall enters xv6 to finish the process. This program has no supplied reporter."
+    ],
+    "workedAction": "Open worked program",
+    "workedSteps": [
+      "Open the worked program as a new project. Your existing project is kept.",
+      "Select the line number beside the exit ecall to set a breakpoint. Choose Start debugging.",
+      "At that pause, inspect s0 and the data bytes. Explain how each loaded count reached the helper and how the result reached s0.",
+      "Choose Continue to let the exit call complete. The retained observations describe the last pause, not the exit state."
+    ],
+    "freshTitle": "Apply it to a different calculation",
+    "freshProject": "Complete program: compare two counts",
+    "freshTask": "The fresh project stores 31 and 17. Change combine to return the first count minus the second. Keep the result in s0 before exit.",
+    "freshPrediction": "Predict s0 before running. Set a breakpoint at the exit ecall and inspect the actual observation.",
+    "freshQuestions": [
+      "Which source defines the starting counts, and which instructions load them?",
+      "Where does call transfer control, and where does ret return?",
+      "Why is the returned result copied before a0 is prepared for exit?",
+      "Which pause supports your claimed result, and what does that observation leave unknown about exit?"
+    ],
+    "freshAction": "Open fresh application",
+    "success": "Check your explanation against the source and paused machine. A matching number alone does not explain the input, call and exit boundaries."
+  }
+};

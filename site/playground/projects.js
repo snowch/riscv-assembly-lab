@@ -109,6 +109,21 @@ export function normaliseProject(value, { freshId = false } = {}) {
     memory: value.memory ?? "data",
     result,
   };
+  if (value.pins !== undefined) {
+    if (
+      !Array.isArray(value.pins) ||
+      value.pins.length > 32 ||
+      value.pins.some(
+        (name) => typeof name !== "string" || registerIndex(name) < 0,
+      )
+    )
+      throw new Error(
+        "Pinned registers must be a list of up to 32 integer register names.",
+      );
+    project.pins = [
+      ...new Set(value.pins.map((name) => REGISTERS[registerIndex(name)])),
+    ];
+  }
   if (value.origin !== undefined) {
     if (
       !plain(value.origin) ||
@@ -166,6 +181,7 @@ export function newProject(kind = "asm", name = "Untitled project") {
     data: [],
     memory: "data",
     result: kind === "c" ? "a0" : "t2",
+    pins: kind === "c" ? ["a0", "a1"] : ["t0", "t1", "t2"],
   });
 }
 export function fromLesson(lesson, source, fixture = {}, activity = "example") {
@@ -179,6 +195,7 @@ export function fromLesson(lesson, source, fixture = {}, activity = "example") {
     data: fixture.data ?? lesson.data ?? [],
     memory: lesson.memory ?? "data",
     result: lesson.result,
+    pins: lesson.observe ?? [lesson.result],
     memoryLabels: lesson.memoryLabels,
     origin: {
       id: lesson.id,

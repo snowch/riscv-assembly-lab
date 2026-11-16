@@ -277,3 +277,150 @@
     display: none;
   }
 }
+/* Keep arithmetic, its width and its readings close together. */
+#calculator-dialog {
+  width: min(1040px, calc(100% - 2rem));
+  padding: 0 1rem 1rem;
+}
+.calculator-heading {
+  padding: 0.65rem 0;
+}
+#calc-context {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+}
+.calculator-intro {
+  margin: 0.5rem 0;
+}
+.calculator-settings {
+  margin: 0.5rem 0;
+  gap: 0.5rem 1rem;
+}
+#calc-width-note,
+#calc-entry-help {
+  margin: 0.4rem 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+.calculator-operands {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.calculator-value {
+  margin: 0.35rem 0;
+  min-width: 0;
+}
+.calculator-value > label {
+  font-size: 0.83rem;
+  margin: 0.3rem 0;
+}
+.calculator-readings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.8rem;
+  margin-top: 0.35rem;
+}
+.calculator-readings > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.45rem;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+.calculator-readings span {
+  display: inline;
+  font-size: 0.7rem;
+}
+.calculator-readings output {
+  display: inline;
+  font:
+    600 0.8rem/1.6 ui-monospace,
+    monospace;
+}
+.calculator-operation {
+  margin-top: 0.45rem;
+}
+.calculator-operation label {
+  font-size: 0.83rem;
+}
+#calc-status {
+  margin: 0.5rem 0;
+}
+#calc-result {
+  padding: 0.7rem 0.8rem;
+  margin: 0.6rem 0;
+}
+#calc-result > .calculator-note {
+  margin: 0.25rem 0;
+  font-size: 0.75rem;
+}
+#calc-result-readings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+#calc-result-readings > div {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+#calc-result-readings output {
+  font-size: 0.9rem;
+}
+#calc-full-result,
+#calc-alternate-full-result {
+  font-size: 0.8rem;
+  margin: 0.4rem 0;
+}
+#calc-w-bridge {
+  border-left: 3px solid var(--accent);
+  padding-left: 0.6rem;
+}
+#calc-w-bridge p {
+  margin: 0.3rem 0;
+  overflow-wrap: anywhere;
+}
+#calc-bits > summary,
+.calculator-help > summary {
+  padding: 0.65rem 0.1rem;
+}
+@media (max-width: 520px) {
+  #calculator-dialog {
+    width: calc(100% - 1rem);
+    padding: 0 0.7rem 0.7rem;
+  }
+  .calculator-operands {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.2rem;
+  }
+  .calculator-readings {
+    gap: 0.15rem;
+  }
+  .calculator-readings > div {
+    width: 100%;
+  }
+  .calculator-readings output {
+    font-size: 0.8rem;
+  }
+  #calc-result-readings {
+    display: flex;
+  }
+  #calc-result-readings > div {
+    display: flex;
+  }
+  .calculator-settings select {
+    font-size: 0.8rem;
+  }
+  .calculator-intro {
+    font-size: 0.77rem;
+    line-height: 1.45;
+  }
+  #calc-width-note,
+  #calc-entry-help {
+    font-size: 0.72rem;
+  }
+}

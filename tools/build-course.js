@@ -20,6 +20,18 @@ const playgroundCopy = JSON.parse(
     "utf8",
   ),
 );
+const toolCopy = JSON.parse(
+  await readFile(
+    new URL("../content/guides/tool-context.json", import.meta.url),
+    "utf8",
+  ),
+);
+await writeFile(
+  new URL("course/tool-context-copy.js", root),
+  "// Copyright © 2026 Christopher Snow\n// Generated from content/guides/tool-context.json.\nexport default " +
+    JSON.stringify(toolCopy, null, 2) +
+    ";\n",
+);
 const theme =
   '<label class="theme-label">Theme <select id="theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>';
 function header(prefix) {
@@ -230,6 +242,24 @@ const completeExample = newProject("program", "Hello World");
 completeExample.id = "example-hello-world";
 completeExample.source = await readFile(new URL("hello.s", root), "utf8");
 examples.push(completeExample);
+const countsSource = await readFile(
+  new URL("playground/complete-counts.s", root),
+  "utf8",
+);
+const worked = {
+  ...newProject("program", toolCopy.bridge.workedProject),
+  id: "example-complete-counts",
+  source: countsSource,
+  result: "s0",
+  pins: ["a0", "a1", "s0"],
+};
+const fresh = {
+  ...worked,
+  id: "example-fresh-counts",
+  name: toolCopy.bridge.freshProject,
+  source: countsSource.replace(".quad 19, 23", ".quad 31, 17"),
+};
+examples.push(worked, fresh);
 const project = projectContext(defaultProject),
   copy = playgroundCopy,
   labels = copy.labels;
@@ -246,6 +276,7 @@ const playgroundBody = `<main id="main" class="playground-shell"><div class="pla
 <noscript><p>JavaScript and WebAssembly are required to build and run code. <a href="../lessons/addition/lesson.s">Read the addition source</a>.</p></noscript>
 ${workbenchMarkup(project, { prefix: "../", standalone: true })}
 <div id="project-resources">${programResourcesMarkup(project, { standalone: true })}</section></div>
+<details id="complete-program-guide" class="playground-help complete-program-guide"><summary>${escape(toolCopy.bridge.title)}</summary><div><p>${inline(toolCopy.bridge.intro)}</p><p><strong>${escape(toolCopy.bridge.preparationLabel)}.</strong> ${inline(toolCopy.bridge.preparationIntro)}</p><ul>${toolCopy.bridge.preparation.map((link) => `<li><a href="${escape(link.href)}">${escape(link.label)}</a></li>`).join("")}</ul><h2>${escape(toolCopy.bridge.workedTitle)}</h2><p>${inline(toolCopy.bridge.workedIntro)}</p>${paragraphs(toolCopy.bridge.workedDetails)}<button id="open-worked-counts">${escape(toolCopy.bridge.workedAction)}</button><ol>${toolCopy.bridge.workedSteps.map((step) => `<li>${inline(step)}</li>`).join("")}</ol><h2>${escape(toolCopy.bridge.freshTitle)}</h2><p>${inline(toolCopy.bridge.freshTask)}</p><p>${inline(toolCopy.bridge.freshPrediction)}</p><button id="open-fresh-counts">${escape(toolCopy.bridge.freshAction)}</button><ul>${toolCopy.bridge.freshQuestions.map((question) => `<li>${inline(question)}</li>`).join("")}</ul><p>${inline(toolCopy.bridge.success)}</p></div></details>
 <details id="playground-help" class="playground-help"><summary>${escape(labels.help)}</summary><div>${copy.help.map((section) => `<section><h2>${escape(section.title)}</h2>${paragraphs(section.paragraphs)}</section>`).join("")}<p><a href="../NOTICE.md">Sources and licences</a> · <a href="../using-the-workbench/">Using the workbench</a></p></div></details>
 <dialog id="new-project-dialog" aria-labelledby="new-project-heading"><form id="new-project-form"><h2 id="new-project-heading">${escape(labels.newProject)}</h2><label>${escape(labels.projectName)}<input id="new-project-name" value="Untitled project" maxlength="80" required></label><label>${escape(labels.projectType)}<select id="new-project-kind">${typeOptions}</select></label><p id="new-project-description"></p><p id="new-project-error" class="project-error" role="status"></p><div class="dialog-actions"><button type="button" data-close-dialog>${escape(labels.cancel)}</button><button type="submit" class="primary">${escape(labels.createProject)}</button></div></form></dialog>
 <dialog id="import-project-dialog" aria-labelledby="import-heading"><form id="import-project-form"><h2 id="import-heading">${escape(labels.import)}</h2><label>${escape(labels.projectName)}<input id="import-project-name" maxlength="80" required></label><label>${escape(labels.importAs)}<select id="import-project-kind">${typeOptions}</select></label><pre id="import-preview" tabindex="0" aria-label="Source preview"></pre><p id="import-error" class="project-error" role="status"></p><div class="dialog-actions"><button type="button" data-close-dialog>${escape(labels.cancel)}</button><button type="submit" class="primary">${escape(labels.openImportedProject)}</button></div></form></dialog>
