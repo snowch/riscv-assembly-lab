@@ -1,6 +1,13 @@
 // Copyright © 2026 Christopher Snow
 // Generated from content/guides/tool-context.json.
 export default {
+  "identity": {
+    "lessonKind": "Lesson workspace",
+    "projectKind": "Playground project",
+    "lessonPurpose": "Work through this lesson’s example or exercise with its guidance.",
+    "projectPurpose": "Work independently with this project’s own code and starting setup.",
+    "originNewTab": "Back to source lesson: {title} (new tab)"
+  },
   "execution": {
     "label": "Where your code runs",
     "structureNote": "Program structure, not an execution trace. Select a stage to inspect its source.",

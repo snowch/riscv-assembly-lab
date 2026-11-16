@@ -4,14 +4,14 @@
   "links": {
     "homeLabel": "Open the playground",
     "homeDescription": "Write your own programs with the course editor and debugger. Projects keep their source and starting setup together.",
-    "lessonLabel": "Open in playground",
-    "lessonDescription": "New tab · current code and starting setup",
-    "lessonAccessibleLabel": "Open current code and starting setup in the playground (new tab)",
+    "lessonLabel": "Open a copy in Playground",
+    "lessonDescription": "Independent copy · new tab · lesson draft kept",
+    "lessonAccessibleLabel": "Open a copy of current code and starting setup in Playground (new tab)",
     "guideTitle": "Work on an independent project",
     "guideParagraphs": [
-      "The playground uses the same editor, build tools and debugger as the lessons. It keeps named projects with their source and starting setup.",
-      "Choose Open in playground from a lesson to create a project from your current code. For an exercise, it also carries the selected case’s inputs and data. The playground opens in a new tab, so your lesson stays open.",
-      "Projects and lesson drafts are separate. Changes in the playground do not replace the lesson draft. Export project keeps the source and setup in one file."
+      "Use the lesson workspace for guided examples and exercises. Use a Playground project to work independently with the same editor, build tools and debugger.",
+      "Choose Open a copy in Playground to copy your current code and starting setup into a new project in a new tab. For an exercise, the copy uses the selected case’s inputs and data.",
+      "Project edits and lesson drafts stay separate. Back to source lesson returns to the lesson the project came from. Export project keeps the project’s source and setup in one file."
     ]
   },
   "projectTypes": [
@@ -75,7 +75,7 @@
     "editorWidth": "Editor width",
     "resizePanes": "Resize editor and inspector",
     "help": "Using the playground",
-    "sourceLesson": "Source lesson",
+    "sourceLesson": "Back to source lesson",
     "mainAssembly": "main.s",
     "mainC": "main.c",
     "examples": "Examples",
