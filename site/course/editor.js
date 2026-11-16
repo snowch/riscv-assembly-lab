@@ -407,8 +407,16 @@ export function createSourceEditor(
         scrollIntoView: true,
       });
     },
-    scrollToLine(line) {
+    scrollToLine(line, { contained = false } = {}) {
       const number = Math.max(1, Math.min(view.state.doc.lines, line));
+      if (contained) {
+        const block = view.lineBlockAt(view.state.doc.line(number).from);
+        view.scrollDOM.scrollTo({
+          top: block.top - (view.scrollDOM.clientHeight - block.height) / 2,
+          behavior: "instant",
+        });
+        return;
+      }
       view.dispatch({
         effects: EditorView.scrollIntoView(view.state.doc.line(number).from, {
           y: "center",

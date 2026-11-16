@@ -2,7 +2,7 @@
 
 export function setupWorkbench() {
   const root = document.getElementById("workbench");
-  const tabs = [...root.querySelectorAll('[role="tab"]')];
+  const tabs = [...root.querySelectorAll('.inspection-tabs [role="tab"]')];
   function inspect(name, focus = false) {
     const next = tabs.find((tab) => tab.id === `tab-${name}`);
     if (!next) return;
@@ -53,10 +53,28 @@ export function setupWorkbench() {
   let placeholder,
     previousTop = 0,
     closing = false;
+  function rememberPaneScroll() {
+    return [
+      ...root.querySelectorAll(
+        ".cm-scroller,.program-scroll,.inspection-view,.workspace",
+      ),
+    ].map((node) => ({ node, top: node.scrollTop, left: node.scrollLeft }));
+  }
+  function restorePaneScroll(positions) {
+    const restore = () => {
+      for (const { node, top, left } of positions) {
+        node.scrollTop = top;
+        node.scrollLeft = left;
+      }
+    };
+    restore();
+    requestAnimationFrame(() => requestAnimationFrame(restore));
+  }
 
   async function close() {
     if (!dialog.open || closing) return;
     closing = true;
+    const paneScroll = rememberPaneScroll();
     if (
       document.fullscreenElement &&
       dialog.contains(document.fullscreenElement)
@@ -75,6 +93,7 @@ export function setupWorkbench() {
     });
     toggle.focus({ preventScroll: true });
     window.dispatchEvent(new Event("resize"));
+    restorePaneScroll(paneScroll);
     closing = false;
   }
   toggle.addEventListener("click", async () => {
@@ -83,6 +102,7 @@ export function setupWorkbench() {
       return;
     }
     previousTop = root.getBoundingClientRect().top;
+    const paneScroll = rememberPaneScroll();
     placeholder = document.createComment("Workbench position");
     root.before(placeholder);
     dialog.append(root);
@@ -107,6 +127,7 @@ export function setupWorkbench() {
     }
     toggle.focus({ preventScroll: true });
     window.dispatchEvent(new Event("resize"));
+    restorePaneScroll(paneScroll);
   });
   dialog.addEventListener("cancel", (event) => {
     event.preventDefault();

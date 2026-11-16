@@ -126,6 +126,15 @@
   },
   "help": [
     {
+      "id": "workspace-views",
+      "title": "Source and execution",
+      "paragraphs": [
+        "Code is your editable source. Program shows that source in its supplied program, with setup and reporting sections folded away. Expand a section to inspect the full source.",
+        "Machine instructions shows the executable from your last successful build. Build again after editing the source. During stepping, PC marks the next instruction to execute.",
+        "Inspect shows observations from execution. Pin useful registers, compare changed values, or choose All to see every integer register."
+      ]
+    },
+    {
       "id": "project-and-source",
       "title": "Choose the source you want to write",
       "paragraphs": [
@@ -171,5 +180,58 @@
         "The playground supplies console output, but no console input. The guest does not provide floating-point process state. Stepping shows functional execution, not physical hardware timing."
       ]
     }
-  ]
+  ],
+  "workspace": {
+    "code": "Code",
+    "program": "Program",
+    "inspect": "Inspect",
+    "views": "Workspace view",
+    "source": "Program source",
+    "instructions": "Machine instructions",
+    "currentSource": "Current source · read-only",
+    "fragmentIntro": "Your code sits inside the supplied program. Expand the folded sections to inspect its setup and reporting code.",
+    "programIntro": "This is your complete source. The build uses it unchanged.",
+    "cIntro": "Your C function and its supplied assembly caller are separate source files. Build the program to inspect the compiled instructions.",
+    "cSource": "Your C function",
+    "cCaller": "Supplied assembly caller",
+    "parts": {
+      "entry": "Entry",
+      "setup": "Supplied initialisation",
+      "user": "Your code",
+      "caller": "Call your C function",
+      "report": "Supplied capture, reporting and exit",
+      "data": "Starting data · lesson_data"
+    },
+    "lines": "lines",
+    "noBuild": "Build or start stepping to see the instructions in the executable.",
+    "buildNote": "Last successful build. PC marks the next instruction at the last pause. One assembly source line can produce several instructions.",
+    "stale": "Source changed. Instructions and observations still belong to the previous build. Build again to use your edits.",
+    "cMapping": "TinyCC does not provide C source-line mappings. This scope shows the compiled lesson function.",
+    "userInstructions": "Your instructions",
+    "allInstructions": "All instructions",
+    "scope": "Instruction scope",
+    "allScope": "All includes supplied setup, helper functions and reporting code.",
+    "filter": "Show registers",
+    "all": "All",
+    "pinned": "Pinned",
+    "changed": "Changed",
+    "filterHelp": "Pinned keeps chosen registers together. Changed compares values with the preceding observation. All shows every integer register.",
+    "emptyRegisters": "No registers match this view. Pin a register from All, or run or step to compare values.",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "changedMark": "Changed",
+    "pinMark": "Pinned",
+    "editCode": "Edit code",
+    "download": "Download complete program",
+    "noInstructions": "This build emitted no instructions in this scope.",
+    "pc": "PC",
+    "address": "Address",
+    "instruction": "Instruction",
+    "sourceLine": "Source line",
+    "setup": "Setup",
+    "help": "Help",
+    "cUserInstructions": "lesson function",
+    "cAllMapping": "TinyCC does not provide C source-line mappings. All includes compiled C and the supplied assembly.",
+    "jumpPc": "Jump to PC"
+  }
 }
