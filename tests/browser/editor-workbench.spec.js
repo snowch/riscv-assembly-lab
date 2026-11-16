@@ -1,6 +1,6 @@
 // Copyright © 2026 Christopher Snow
 import { test, expect } from "@playwright/test";
-import { fillSource } from "./editor-helpers.js";
+import { fillSource, loadExercise } from "./editor-helpers.js";
 
 const go = async (page, id = "addition") => {
   await page.goto(`/lessons/${id}/`);
@@ -41,7 +41,7 @@ test("the visible editor supports highlighting, indentation, undo, find and focu
   await page.keyboard.press("Escape");
   await page.keyboard.press("Tab");
   await expect(editor).not.toBeFocused();
-  await page.locator("#challenge-mode").click();
+  await loadExercise(page);
   const challenge = await page.locator("#source").inputValue();
   await page.locator(".cm-content").focus();
   await page.keyboard.press("Control+z");
@@ -181,13 +181,14 @@ test("challenge checks lock the visible editor and release it afterwards", async
   page,
 }) => {
   await go(page);
-  await page.locator("#challenge-mode").click();
+  await loadExercise(page);
   await fillSource(page, "add t2,t0,t1");
   await page.locator("#check-cases").click();
   await expect(page.locator(".cm-content")).toHaveAttribute(
     "contenteditable",
     "false",
   );
+  await expect(page.locator("#return-example")).toBeDisabled();
   await page.locator("#fullscreen-workspace").click();
   await expect(page.locator(".cm-content")).toHaveAttribute(
     "contenteditable",

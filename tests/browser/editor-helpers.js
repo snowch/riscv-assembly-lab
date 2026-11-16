@@ -11,3 +11,17 @@ export async function fillSource(page, value) {
 export async function selectedSource(page) {
   return page.evaluate(() => window.getSelection()?.toString() ?? "");
 }
+
+export async function loadExercise(page) {
+  const exercise = page.locator("#challenge");
+  if (!(await exercise.evaluate((el) => el.open))) {
+    await exercise.locator(":scope > summary").click();
+  }
+  await page.locator("#start-challenge").click();
+  await expect(page.locator("#editor-context")).toHaveText("Exercise");
+}
+
+export async function returnToExample(page) {
+  await page.locator("#return-example").click();
+  await expect(page.locator("#editor-context")).toHaveText("Example");
+}

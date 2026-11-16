@@ -156,8 +156,7 @@ function controls() {
       button.disabled = busy || paused || batch;
     });
   for (const id of [
-    "explore-mode",
-    "challenge-mode",
+    "return-example",
     "restore",
     "start-challenge",
     "check-cases",
@@ -767,43 +766,52 @@ document.addEventListener("keydown", (event) => {
 });
 function switchActivity(next) {
   if (batch) return;
-  if (busy || paused) session.stop();
-  saveDraft();
-  activity = next;
-  caseIndex = 0;
-  undoSource = null;
-  debuggerPanel.sourceChanged();
-  source.value = restoreDraft(
-    activity === "challenge" ? lesson.challenge.starter : lesson.starter,
-  );
-  $("explore-mode").setAttribute(
-    "aria-pressed",
-    String(activity === "explore"),
-  );
-  $("challenge-mode").setAttribute(
-    "aria-pressed",
-    String(activity === "challenge"),
-  );
-  $("challenge-controls").hidden = activity !== "challenge";
-  $("prediction-block").hidden = activity !== "explore";
-  clearState();
-  startingState();
-  completeSource();
-  status(
-    activity === "challenge"
-      ? "Write the requested code, then check all cases."
-      : "Ready for a fresh example.",
-  );
-  controls();
+  if (activity === next) return;
+  const editor = $("source-editor");
+  if (
+    !workbench.expanded &&
+    !editor.style.getPropertyValue("--editor-fixed-height")
+  ) {
+    editor.style.setProperty(
+      "--editor-fixed-height",
+      `${editor.getBoundingClientRect().height}px`,
+    );
+  }
+  workbench.preservePosition(() => {
+    if (busy || paused) session.stop();
+    saveDraft();
+    activity = next;
+    caseIndex = 0;
+    undoSource = null;
+    debuggerPanel.sourceChanged();
+    source.value = restoreDraft(
+      activity === "challenge" ? lesson.challenge.starter : lesson.starter,
+    );
+    $("editor-context").textContent =
+      activity === "challenge" ? "Exercise" : "Example";
+    $("return-example").hidden = activity !== "challenge";
+    $("challenge-controls").hidden = activity !== "challenge";
+    $("prediction-block").hidden = activity !== "explore";
+    clearState();
+    startingState();
+    completeSource();
+    status(
+      activity === "challenge"
+        ? "Write the requested code, then check all cases."
+        : "Example draft restored. Build and run for a fresh machine.",
+    );
+    controls();
+  });
 }
-$("explore-mode").addEventListener("click", () => switchActivity("explore"));
-$("challenge-mode").addEventListener("click", () =>
-  switchActivity("challenge"),
-);
-$("start-challenge").addEventListener("click", () => {
+$("return-example").addEventListener("click", () => {
+  switchActivity("explore");
+  $("editor-context").focus({ preventScroll: true });
+});
+$("start-challenge").addEventListener("click", (event) => {
   switchActivity("challenge");
-  $("source-heading").scrollIntoView({ block: "start" });
-  source.focus({ preventScroll: true });
+  $("workbench").scrollIntoView({ block: "start", behavior: "instant" });
+  if (event.detail === 0) source.focus({ preventScroll: true });
+  else $("editor-context").focus({ preventScroll: true });
 });
 $("case-picker").replaceChildren(
   ...lesson.challenge.cases.map((test, index) => {

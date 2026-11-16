@@ -58,11 +58,15 @@
   padding: 0.5rem 0.8rem;
   border-bottom: 1px solid var(--border);
 }
-.workbench .mode-tabs {
-  padding: 0;
+.workbench-context {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
 }
-.workbench .mode-tabs button {
-  min-width: 6rem;
+#editor-context:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .workbench .text-button {
   min-height: 44px;
@@ -140,7 +144,11 @@
 }
 .workbench .editor {
   display: block;
-  height: clamp(144px, var(--editor-content-height, 180px), 360px);
+  height: clamp(
+    144px,
+    var(--editor-fixed-height, var(--editor-content-height, 180px)),
+    360px
+  );
   min-height: 144px;
   max-height: 85vh;
   resize: vertical;
@@ -303,8 +311,12 @@
   .workbench-bar {
     padding: 0.4rem 0.6rem;
   }
-  .workbench .mode-tabs button {
-    min-width: 0;
+  .workbench-context {
+    flex: 1 0 100%;
+  }
+  .workbench .workspace-tools {
+    min-height: 44px;
+    margin-left: auto;
   }
   .workspace-tools {
     gap: 0;
@@ -335,7 +347,11 @@
   }
   .course-layout .workbench .editor {
     min-height: 176px;
-    height: clamp(176px, var(--editor-content-height, 220px), 352px);
+    height: clamp(
+      176px,
+      var(--editor-fixed-height, var(--editor-content-height, 220px)),
+      352px
+    );
   }
   .workbench .panel-heading {
     padding: 0.45rem 0.6rem;
@@ -357,6 +373,17 @@
   .hello-editor .source-code-editor .cm-search input:not([type="checkbox"]) {
     font-size: 16px;
   }
+}
+
+.challenge-section {
+  padding: 0;
+}
+.challenge-section > summary {
+  padding: 1rem 1.3rem;
+  font-size: 1rem;
+}
+.exercise-body {
+  padding: 0 1.3rem 1.3rem;
 }
 
 /* Find must leave room for code after the compact phone sizing rules. */

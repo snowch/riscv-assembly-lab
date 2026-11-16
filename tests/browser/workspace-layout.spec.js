@@ -1,5 +1,10 @@
 // Copyright © 2026 Christopher Snow
-import { fillSource, selectedSource } from "./editor-helpers.js";
+import {
+  fillSource,
+  selectedSource,
+  loadExercise,
+  returnToExample,
+} from "./editor-helpers.js";
 import { test, expect } from "@playwright/test";
 
 const height = (locator) =>
@@ -29,8 +34,9 @@ test("the editor fits drafts, restores and activity changes without losing code"
   expect(await height(editor)).toBe(small);
   await page.getByRole("button", { name: "Undo restore", exact: true }).click();
   await expect(source).toHaveValue(long);
-  await page.locator("#challenge-mode").click();
-  expect(await height(editor)).toBeLessThanOrEqual(225);
+  const workingHeight = await height(editor);
+  await loadExercise(page);
+  expect(await height(editor)).toBe(workingHeight);
   await expect(page.locator("#starting-state")).toContainText(
     "Starting inputs · Two positive inputs",
   );
@@ -38,7 +44,7 @@ test("the editor fits drafts, restores and activity changes without losing code"
   await expect(page.locator("#starting-state")).toContainText(
     "Fresh machine each run.",
   );
-  await page.locator("#explore-mode").click();
+  await returnToExample(page);
   await expect(source).toHaveValue(long);
   await page.reload();
   await expect(source).toHaveValue(long);
