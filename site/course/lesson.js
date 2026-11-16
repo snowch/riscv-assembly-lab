@@ -21,10 +21,12 @@ import {
 import { sourceZip } from "./zip.js";
 import { createSourceEditor } from "./editor.js";
 import { setupWorkbench } from "./workspace.js";
+import { setupCourseNavigation } from "./navigation.js";
 const $ = (id) => document.getElementById(id),
   lesson = JSON.parse($("lesson-data").textContent);
 setupTheme();
 renderCompletion();
+setupCourseNavigation();
 let activity = "explore",
   caseIndex = 0,
   state = null,

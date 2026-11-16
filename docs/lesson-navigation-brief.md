@@ -1,0 +1,23 @@
+# Lesson navigation, resources and operand diagram
+
+Copyright © 2026 Christopher Snow.
+
+The user approved compact breadcrumbs with access to the course list, less space before the lesson title, underlined prose links, full-width resource rows, and an addition operand diagram with a definition of `li` (load immediate). Keep the existing runnable lessons, source drafts, prediction checking and optional exercise flow.
+
+Checked facts: the addition starter loads t0 and t1 then adds them into t2. The first add operand is its destination and the other two name source registers. Reading these separate input registers leaves them unchanged. `li` is assembler shorthand for loading an immediate constant; it can expand into multiple machine instructions. The ISA/ABI sources are already recorded in tools/course-data.js and the checked audit extracts under /tmp/riscv-audit-*.txt. The browser uses real GNU tools and xv6 execution.
+
+Use a schematic of operand roles, labelled with the exact instruction, rather than inventing a CPU hardware architecture. Do not print the prediction's numerical answer before execution. Keep the schematic explicitly tied to the original example when the editor changes. Add no fabricated resources or new instruction/runtime behaviours.
+
+The course menu must be usable with keyboard, phone touch and JavaScript disabled. Breadcrumb module links must open the matching course module on the front page. Native resource disclosures retain their IDs, focus targets, code generation and downloads. Check navigation, focus, disclosure state, first-lesson clarity and both themes at phone/tablet/desktop sizes. Obtain separate copy drafting and independent learner and technical reviews under docs/course-authoring.md.
+
+The user also requested a header calculator. Make it available on the home page, optional guide, generated lessons and Hello World. Default to 64-bit unsigned arithmetic; offer 32 bits and signed decimal reading. Reuse the author's checked exact BigInt calculator maths without any Arm flag UI. Prefix entry (`0x`, `0b`, otherwise decimal) accepts separators and leading zeros. Pasting never changes width or truncates nonzero upper bits. Explicit narrowing retains low bits; widening adds zeros. Keep A/B conversions live, calculate results on request, and clear stale results on edits. Optional aligned bit rows and addition carries describe mathematical properties, not RISC-V processor flags. The calculator is independent of lesson code, predictions, CPU runs and exercise state. Store values in sessionStorage when available and retain same-page usability if storage is blocked.
+
+The core numeric subset comes from Christopher Snow's Assembly Lab `packages/machine/src/programmer-calculator.ts` at `2988f4d002195734c4eb9c0082b9e88a41cbb037`, through the addition-carries function. Types were removed using esbuild, with attribution and the original copyright retained. No Arm arithmetic-flags UI or execution model was imported. The original upstream calculator source attribution remains in the file and public source record.
+
+## Review and verification record
+
+The separate copy pass is recorded in `lesson-navigation-copy.md`. Independent learner and technical reviews are recorded alongside this brief. The learner review covered 18 lesson/viewport/theme combinations plus 12 final modal combinations, actual paused execution, and native navigation without JavaScript. Opening the course list moved the heading by zero pixels. The technical review checked 112,360 arithmetic comparisons against separate integer and carry-column calculations.
+
+Review found that Ctrl/Cmd+Enter could reach the lesson's global build shortcut through the calculator, and that Hello World lacked the generated pages' input styling. Both were fixed at the shared calculator boundary and independently rechecked. Calculator shortcuts now calculate locally and preserve the underlying paused CPU and source. Hello World has the header control and calculator-specific 44-pixel input styling. The shortcut regression covers both pages and keyboard modifiers.
+
+The initial focused browser run passed all 18 checks without skips. A subsequent full run passed all 74 then-collected checks. After adding the four shortcut regressions, the final full browser run passed all 78 checks without skips (exit 0). All 18 unit/execution checks and 26 pinned-asset checks passed. These results are separate from the reviewers' private probe corrections, documented in their records. Lesson programs, runtime binaries and case fixtures are unchanged; the complete native/xv6 corpus is left to the existing GitHub check before publishing. Regenerated all 58 lesson pages from their canonical source.
