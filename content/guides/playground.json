@@ -4,14 +4,11 @@
   "links": {
     "homeLabel": "Open the playground",
     "homeDescription": "Use the course workbench for your own projects. Each project keeps its source and starting setup together.",
-    "lessonLabel": "Open a copy in Playground",
-    "lessonDescription": "Independent copy · new tab · lesson draft kept",
-    "lessonAccessibleLabel": "Open a copy of current code and starting setup in Playground (new tab)",
     "guideTitle": "Work on an independent project",
     "guideParagraphs": [
       "Use the lesson’s example and optional exercise for guided work. To keep an independent experiment, open Tools → Projects and choose Save a copy. The project opens in the same editor with its own source and starting setup.",
       "A copy of an exercise uses the selected case’s inputs and data. Project edits keep the lesson draft unchanged. Choose Return to lesson to restore the example or exercise you left.",
-      "The playground link opens the same workspace for independent projects. The lesson resource Open a copy in Playground remains available if you want the copy in a separate tab."
+      "Open the playground from the course overview to work on independent projects. In a lesson, use Tools → Projects to keep working in the same editor."
     ]
   },
   "projectTypes": [

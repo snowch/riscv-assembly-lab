@@ -39,16 +39,9 @@ for (const fallback of [false, true]) {
       "Add two register values · exercise",
     );
     await page.locator("#fullscreen-workspace").click();
-    await expect(page.locator("#open-playground")).toContainText(
-      "Open a copy in Playground",
-    );
-    await expect(page.locator("#open-playground")).toHaveAttribute(
-      "target",
-      "_blank",
-    );
-    await expect(page.locator("#open-playground")).toHaveAccessibleName(
-      /copy of current code and starting setup.*new tab/,
-    );
+    await expect(page.locator("#open-playground")).toHaveCount(0);
+    await openTools(page, "projects");
+    await expect(page.locator("#project-picker")).toBeEnabled();
 
     await page.goto("/playground/");
     await expect(page.locator("#run")).toBeEnabled();

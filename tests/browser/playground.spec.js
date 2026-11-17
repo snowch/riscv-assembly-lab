@@ -176,49 +176,55 @@ test("invalid setup and imports leave a paused program unchanged; source import 
   await expect(page.locator("#t2-decimal")).toHaveText("19");
 });
 
-test("lesson exercise transfer creates an independent project with selected case inputs", async ({
+test("lesson exercise copy uses selected case inputs and restores the lesson draft", async ({
   page,
-  context,
 }) => {
   test.setTimeout(120000);
   await page.goto("/lessons/addition/");
   await expect(page.locator("#run")).toBeEnabled();
   await loadExercise(page);
   await page.locator("#case-picker button").nth(1).click();
+  const selected = await page
+    .locator("#case-picker button[aria-pressed=true]")
+    .textContent();
   const code = "add t2,t0,t1\n";
   await fillSource(page, code);
   await page.locator("#step").click();
   await expect(page.locator("#state-badge")).toHaveText("Paused", {
     timeout: 45000,
   });
-  const pc = await page.locator("#step-location").textContent();
-  const popupEvent = context.waitForEvent("page");
-  await page.locator("#open-playground").click();
-  const popup = await popupEvent;
-  await popup.waitForLoadState();
-  await expect(popup.locator("#source")).toHaveValue(code);
-  await expect(popup.locator("#project-origin")).toContainText(
-    "Back to source lesson",
-  );
-  const selected = await page
-    .locator("#case-picker button[aria-pressed=true]")
-    .textContent();
-  await expect(popup.locator("#project-origin")).toContainText(selected);
-  const setup = await popup.locator("#project-inputs").inputValue();
+  await expect(page.locator("#open-playground")).toHaveCount(0);
+  await openTools(page, "projects");
+  await actions(page);
+  await page.locator("#copy-project").click();
+  await expect(page.locator("#return-lesson")).toBeVisible();
+  await expect(page.locator("#source")).toHaveValue(code);
+  await expect(page.locator("#state-badge")).toHaveText("Ready");
+  await expect(page.locator("#project-origin")).toContainText(selected);
+  await openTools(page, "setup");
+  const setup = await page.locator("#project-inputs").inputValue();
   expect(setup).toContain("t0 = 0x0000000000000000");
   expect(setup).toContain("t1 = 0x0000000000000009");
-  await expect(page.locator("#source")).toHaveValue(code);
-  await expect(page.locator("#step-location")).toHaveText(pc);
-  await expect(page.locator("#state-badge")).toHaveText("Paused");
-  await popup.locator("#run").click();
-  await finished(popup);
-  await expect(popup.locator("#t2-decimal")).toHaveText("9");
-  await fillSource(popup, "li t2, 88\n");
-  await expect(page.locator("#source")).toHaveValue(code);
-  await page.locator("#continue").click();
+  await page.locator("#run").click();
   await finished(page);
   await expect(page.locator("#t2-decimal")).toHaveText("9");
-  await popup.close();
+  await fillSource(page, "li t2, 88\n");
+  await page.locator("#run").click();
+  // Wait for this run's result, not the preceding run's Finished badge.
+  await expect(page.locator("#t2-decimal")).toHaveText("88", {
+    timeout: 45000,
+  });
+  await finished(page);
+  await page.locator("#return-lesson").click();
+  await expect(page.locator("#editor-context")).toHaveText("Exercise");
+  await expect(page.locator("#source")).toHaveValue(code);
+  await expect(
+    page.locator("#case-picker button[aria-pressed=true]"),
+  ).toHaveText(selected);
+  await expect(page.locator("#state-badge")).toHaveText("Ready");
+  await page.locator("#run").click();
+  await finished(page);
+  await expect(page.locator("#t2-decimal")).toHaveText("9");
 });
 
 test("multiple tabs keep newer saved projects when an untouched editor switches projects", async ({
@@ -351,51 +357,42 @@ test("stepping a complete program through its exit waits for xv6 completion", as
   );
 });
 
-test("native new-tab gestures transfer edited lesson and Hello World source", async ({
+test("lesson footers omit the redundant playground link and projects remain accessible", async ({
   page,
-  context,
-}, info) => {
+}) => {
   test.setTimeout(90000);
+  const response = await page.request.get("/course/catalog.json");
+  const lessons = await response.json();
+  for (const id of new Set([
+    ...lessons.map((lesson) => lesson.id),
+    "hello-world",
+  ])) {
+    const lesson = await page.request.get(`/lessons/${id}/`);
+    expect(lesson.ok()).toBe(true);
+    expect(await lesson.text(), id).not.toContain('id="open-playground"');
+  }
   await page.goto("/lessons/addition/");
   await expect(page.locator("#run")).toBeEnabled();
-  const source = "li t2, 123\n";
-  await fillSource(page, source);
-  const link = page.locator("#open-playground");
-  await link.focus();
-  expect(decodeURIComponent(await link.getAttribute("href"))).toContain(
-    "li t2, 123",
-  );
-  const opened = context.waitForEvent("page");
-  await link.click({
-    button: info.project.name === "desktop" ? "middle" : "left",
-  });
-  const target = await opened;
-  await target.waitForLoadState();
-  await expect(target.locator("#source")).toHaveValue(source);
-  await target.close();
+  await openTools(page, "projects");
+  await actions(page);
+  await expect(page.locator("#copy-project")).toBeVisible();
+  await page.goto("/");
+  await page
+    .getByRole("link", { name: "Open the playground", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/playground\/$/);
+  await expect(page.locator("#run")).toBeEnabled();
+  await expect(page.locator("#workspace-tools-toggle")).toBeEnabled();
   await page.goto("/lessons/hello-world/");
   await expect(page.locator("#run")).toBeEnabled();
-  const original = await page.locator("#source").inputValue(),
-    edited = original.replace("Hello, RISC-V!", "My own message!");
+  const original = await page.locator("#source").inputValue();
+  const edited = original.replace("Hello, RISC-V!", "My own message!");
   await fillSource(page, edited);
-  const fullLink = page.locator("#open-playground");
-  await fullLink.focus();
-  expect(decodeURIComponent(await fullLink.getAttribute("href"))).toContain(
-    "My own message!",
-  );
-  const popup = context.waitForEvent("page");
-  await fullLink.click({
-    button: info.project.name === "desktop" ? "middle" : "left",
+  await page.locator("#run").click();
+  await expect(page.locator("#console")).toContainText("My own message!", {
+    timeout: 45000,
   });
-  const program = await popup;
-  await program.waitForLoadState();
-  await expect(program.locator("#source")).toHaveValue(edited);
-  await expect(program.locator("#project-kind")).toHaveText(
-    "Complete assembly program",
-  );
-  await program.locator("#run").click();
-  await finished(program);
-  await expect(program.locator("#console")).toContainText("My own message!");
+  await page.reload();
   await expect(page.locator("#source")).toHaveValue(edited);
-  await program.close();
+  await expect(page.locator("#open-playground")).toHaveCount(0);
 });
