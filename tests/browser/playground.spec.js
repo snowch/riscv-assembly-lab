@@ -1,7 +1,7 @@
 // Copyright © 2026 Christopher Snow
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
-import { fillSource, loadExercise } from "./editor-helpers.js";
+import { fillSource, loadExercise, openTools } from "./editor-helpers.js";
 import {
   newProject,
   serialiseProject,
@@ -17,11 +17,13 @@ const finished = (page) =>
     timeout: 45000,
   });
 async function example(page, id) {
+  await openTools(page, "projects");
   await page.locator(".project-examples > summary").click();
   await page.locator("#project-example").selectOption("example-" + id);
   await page.locator("#open-example").click();
 }
 async function actions(page) {
+  await openTools(page, "projects");
   const menu = page.locator(".project-actions");
   if (!(await menu.evaluate((el) => el.open)))
     await menu.locator(":scope > summary").click();
@@ -56,10 +58,10 @@ test("standalone workspace runs assembly, C and complete programs with real obse
     page,
     "long lesson(long a, long b) {\n return a * 3 + b;\n}\n",
   );
-  await page.locator("#project-setup > summary").click();
+  await openTools(page, "setup");
   await page.locator("#project-inputs").fill("a0 = 7\na1 = 5");
   await page.locator("#setup-form button[type=submit]").click();
-  await page.locator("#project-setup > summary").click();
+  await openTools(page, "setup");
   await page.locator("#run").click();
   await finished(page);
   await expect(page.locator("#a0-decimal")).toHaveText("26");
@@ -72,16 +74,15 @@ test("standalone workspace runs assembly, C and complete programs with real obse
   await expect(page.locator("#state-badge")).toHaveText("Paused", {
     timeout: 45000,
   });
-  if (await page.locator("#workspace-inspect").isVisible())
-    await page.locator("#workspace-inspect").click();
-  await page.locator("#tab-stack").click();
+  await openTools(page, "registers");
+  await openTools(page, "stack");
   await expect(page.locator("#debug-stack tbody tr")).toHaveCount(8);
-  await page.locator("#tab-memory").click();
+  await openTools(page, "memory");
   await page.locator("#continue").click();
   await finished(page);
   await expect(page.locator("#observation-note")).toBeVisible();
   await expect(page.locator("#observation-note")).toContainText("not");
-  await page.locator("#workspace-code").click();
+  await openTools(page, "registers");
   await page.locator(".lab-help > summary").click();
   await expect(page.locator("#entry-copy")).not.toContainText("supplies entry");
 });
@@ -93,11 +94,11 @@ test("project drafts, copying, removal and imports preserve source and setup exa
   await rename(page, "Sensor project");
   const source = "add t2, t0, t1\n";
   await fillSource(page, source);
-  await page.locator("#project-setup > summary").click();
+  await openTools(page, "setup");
   await page.locator("#project-inputs").fill("t0 = 0xffffffffffffffff\nt1 = 2");
   await page.locator("#project-bytes").fill("01 FF");
   await page.locator("#setup-form button[type=submit]").click();
-  await page.locator("#project-setup > summary").click();
+  await openTools(page, "setup");
   await actions(page);
   const downloadEvent = page.waitForEvent("download");
   await page.locator("#export-project").click();
@@ -113,6 +114,7 @@ test("project drafts, copying, removal and imports preserve source and setup exa
   await actions(page);
   await page.locator("#delete-project").click();
   await expect(page.locator("#source")).toHaveValue(source);
+  await openTools(page, "projects");
   await page.locator("#undo-delete").click();
   await expect(page.locator("#source")).toHaveValue("li t2, 42\n");
   await page.reload();
@@ -146,7 +148,7 @@ test("invalid setup and imports leave a paused program unchanged; source import 
     timeout: 45000,
   });
   const pc = await page.locator("#step-location").textContent();
-  await page.locator("#project-setup > summary").click();
+  await openTools(page, "setup");
   await page.locator("#project-inputs").fill("sp = 1");
   await page.locator("#setup-form button[type=submit]").click();
   await expect(page.locator("#setup-error")).toContainText("unchanged");
@@ -169,8 +171,6 @@ test("invalid setup and imports leave a paused program unchanged; source import 
   await page.locator("#import-project-dialog [data-close-dialog]").click();
   await expect(page.locator("#state-badge")).toHaveText("Paused");
   await expect(page.locator("#step-location")).toHaveText(pc);
-  if (await page.locator("#project-setup").evaluate((el) => el.open))
-    await page.locator("#project-setup > summary").click();
   await page.locator("#continue").click();
   await finished(page);
   await expect(page.locator("#t2-decimal")).toHaveText("19");
@@ -230,11 +230,13 @@ test("multiple tabs keep newer saved projects when an untouched editor switches 
   await actions(page);
   await page.locator("#copy-project").click();
   const secondId = await page.locator("#project-picker").inputValue();
+  await openTools(page, "projects");
   await page.locator("#project-picker").selectOption(firstId);
   const second = await context.newPage();
   await second.goto("/playground/");
   await expect(second.locator("#run")).toBeEnabled();
   await fillSource(second, "li t2, 99\n");
+  await openTools(page, "projects");
   await page.locator("#project-picker").selectOption(secondId);
   const stored = await page.evaluate(
     ({ prefix, id }) => JSON.parse(localStorage.getItem(prefix + id)),
@@ -242,6 +244,7 @@ test("multiple tabs keep newer saved projects when an untouched editor switches 
   );
   expect(stored.source).toBe("li t2, 99\n");
   await page.reload();
+  await openTools(page, "projects");
   await page.locator("#project-picker").selectOption(firstId);
   await expect(page.locator("#source")).toHaveValue("li t2, 99\n");
   await second.close();
@@ -261,6 +264,7 @@ test("tab-only projects remain usable when browser storage is blocked", async ({
   await expect(page.locator("#save-state")).toContainText("tab-only");
   await fillSource(page, "li t2, 42\n");
   await example(page, "sum-array");
+  await openTools(page, "projects");
   await page
     .locator("#project-picker")
     .selectOption({ label: "Register addition" });
@@ -274,10 +278,11 @@ test("tab-only projects remain usable when browser storage is blocked", async ({
   );
 });
 
-test("menus are exclusive for keyboard and pointer; desktop panes survive fullscreen", async ({
+test("project menus are exclusive; editor and compact observations survive fullscreen", async ({
   page,
 }, info) => {
   await go(page);
+  await openTools(page, "projects");
   const actionsMenu = page.locator(".project-actions"),
     examples = page.locator(".project-examples");
   await actionsMenu.locator(":scope > summary").focus();
@@ -299,7 +304,7 @@ test("menus are exclusive for keyboard and pointer; desktop panes survive fullsc
   await expect(page.locator(".workbench-dialog")).toBeVisible();
   if (info.project.name === "desktop") {
     const editor = await page.locator(".editor-panel").boundingBox(),
-      inspector = await page.locator(".run-panel").boundingBox();
+      inspector = await page.locator(".phone-observation").boundingBox();
     expect(inspector.x).toBeGreaterThan(editor.x + editor.width);
     expect(
       await page

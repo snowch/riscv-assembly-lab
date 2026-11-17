@@ -105,12 +105,18 @@ export function createExecutionContext(
         ? `${o.pcAtPause.replace("{pc}", pc)}${instruction ? " · " + o.nextAtPause.replace("{instruction}", instruction.text) : ""}`
         : "";
     document.getElementById("phone-observation-reading").textContent =
-      o.reading.replace("{reading}", copy.calculator[view.readingMode]);
-    const pins = view.pins.slice(0, 3),
+      view.context.ui?.signed === false
+        ? "Decimal reading"
+        : o.reading.replace("{reading}", copy.calculator[view.readingMode]);
+    const relevant =
+      view.context.module === "playground"
+        ? [...new Set([view.context.result, ...view.pins])]
+        : view.context.observe;
+    const pins = relevant.slice(0, 5),
       registers = document.getElementById("phone-observation-registers");
     registers.setAttribute(
       "aria-label",
-      `${o.previewLabel} (${pins.length}/${view.pins.length})`,
+      `${o.previewLabel} (${pins.length}/${relevant.length})`,
     );
     registers.replaceChildren(
       ...pins.map((name) => {
@@ -134,11 +140,11 @@ export function createExecutionContext(
       }),
     );
     if (!pins.length) registers.textContent = o.noPins;
-    if (view.pins.length > 3) {
+    if (relevant.length > 5) {
       const more = document.createElement("span");
       more.textContent = o.morePins.replace(
         "{count}",
-        String(view.pins.length - 3),
+        String(relevant.length - 5),
       );
       registers.append(more);
     }

@@ -1,9 +1,10 @@
 // Copyright © 2026 Christopher Snow
-import { fillSource, selectedSource } from "./editor-helpers.js";
+import { fillSource, selectedSource, openTools } from "./editor-helpers.js";
 import { test, expect } from "@playwright/test";
 const go = async (page, id = "addition") => {
   await page.goto("/lessons/" + id + "/");
-  await expect(page.locator("#debug")).toBeEnabled();
+  await expect(page.locator("#run")).toBeEnabled();
+  await openTools(page, "debugger");
 };
 const pause = (page) =>
   expect(page.locator("#state-badge")).toHaveText("Paused", { timeout: 45000 });
@@ -95,11 +96,12 @@ test("adding a paused memory watch observes real bytes without advancing and sta
     "unsigned 42",
   );
   await expect(page.locator("#step-location")).toHaveText(pc);
-  await page.locator("#debug-stack-section > summary").click();
+  await openTools(page, "stack");
   await expect(page.locator("#debug-stack tbody tr")).toHaveCount(8);
   await expect(page.locator("#debug-stack tbody tr").nth(1)).toContainText(
     "done",
   );
+  await openTools(page, "debugger");
   await page.locator("#debug-memory-base").selectOption("zero");
   await page.locator("#debug-memory-offset").fill("-8");
   await page.locator("#debug-memory-add").click();

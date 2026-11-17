@@ -1,13 +1,13 @@
 {
   "title": "Using the workbench",
-  "intro": "An optional guide to editing, running and inspecting code. Try the controls in the addition lesson; return here when you need a reminder.",
+  "intro": "One editor for lesson examples, exercises and your own projects. Start with the lesson controls; open Tools when you need more inspection or project options.",
   "sections": [
     {
       "id": "run-an-example",
       "title": "Edit, run and compare",
       "paragraphs": [
-        "Registers are the processor’s working storage. Open the addition workbench. If a saved draft differs from the example below, choose Restore starter; Undo restore recovers your draft. This example’s first two lines load values into registers; the third adds them into t2.",
-        "Predict what t2 will hold, then choose Build & Run. Inspect Registers after the code finishes. Change a starting number in the editor, predict again, and run the edited code. Each run starts a fresh machine. Stop ends the current run.",
+        "Registers are the processor’s working storage. Open the addition workbench. If a saved draft differs from the example below, choose Restore starter; Undo restore recovers your draft. The first two lines load values into registers. The third adds them into t2.",
+        "Predict what t2 will hold, then choose Build & Run. Inspect the register values after the code finishes. Change a starting number in the editor, predict again, and run the edited code. Each run starts a fresh machine. Stop ends the current run.",
         "A prediction is checked against the code you run, including your edits. A valid edit can produce a different result from the original example."
       ],
       "example": true,
@@ -20,29 +20,49 @@
       "id": "inspect-results",
       "title": "Choose what to inspect",
       "paragraphs": [
-        "In a lesson workspace, the inspector sits beside the editor on a wide screen and below it on a phone. Select a named tab. The addition example has no Memory tab."
+        "The workbench shows the registers relevant to the current example. Open Tools for further inspection, starting setup and saved projects. Choosing a tool keeps your source in the same editor.",
+        "Observations belong to the named pause or completed run. If you edit the code afterwards, build again before using the values to explain your changes."
       ],
-      "headers": ["Tab", "What it shows"],
+      "headers": [
+        "Tab",
+        "What it shows"
+      ],
       "rows": [
         [
           "Registers",
-          "Values captured at a pause or after your code completes."
+          "Captured integer-register values, with filters for pinned or changed registers and an optional bit view."
         ],
         [
           "Memory",
-          "Data or stack bytes, in lessons that provide a memory view."
+          "Observed bytes in the selected data or stack region. Before and After compare the supplied data with the captured data."
+        ],
+        [
+          "Stack",
+          "Observed bytes around sp, the stack pointer."
+        ],
+        [
+          "Debugger",
+          "Breakpoints and the register or memory values you choose to watch."
+        ],
+        [
+          "Program",
+          "Your source within the complete program, or machine instructions from the last successful build."
         ],
         [
           "Output",
-          "Your program’s console text. This addition prints no console text."
+          "Your program’s console text. The addition example prints no console text."
         ],
         [
           "Diagnostics",
           "Compiler, assembler and linker messages, plus execution errors."
         ],
         [
-          "Debugger",
-          "Breakpoints and the register or memory values you choose to watch."
+          "Setup",
+          "Starting registers, supplied data and the highlighted result register."
+        ],
+        [
+          "Projects",
+          "Saved projects, examples, new projects and file import or export."
         ]
       ]
     },
@@ -51,7 +71,8 @@
       "title": "Follow execution",
       "paragraphs": [
         "Start stepping pauses before the first machine instruction of your code. Step instruction executes one machine instruction. In assembly, the execution highlight identifies the source line for the next instruction. A source line can expand into several machine instructions.",
-        "A breakpoint pauses before its instruction runs. In the addition example, choose the numbered button beside `add`, then choose Start debugging. Continue runs to the next selected breakpoint or the end of your code. C debugging uses actual instruction addresses because this compiler provides no C source-line mappings."
+        "A breakpoint pauses before its instruction runs. In the addition example, choose the numbered button beside `add`, then choose Start debugging. Continue runs to the next selected breakpoint or the end of your code. Open Tools → Debugger to inspect breakpoints and watches.",
+        "C debugging uses actual instruction addresses because this compiler provides no C source-line mappings. In Tools → Program, choose Machine instructions to inspect the executable from the last successful build."
       ]
     },
     {
@@ -67,12 +88,27 @@
       "paragraphs": [
         "Syntax highlighting and bracket matching help you read the code. Diagnostics report whether the tools accept it."
       ],
-      "headers": ["Keys", "Action"],
+      "headers": [
+        "Keys",
+        "Action"
+      ],
       "rows": [
-        ["Ctrl / ⌘ + F", "Find text."],
-        ["Ctrl / ⌘ + Z", "Undo an edit."],
-        ["Ctrl / ⌘ + Enter", "Build and run."],
-        ["Tab", "Indent code."],
+        [
+          "Ctrl / ⌘ + F",
+          "Find text."
+        ],
+        [
+          "Ctrl / ⌘ + Z",
+          "Undo an edit."
+        ],
+        [
+          "Ctrl / ⌘ + Enter",
+          "Build and run."
+        ],
+        [
+          "Tab",
+          "Indent code."
+        ],
         [
           "Escape, then Tab",
           "Leave the editor using the keyboard. Close Find first if it is open."
@@ -90,17 +126,19 @@
       "id": "keep-your-work",
       "title": "Keep or restore your work",
       "paragraphs": [
-        "The example and optional exercise keep separate drafts. Drafts save in this browser when storage is available; check the save message. Download code keeps a file.",
-        "Restore starter replaces your edits; Undo restore recovers them. View complete program shows the supplied entry, reporting and exit code around your work."
+        "The example and optional exercise keep separate drafts. Drafts save in this browser when storage is available; check the save message. Download code keeps a source file.",
+        "Restore starter replaces your edits; Undo restore recovers them. In Tools → Program, inspect the complete source to see the supplied entry, reporting and exit code around your work.",
+        "A saved project keeps source and starting setup together. Export project saves both in one JSON file. Saved drafts and projects do not keep a running or paused machine."
       ]
     },
     {
       "id": "independent-project",
       "title": "Work on an independent project",
       "paragraphs": [
-        "Use the lesson workspace for guided examples and exercises. Use a Playground project to work independently with the same editor, build tools and debugger.",
-        "Choose Open a copy in Playground to copy your current code and starting setup into a new project in a new tab. For an exercise, the copy uses the selected case’s inputs and data.",
-        "Project edits and lesson drafts stay separate. Back to source lesson returns to the lesson the project came from. Export project keeps the project’s source and setup in one file."
+        "Use the lesson’s example and optional exercise for guided work. To keep an independent experiment, open Tools → Projects and choose Save a copy. The project opens in the same editor with its own source and starting setup.",
+        "In a lesson draft, Apply setup opens a project copy with the values you entered. The lesson draft and its starting setup stay unchanged.",
+        "A copy of an exercise uses the selected case’s inputs and data. Project edits keep the lesson draft unchanged. Choose Return to lesson to restore the example or exercise you left.",
+        "The playground link opens the same workspace for independent projects. The lesson resource Open a copy in Playground remains available if you want the copy in a separate tab."
       ],
       "link": {
         "href": "../playground/",

@@ -1,17 +1,17 @@
 {
   "title": "RISC-V playground",
-  "intro": "Write and run your own code. Inspect the machine, then change the program and run again.",
+  "intro": "Write and run your own code in the course workbench. Open Tools for inspection, setup and projects.",
   "links": {
     "homeLabel": "Open the playground",
-    "homeDescription": "Write your own programs with the course editor and debugger. Projects keep their source and starting setup together.",
+    "homeDescription": "Use the course workbench for your own projects. Each project keeps its source and starting setup together.",
     "lessonLabel": "Open a copy in Playground",
     "lessonDescription": "Independent copy · new tab · lesson draft kept",
     "lessonAccessibleLabel": "Open a copy of current code and starting setup in Playground (new tab)",
     "guideTitle": "Work on an independent project",
     "guideParagraphs": [
-      "Use the lesson workspace for guided examples and exercises. Use a Playground project to work independently with the same editor, build tools and debugger.",
-      "Choose Open a copy in Playground to copy your current code and starting setup into a new project in a new tab. For an exercise, the copy uses the selected case’s inputs and data.",
-      "Project edits and lesson drafts stay separate. Back to source lesson returns to the lesson the project came from. Export project keeps the project’s source and setup in one file."
+      "Use the lesson’s example and optional exercise for guided work. To keep an independent experiment, open Tools → Projects and choose Save a copy. The project opens in the same editor with its own source and starting setup.",
+      "A copy of an exercise uses the selected case’s inputs and data. Project edits keep the lesson draft unchanged. Choose Return to lesson to restore the example or exercise you left.",
+      "The playground link opens the same workspace for independent projects. The lesson resource Open a copy in Playground remains available if you want the copy in a separate tab."
     ]
   },
   "projectTypes": [
@@ -80,7 +80,11 @@
     "mainC": "main.c",
     "examples": "Examples",
     "renameProject": "Rename project",
-    "observation": "Observation"
+    "observation": "Observation",
+    "tools": "Tools",
+    "returnToLesson": "Return to lesson",
+    "lessonDraft": "Lesson draft",
+    "projectNotes": "Project notes"
   },
   "setup": {
     "intro": "Set the values supplied before your code starts. Apply setup ends the current run; the next build starts a fresh machine.",
@@ -100,7 +104,8 @@
       "dataBytes": "{count} supplied data bytes",
       "zeroData": "64 zero data bytes",
       "fullProgram": "Defined in source"
-    }
+    },
+    "lessonHelp": "Apply setup opens a project copy with these values. Your lesson draft and its starting setup stay unchanged."
   },
   "messages": {
     "saved": "Project saved in this browser.",
@@ -122,17 +127,19 @@
     "lastPause": "Last observed at a pause before the program finished. These are not exit register values.",
     "notObserved": "Start stepping or Start debugging to observe this program’s registers.",
     "lastPausedObservation": "Registers, memory and stack show the last pause before this program finished. They do not show the exit state.",
-    "noPausedObservation": "No paused observation was captured. Start stepping or Start debugging to inspect registers, memory and stack."
+    "noPausedObservation": "No paused observation was captured. Start stepping or Start debugging to inspect registers, memory and stack.",
+    "lessonRestored": "Lesson draft restored. Build or start stepping for a fresh machine.",
+    "lessonCopyCreated": "Project copy opened in this workspace. Your lesson draft is kept."
   },
   "help": [
     {
       "id": "workspace-views",
       "title": "Source and execution",
       "paragraphs": [
-        "On a phone or narrow window, use Code, Program and Inspect to switch views. On a wide screen, the inspector stays beside Code or Program.",
-        "Code is your editable source. Program shows that source in its supplied program, with setup and reporting sections folded away. Expand a section to inspect the full source.",
+        "The editor and run controls work the same way in lessons and independent projects. Open Tools when you need more inspection, starting setup or saved projects. Close Tools to concentrate on the code and its relevant results.",
+        "Program shows your current source inside its complete program. Expand a supplied section to inspect the setup, capture or reporting code. Your fragment stays editable in the editor.",
         "Machine instructions shows the executable from your last successful build. Build again after editing the source. During stepping, PC marks the next instruction to execute.",
-        "Inspect shows observations from execution. Pin useful registers, compare changed values, or choose All to see every integer register."
+        "Registers shows observations from execution. Pin useful registers, compare changed values, or choose All to see every integer register."
       ]
     },
     {
@@ -158,7 +165,7 @@
       "id": "starting-values",
       "title": "Supply starting values",
       "paragraphs": [
-        "For fragments and C functions, Starting setup supplies register values before your source runs. Use assignments such as t0 = 7, one per line. Apply setup commits the entries and ends the current run. Editing the setup form alone does not change a paused machine.",
+        "For fragments and C functions, Setup supplies register values before your source runs. Use assignments such as t0 = 7, one per line. Apply setup commits the entries and ends the current run. Editing the setup form alone does not change a paused machine.",
         "Data bytes fills the area named lesson_data. Hexadecimal uses digits 0–9 and A–F; two hexadecimal digits describe one byte. Unspecified bytes start at zero.",
         "Memory view chooses the 64-byte region shown in Memory. Data starts at lesson_data. Stack starts at the observed stack pointer, sp. The Stack tab and memory watches provide further observed readings."
       ]
@@ -168,8 +175,9 @@
       "title": "Keep your projects",
       "paragraphs": [
         "Source and setup save together in this browser when storage is available. Check the save message. A project saves your code and setup, not a running or paused machine.",
-        "Open example and Import file create a new project. They keep your other projects. Save a copy creates another project from the current source and setup.",
-        "Export project saves the source and setup in one JSON file. Download source saves only the code. Import file accepts project JSON, assembly source (.s or .asm), or C source (.c). Check Import as before opening a source file.",
+        "Open Tools → Projects to open a saved project, choose an example, import a file or create a new project. Open example and Import file create new projects and keep your other work. Save a copy keeps the current source and setup in another project.",
+        "From a lesson, Save a copy opens an independent project in the same editor. The lesson draft stays available through Return to lesson. An exercise copy uses the selected case’s inputs and data.",
+        "Export project saves the source and setup in one JSON file. Download code saves only the source. Import file accepts project JSON, assembly source (.s or .asm), or C source (.c). Check Import as before opening a source file.",
         "If storage is unavailable, you can keep working in this tab. Export project before leaving to keep that work. Delete project can be reversed with Undo delete."
       ]
     },
