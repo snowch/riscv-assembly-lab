@@ -4,6 +4,8 @@ Copyright © 2026 Christopher Snow. Adaptation authorised by the author from Ass
 
 The source authoring instructions are `/workspace/assembly-lab/AGENTS.md`, `CLAUDE.md`, `docs/style.md`, and `docs/authoring.md`. Use checked facts, separate drafting and independent reviews. Preserve attribution; the source course content is all rights reserved, while the new interface is MIT. Do not modify Assembly Lab.
 
+Apply the user's [learner clarity criteria](learner-clarity.md) sentence by sentence and to the full action/result flow. Verify requested edits through the actual interface and preserve saved learner work.
+
 ## Course contract
 
 Author one JSON array per assigned file under `content/`. Each object has:

@@ -112,7 +112,17 @@
       "carryMechanism": "Each column adds A, B and the carry from its right. A total of two or three sends a carry to the next column on the left. Out shows the carry beyond the top bit; the result keeps only the selected width.",
       "overflowMechanism": "Signed overflow occurs when the carry into the top bit differs from the carry out. RISC-V does not record arithmetic condition flags."
     },
-    "wPatternNote": "This pattern shows W result formation, calculated from the retained low 32 bits. No CPU instruction was executed."
+    "wPatternNote": "This pattern shows W result formation, calculated from the retained low 32 bits. No CPU instruction was executed.",
+    "entryHelp": "Decimal by default. Use 0x for hexadecimal or 0b for binary. Spaces, commas and underscores may separate digits.",
+    "help": {
+      "summary": "Entry, reading and width",
+      "paragraphs": [
+        "Unsigned reads the bits as zero or a positive number. Signed gives the top bit negative weight.",
+        "Hexadecimal and binary entries describe bit patterns. Shorter patterns get upper zeros, even with Signed selected.",
+        "Values must fit the selected width. Leading zeros are allowed. A pattern with nonzero bits above that width is rejected; entering a value never changes the selected width or discards bits.",
+        "For Shift left, B is the number of positions to shift: zero to one less than the selected width. The full shift result uses A’s unsigned bit pattern."
+      ]
+    }
   },
   "bridge": {
     "id": "complete-program-guide",
@@ -166,5 +176,15 @@
     ],
     "freshAction": "Open fresh application",
     "success": "Check your explanation against the source and paused machine. A matching number alone does not explain the input, call and exit boundaries."
+  },
+  "lessonFeedback": {
+    "noPrediction": "No prediction was entered. This run produced {register} = {value} ({reading}). Enter a prediction before your next run to check it.",
+    "predictionMismatch": "This run completed with {register} = {value} ({reading}). Your prediction differs from this result; compare it with the code you ran.",
+    "finishedLesson": "Run finished. Inspect Registers, then try the task under Change it and run again.",
+    "finishedProject": "Run finished. Inspect Registers, then change your code or Starting setup and run again.",
+    "predictionUnavailable": "Prediction not checked: this run produced no completed register result.",
+    "errorStatus": "Inspect Diagnostics for the error.",
+    "diagnosticsTitle": "Build and execution messages",
+    "finishedExercise": "Run finished for the selected exercise case. Inspect Registers, then use Check all cases to test every supplied input."
   }
 }

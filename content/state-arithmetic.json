@@ -21,7 +21,7 @@
       "prompt": "What will t2 hold after the three lines run?",
       "register": "t2",
       "reading": "signed",
-      "hint": "Follow the instruction inputs in order, then inspect the requested register after the fragment."
+      "hint": "The li lines prepare t0 and t1. Add the values read by the final add; neither input is its destination."
     },
     "explanation": [
       "The addition reads the values already loaded into its two source registers. It writes only its destination. Check both input cards as well as the result card: this distinguishes using a value from changing it.",
@@ -29,7 +29,7 @@
       "An instruction does not know that a value means distance, a count or a reading. You choose registers for those jobs. Changing a register name changes which stored value the instruction reads or writes."
     ],
     "experiment": {
-      "task": "Change the starting values to 19 and 23. Predict the destination, then run again and check that the two inputs kept their values.",
+      "task": "Change `li t0, 7` to `li t0, 19` and `li t1, 5` to `li t1, 23` in the editor. Predict the value in t2, then choose Build & Run. In Registers, check t0 and t1 beside t2: did the add change either input?",
       "hint": "Use the first operand to find the register that is written."
     },
     "challenge": {
@@ -105,7 +105,7 @@
       "prompt": "What will t2 hold after adding the adjustment?",
       "register": "t2",
       "reading": "signed",
-      "hint": "Follow the instruction inputs in order, then inspect the requested register after the fragment."
+      "hint": "Read t0 from the li line, then apply the final numeric operand of addi. addi does not replace its input with the immediate alone."
     },
     "explanation": [
       "The processor does not read a register called 3. The assembler encodes that number into the machine instruction. Replacing it with another register name would require a register-input form such as `add`.",
@@ -113,7 +113,7 @@
       "Keep the role of the constant separate from the changing input. In a calibration rule, the adjustment can stay fixed while each new sensor reading changes. A useful test therefore uses several incoming readings, not just the worked example."
     ],
     "experiment": {
-      "task": "Change the adjustment to \u22124. Run with more than one starting value and check the input register after each run.",
+      "task": "Change `addi t2, t0, 3` to `addi t2, t0, -4`. Choose Build & Run first with the existing `li t0, 18`, then with that line changed to `li t0, 30`. In Registers, compare t0 and t2 after each run. Does the adjustment replace t0?",
       "hint": "A negative immediate is still a number in the instruction, not another register."
     },
     "challenge": {
@@ -183,7 +183,7 @@
       "prompt": "What will t2 hold after both arithmetic operations?",
       "register": "t2",
       "reading": "signed",
-      "hint": "Follow the instruction inputs in order, then inspect the requested register after the fragment."
+      "hint": "First update t0 with the add. The final sub reads that updated value, with its third operand subtracted from its second."
     },
     "explanation": [
       "The subtraction uses the value that the preceding addition left in t0. It does not return to t0\u2019s first loaded value. Instruction order and register reuse together determine which value is available at each read.",
@@ -191,7 +191,7 @@
       "Subtraction keeps a direction. A planned distance minus the distance already travelled can express what remains. Swapping those inputs instead asks how far the travel exceeds the plan. Choose the question before choosing the operand order."
     ],
     "experiment": {
-      "task": "Change the final instruction to sub t2, t1, t0. Predict how reversing only the two inputs changes the result.",
+      "task": "Change the final instruction to `sub t2, t1, t0`. Predict how reversing only the two inputs changes the result, then choose Build & Run. In Registers, compare t2 with the earlier result. Which stored values did the subtraction read?",
       "hint": "The destination is still t2. Only the subtraction\u2019s direction changed."
     },
     "challenge": {
@@ -264,7 +264,7 @@
       "prompt": "What value remains in t2 after the final correction?",
       "register": "t2",
       "reading": "signed",
-      "hint": "Follow the instruction inputs in order, then inspect the requested register after the fragment."
+      "hint": "The final addi reads the sum already written to t2. Carry that value forward instead of using t2’s starting value."
     },
     "explanation": [
       "An instruction that writes a register affects later instructions that read that register. It cannot change an input that an earlier instruction has already read. This gives you a concrete way to trace a fragment without guessing from its overall appearance.",
@@ -272,7 +272,7 @@
       "The result cards here describe one observation moment: after your fragment finishes. For a longer calculation, identify that moment first, then follow the path of the values that survive to it."
     ],
     "experiment": {
-      "task": "Move the correction before the add without changing its operands. Run again and explain which write discards the correction.",
+      "task": "Move `addi t2, t2, -2` immediately before `add t2, t0, t1`, leaving both li lines first. Predict the final t2, then choose Build & Run and inspect t2 in Registers. Which write discards the correction?",
       "hint": "Ask which instruction writes t2 last."
     },
     "challenge": {
@@ -339,7 +339,7 @@
     "before": [
       "RISC-V has a register whose value is always zero. Its architectural name is `x0`; `zero` is another spelling for the same register. Reading either name supplies zero. Writing it discards the result.",
       "The other integer registers can store changing values. The zero register instead gives instructions a useful fixed input. `addi t2, zero, 9` therefore creates a value from a constant, while `sub t2, zero, t0` forms zero minus t0.",
-      "The first line below attempts to write the register named `zero`. Predict the final result using the value that the next line actually reads. Treat the fixed register rule as part of the machine, not a convention that your program may choose to ignore."
+      "The first line below attempts to write the register named `zero`. Predict the final result using the value that the final add actually reads. Treat the fixed register rule as part of the machine, not a convention that your program may choose to ignore."
     ],
     "starter": "li zero, 99\nli t0, 8\nadd t2, t0, zero\n",
     "observe": ["zero", "t0", "t2"],
@@ -348,7 +348,7 @@
       "prompt": "What will t2 hold when the add reads zero?",
       "register": "t2",
       "reading": "signed",
-      "hint": "Follow the instruction inputs in order, then inspect the requested register after the fragment."
+      "hint": "The attempted write cannot change zero. Work out which values the final add actually reads."
     },
     "explanation": [
       "The attempted write does not create a stored 99 in x0. There is no earlier value for the next read to recover. This is different from an ordinary register whose new value replaces its old one.",
@@ -356,11 +356,11 @@
       "The destination still matters. Writing a calculated result to zero throws it away, so later code cannot retrieve that result from x0. If you need to keep a value, choose a writable register."
     ],
     "experiment": {
-      "task": "Change the destination of the final add to zero. Check t0 and zero after the run, then restore a writable destination.",
+      "task": "Change the final instruction to `add zero, t0, zero`, then choose Build & Run. Check t0 and zero in Registers: did discarding the sum change either source? Restore the destination t2 before continuing.",
       "hint": "Discarding a result does not change the source register."
     },
     "challenge": {
-      "task": "A signed working value arrives in t0. Put its negation into t2 using zero as an input. Preserve t0.",
+      "task": "A working value arrives in t0. Put its negation into t2 using zero as an input. Preserve t0.",
       "starter": "add t2, t0, zero\n",
       "reference": "sub t2, zero, t0\n",
       "hints": [
@@ -415,9 +415,9 @@
       "Relate hexadecimal digits to groups of bits."
     ],
     "before": [
-      "Hexadecimal writes a bit pattern more compactly than binary. Each digit describes four bits. The digits run from 0 to 9, then A to F for the remaining six values. Upper-case and lower-case letters mean the same thing.",
+      "Hexadecimal writes a bit pattern more compactly than binary. Each digit describes four bits. The digits run from 0 to 9, then A to F for the values ten through fifteen. Upper-case and lower-case letters mean the same thing.",
       "The prefix `0x` tells the assembler that a number uses hexadecimal. It does not make the register a different kind of storage. `0x10` has a one in the next group of four bits; it is not the decimal number ten.",
-      "Load the example, then compare the decimal and hexadecimal readings in the result cards. Leading zeros in a displayed 64-bit pattern make its width visible. They do not change its value. Predict the sum before running it."
+      "Predict the sum in the two lines below before choosing Build & Run. Afterwards, compare the decimal and hexadecimal readings in the t0 and t2 register cards. Leading zeros in a displayed 64-bit pattern make its width visible. They do not change its value."
     ],
     "starter": "li t0, 0x2a\naddi t2, t0, 0x10\n",
     "observe": ["t0", "t2"],
@@ -426,7 +426,7 @@
       "prompt": "What hexadecimal value will t2 hold after the adjustment?",
       "register": "t2",
       "reading": "hex",
-      "hint": "Follow the instruction inputs in order, then inspect the requested register after the fragment."
+      "hint": "Keep the place value of 0x10 distinct from decimal 10. Add the hexadecimal values, carrying into the next digit position if needed."
     },
     "explanation": [
       "A hexadecimal digit has sixteen possible values because four bits have sixteen possible patterns. Moving one hexadecimal place to the left multiplies that digit\u2019s place value by sixteen, just as moving a decimal place multiplies it by ten.",
@@ -434,7 +434,7 @@
       "Hexadecimal is particularly useful when boundaries between groups of bits matter. Keep the prefix when entering a hex answer so an unprefixed string of decimal digits does not ask the page to interpret a different number."
     ],
     "experiment": {
-      "task": "Write the first loaded value as decimal 42 instead of 0x2a. Compare the resulting register patterns, then try a hexadecimal value with a letter digit.",
+      "task": "Change `li t0, 0x2a` to `li t0, 42`. Choose Build & Run and compare the hexadecimal patterns for t0 and t2 with the previous run. Then try `li t0, 0x3b` and predict the new sum before running. Does changing notation alone change the stored bits?",
       "hint": "Four bits determine one hexadecimal digit, regardless of the decimal reading."
     },
     "challenge": {
@@ -493,9 +493,9 @@
       "Keep a bit pattern unchanged while comparing its readings."
     ],
     "before": [
-      "An unsigned reading treats every set bit as a positive place value. A signed two\u2019s-complement reading gives the top bit a negative weight and keeps the lower bit weights positive. With 64 bits, the top bit is bit 63.",
+      "An unsigned reading treats every set bit as a positive place value. A signed two’s-complement reading gives the top bit a negative weight and keeps the lower bit weights positive. Bit positions are numbered from zero at the right, so the top bit of a 64-bit register is bit 63.",
       "Both readings describe the same stored pattern. The register does not hold an extra signedness label. The instruction you choose, and the interpretation you need for a result, determine which reading is useful.",
-      "Loading a negative constant gives the assembler a way to describe its two\u2019s-complement pattern. The example copies that pattern without changing it. Predict the unsigned reading, then compare the hexadecimal pattern with the signed reading after execution."
+      "Loading a negative constant gives the assembler a way to describe its two’s-complement pattern. The example copies that pattern without changing it. Predict the unsigned reading of t2, then choose Build & Run. In Registers, use Decimal reading to compare Unsigned and Signed while checking that the hexadecimal pattern stays the same."
     ],
     "starter": "li t0, -2\naddi t2, t0, 0\n",
     "observe": ["t0", "t2"],
@@ -504,7 +504,7 @@
       "prompt": "What unsigned value does the copied 64-bit pattern represent?",
       "register": "t2",
       "reading": "unsigned",
-      "hint": "Follow the instruction inputs in order, then inspect the requested register after the fragment."
+      "hint": "The copy leaves every bit unchanged. For a negative signed reading, add one full 64-bit range to find the unsigned reading of the same pattern."
     },
     "explanation": [
       "For a pattern whose top bit is set, the unsigned and signed readings differ by one full 64-bit range. No instruction is needed merely to change your reading of a result card; the underlying bits remain in place.",
@@ -512,7 +512,7 @@
       "A trip gradient may need a negative reading, while a packed warning pattern needs individual bits. Those uses can share a pattern without sharing a meaning. In later lessons, signed and unsigned comparison instructions make that choice affect execution."
     ],
     "experiment": {
-      "task": "Replace \u22122 with \u22121, then with 1. Compare the hexadecimal top bit and both decimal readings after each run.",
+      "task": "Change the first line to `li t0, -1`, then to `li t0, 1`, choosing Build & Run each time. In Registers, compare t2 under both Decimal reading choices and check that its hexadecimal pattern stays unchanged when you switch readings. Open Inspect the register bits, select t2 and choose High bits. How does the top bit relate to the two decimal readings?",
       "hint": "A set top bit contributes positively to the unsigned reading and negatively to the signed reading."
     },
     "challenge": {
@@ -582,7 +582,7 @@
       "prompt": "What hexadecimal pattern will the explicit construction put in t2?",
       "register": "t2",
       "reading": "hex",
-      "hint": "Follow the instruction inputs in order, then inspect the requested register after the fragment."
+      "hint": "Track where lui places each hexadecimal digit. Then add the low adjustment, keeping the full 64-bit pattern."
     },
     "explanation": [
       "The value in t0 is an upper part, not the original immediate standing alone. Adding the low adjustment combines two contributions to the final value. Inspect t0 separately so that the shifting effect of lui remains visible.",
@@ -590,7 +590,7 @@
       "You normally use li when you want a constant and do not care how it is built. Understanding the pieces helps you read actual instructions and explain why one source line can occupy several instruction positions. This page does not assume that every source line is one machine instruction."
     ],
     "experiment": {
-      "task": "Replace the lui immediate with 0x80000 and inspect t0 before interpreting it as unsigned. Explain which bits were copied upwards.",
+      "task": "Change the first line to `lui t0, 0x80000` and choose Build & Run. In Registers, compare t0’s hexadecimal pattern under the Signed and Unsigned Decimal reading choices. Which upper bits came from copying bit 31, and which changes are only changes of reading?",
       "hint": "lui forms a 32-bit result first, then sign-extends it on RV64."
     },
     "challenge": {
@@ -660,7 +660,7 @@
       "prompt": "What signed 64-bit value will t3 hold after addw?",
       "register": "t3",
       "reading": "signed",
-      "hint": "Follow the instruction inputs in order, then inspect the requested register after the fragment."
+      "hint": "Keep the low 32 bits of the sum first. Use bit 31 of that result to fill every upper position in t3."
     },
     "explanation": [
       "The two additions do not use each other\u2019s results. Their difference comes from the requested operation width and the way addw fills the upper half. Check the hexadecimal cards to separate low result bits from their extension.",
@@ -668,7 +668,7 @@
       "RISC-V word arithmetic differs from an architecture whose 32-bit register writes clear the upper half. Read the instruction\u2019s rule rather than inferring a filling rule from the small size of the calculation."
     ],
     "experiment": {
-      "task": "Use 0xffffffff and 1 as the two inputs. Then try an input with non-zero bits above bit 31. Compare what add and addw keep.",
+      "task": "Change the two li lines to load `0xffffffff` into t0 and 1 into t1. Choose Build & Run and compare the full hexadecimal patterns in t2 and t3. Then use `li t0, 0x100000003` with t1 still 1. Predict which upper bits add and addw will keep before running again.",
       "hint": "Only the low 32 result bits determine every bit written by addw."
     },
     "challenge": {
@@ -730,12 +730,12 @@
     "summary": "Observe a sum that exceeds a 64-bit register\u2019s unsigned range.",
     "objectives": [
       "Separate an exact mathematical sum from stored result bits.",
-      "Explain fixed-width wrapping without inventing a flag."
+      "Explain fixed-width wrapping."
     ],
     "before": [
       "A 64-bit register has a fixed number of bit positions. `add` writes the low 64 bits of a sum. If the exact unsigned sum needs another bit, that extra bit is not stored in the destination.",
       "The unsigned range runs from zero to 2 to the power 64 minus one. Moving beyond its top returns the stored pattern to the start of that range. This is fixed-width wrapping; it is not an instruction that chooses to reset a counter.",
-      "The example places a value close to the top of the range in t0. Read t0 and t2 as unsigned for this prediction. RISC-V add does not set Arm-style carry or overflow flags. The next lessons build explicit checks when the program needs them."
+      "The example places a value close to the top of the range in t0. Read t0 and t2 as unsigned for this prediction. RISC-V add does not automatically store a separate result saying whether the unsigned or signed range was exceeded. The next lessons build explicit checks when the program needs them."
     ],
     "starter": "li t0, 0xfffffffffffffffe\nli t1, 5\nadd t2, t0, t1\n",
     "observe": ["t0", "t1", "t2"],
@@ -744,7 +744,7 @@
       "prompt": "What unsigned result fits in t2 after the addition?",
       "register": "t2",
       "reading": "unsigned",
-      "hint": "Follow the instruction inputs in order, then inspect the requested register after the fragment."
+      "hint": "Find the exact unsigned sum, then keep only its lowest 64 bit positions."
     },
     "explanation": [
       "The exact mathematical sum and the stored register pattern answer different questions. The exact sum can be too large for one register, while the low bits still have a precise architectural result.",
@@ -752,7 +752,7 @@
       "Wrapping can be intentional for a tick counter. It can be a fault for a distance total that must never decrease. Before adding a check, decide what the quantity is supposed to mean. The same add instruction can serve both uses."
     ],
     "experiment": {
-      "task": "Try an all-ones t0 with adjustments 0, 1 and 2. Predict the unsigned pattern each time before running.",
+      "task": "Change the first line to `li t0, 0xffffffffffffffff`. Run with the second line loading 0, then 1, then 2 into t1. Predict t2 before each Build & Run. In Registers, select Unsigned for Decimal reading and compare t2 with the inputs. At which run does the stored sum become smaller than t0?",
       "hint": "Keep exactly 64 result bits, including when the exact sum would need a 65th."
     },
     "challenge": {
@@ -817,7 +817,7 @@
       "Keep the original input until after the check."
     ],
     "before": [
-      "RISC-V integer addition leaves the result bits, without an unsigned carry flag. If the program needs a carry check, it computes a separate result. Here the check writes zero for no carry or one for carry.",
+      "An unsigned carry means the exact sum needs more than the register’s 64 bits. RISC-V add keeps the low result bits but does not record that carry automatically. If the program needs a carry check, it computes a separate result. Here the check writes zero for no carry or one for carry.",
       "`sltu destination, left, right` writes one when the unsigned left value is less than the unsigned right value. Otherwise it writes zero. The final `u` selects unsigned order; it does not change either source register.",
       "For two unsigned inputs, a wrapped sum is below an original input exactly when their exact sum exceeded the 64-bit unsigned maximum. Keep that original input available. The example puts the sum in t2 and the separate carry result in t3."
     ],
@@ -828,7 +828,7 @@
       "prompt": "Will the unsigned carry check write zero or one to t3?",
       "register": "t3",
       "reading": "signed",
-      "hint": "Follow the instruction inputs in order, then inspect the requested register after the fragment."
+      "hint": "Find the stored sum in t2, then compare it with the unchanged t0 as unsigned values. sltu writes one only when its left input is smaller."
     },
     "explanation": [
       "Without wrapping, adding a non-negative unsigned value cannot make a sum smaller than either input. After one wrap, the stored sum is smaller. The comparison turns this property into an explicit one-bit result.",
@@ -836,7 +836,7 @@
       "Do not overwrite the input that your comparison needs. If you add into t0 and then compare t0 with itself, the comparison no longer has the old input. Choosing a separate sum register makes the necessary before-and-after values visible."
     ],
     "experiment": {
-      "task": "Try t0 = 0x7fffffffffffffff and t1 = 1, then t0 = \u22121 and t1 = 1. Compare the unsigned carry result for those two distinct questions.",
+      "task": "In the two li lines, first load `0x7fffffffffffffff` into t0 and 1 into t1, then load -1 into t0 with t1 still 1. Choose Build & Run for each pair. Compare the carry result in t3 and the sum in t2 in Registers. Why can the two pairs need different unsigned carry results?",
       "hint": "sltu reads every source pattern as an unsigned number, including a pattern written with a negative constant."
     },
     "challenge": {
@@ -924,7 +924,7 @@
       "prompt": "Will the signed-overflow result in t4 be zero or one?",
       "register": "t4",
       "reading": "signed",
-      "hint": "Follow the instruction inputs in order, then inspect the requested register after the fragment."
+      "hint": "Predict t3 from t1’s sign. Separately decide whether the stored signed sum is below t0. The final xor asks whether those two answers differ."
     },
     "explanation": [
       "The two comparisons describe an expected direction and an observed direction. A disagreement means the fixed-width result crossed the signed boundary. The final XOR combines those zero-or-one comparisons without changing the saved sum.",
@@ -932,7 +932,7 @@
       "Signed overflow in an assembly instruction and signed overflow in C are different contracts. This lesson observes the defined low-bit RISC-V result. A later C lesson explains why you cannot assume a C signed addition promises the same wrapping behaviour."
     ],
     "experiment": {
-      "task": "Try two negative inputs that cross the negative limit. Then try inputs with opposite signs. Compare the direction checks, not just the sign of the stored result.",
+      "task": "In the two li lines, first load `0x8000000000000000` into t0 and -1 into t1. Choose Build & Run and compare the signed sum in t2 with t0, alongside the sign check in t3 and overflow result in t4. Then repeat with t0 = -7 and t1 = 3. Why does comparing directions reveal more than looking only at the sum’s sign?",
       "hint": "Adding a negative number should move an in-range signed result below the first input."
     },
     "challenge": {
@@ -1010,7 +1010,7 @@
     ],
     "before": [
       "A counter can wrap while the quantity you want is the forward interval between two readings. In this example the counter uses all 64 bits. t1 holds the earlier reading, called then; t0 holds the later reading, called now.",
-      "`sub t2, t0, t1` keeps the low 64 bits of now minus then. If now is numerically smaller because the counter wrapped once, that subtraction still gives the forward interval modulo the counter\u2019s range.",
+      "`sub t2, t0, t1` keeps the low 64 bits of now minus then. If now is numerically smaller because the counter wrapped once, the stored result still gives the forward interval around the counter’s range.",
       "The interpretation needs a limit: the counter advances normally, and fewer than one full 64-bit turn passes between readings. The two readings alone cannot reveal extra complete turns. Predict the interval as unsigned, not the signed difference between the displayed input readings."
     ],
     "starter": "li t1, 0xfffffffffffffff8\nli t0, 8\nsub t2, t0, t1\n",
@@ -1020,15 +1020,15 @@
       "prompt": "What unsigned elapsed interval will t2 contain?",
       "register": "t2",
       "reading": "unsigned",
-      "hint": "Follow the instruction inputs in order, then inspect the requested register after the fragment."
+      "hint": "Count forwards from the earlier reading to the wrap boundary, then from the start of the range to the later reading. Use the stated limit on elapsed ticks."
     },
     "explanation": [
-      "The counter and the subtraction use the same width. The high bits that a negative mathematical difference would need are discarded, leaving the forward distance around one counter turn.",
-      "Comparing now and then as ordinary unsigned magnitudes would tell you only which pattern is larger. It would not identify the forward elapsed interval. The subtraction is useful because its wrapping rule matches the counter\u2019s wrapping rule.",
+      "The counter and the subtraction use the same width. The subtraction keeps only 64 result bits. Under the stated limit on elapsed ticks, those bits give the forward interval even when now is smaller than then.",
+      "Comparing now and then as ordinary unsigned magnitudes would tell you only which pattern is larger. It would not identify the forward elapsed interval. The subtraction is useful because its wrapping rule matches the counter’s wrapping rule.",
       "Width is part of the contract. A counter that wraps at 32 bits needs a 32-bit difference and a suitable interpretation of that result. The full-width subtraction here must not be reused unchanged for a narrower device counter."
     ],
     "experiment": {
-      "task": "Use then = 40 and now = 53, then use two identical readings. Decide what each observation can establish under the one-turn assumption.",
+      "task": "Change the li lines to load 40 into t1 (then) and 53 into t0 (now). Choose Build & Run and read t2 in Registers with Decimal reading set to Unsigned. Then load 40 into both registers and run again. What does each interval establish when fewer than one full counter turn has passed?",
       "hint": "Equal readings represent zero elapsed ticks only when a complete unseen turn is ruled out."
     },
     "challenge": {
@@ -1104,7 +1104,7 @@
       "prompt": "What hexadecimal pattern will the bit-3 mask leave in t2?",
       "register": "t2",
       "reading": "hex",
-      "hint": "Follow the instruction inputs in order, then inspect the requested register after the fragment."
+      "hint": "The mask selects bit 3. Keep that source bit if it is set and clear every other result position."
     },
     "explanation": [
       "AND does not move a selected bit down to bit 0. It preserves that bit\u2019s original position. This explains why a single selected warning can produce a non-zero value other than one.",
@@ -1112,7 +1112,7 @@
       "The immediate in andi is sign-extended before it is used as a full-width mask. The small positive masks here therefore have zeros above their selected low positions. The next lesson uses a negative immediate to preserve high bits while clearing one position."
     ],
     "experiment": {
-      "task": "Replace 0x08 with 0x03, then 0x30. Inspect which positions survive rather than treating the mask as a decimal threshold.",
+      "task": "Change the mask in `andi t2, t0, 0x08` to `0x03`, then to `0x30`, choosing Build & Run each time. Compare the hexadecimal t2 patterns in Registers. To inspect positions, open Inspect the register bits, select t2 and choose Low bits. Which positions survive each mask?",
       "hint": "Work one corresponding pair of bits at a time."
     },
     "challenge": {
@@ -1171,9 +1171,9 @@
       "Keep all unrelated high and low positions."
     ],
     "before": [
-      "OR writes one where either input bit is one. OR with a mask therefore sets selected positions without clearing any others. `ori` uses an immediate mask. XOR writes one where corresponding bits differ, so `xori` toggles the positions selected by its mask.",
-      "Clearing a position uses AND with a mask that has zero only at that position. For bit 3, \u22129 describes a full-width mask of ones except at bit 3. The negative immediate is sign-extended to 64 bits before andi uses it.",
-      "The example computes three independent changes from the same original t0: t2 sets bit 0, t3 clears bit 3, and t4 toggles bit 1. None of these three operations takes another operation\u2019s result as its input. Predict the requested cleared result before running."
+      "OR writes one where either input bit is one. OR with a mask therefore sets selected positions without clearing any others. `or` takes two register inputs; `ori` uses an immediate mask. XOR writes one where corresponding bits differ, so `xori` toggles the positions selected by its mask.",
+      "Clearing a position uses AND with a mask that has zero only at that position. For bit 3, −9 describes a full-width mask of ones except at bit 3. The negative immediate is sign-extended to 64 bits before andi uses it.",
+      "The example computes three independent changes from the same original t0: t2 sets bit 0, t3 clears bit 3, and t4 toggles bit 1. None of these three operations takes another operation’s result as its input. Predict the requested cleared result before running."
     ],
     "starter": "li t0, 0x2a\nori t2, t0, 1\nandi t3, t0, -9\nxori t4, t0, 2\n",
     "observe": ["t0", "t2", "t3", "t4"],
@@ -1182,7 +1182,7 @@
       "prompt": "What hexadecimal pattern remains in t3 after clearing bit 3?",
       "register": "t3",
       "reading": "hex",
-      "hint": "Follow the instruction inputs in order, then inspect the requested register after the fragment."
+      "hint": "Follow the andi that writes t3. It reads the original t0, not the separate results in t2 or t4."
     },
     "explanation": [
       "Setting is not addition: if a selected bit is already one, OR leaves it one. Toggling is different again: applying XOR with the same mask twice restores the original bits.",
@@ -1190,7 +1190,7 @@
       "Independent demonstrations must start with the original pattern each time. A combined update, in contrast, intentionally passes one operation\u2019s output into the next. Name which of those two situations you are tracing before calculating a result."
     ],
     "experiment": {
-      "task": "Toggle bit 1 twice through the same destination. Then set bit 0 twice. Explain why the second applications have different effects.",
+      "task": "Keep the first line and the independent clear operation. After `xori t4, t0, 2`, add `xori t4, t4, 2`. After `ori t2, t0, 1`, add `ori t2, t2, 1`. Choose Build & Run and compare t4 and t2 with t0 in Registers. Explain why a second toggle and a second set have different effects.",
       "hint": "XOR changes the selected bit each time; OR leaves a selected one set."
     },
     "challenge": {
@@ -1249,8 +1249,8 @@
       "Replace a field without changing neighbouring positions."
     ],
     "before": [
-      "A logical shift moves bits and fills the newly empty positions with zeros. `slli` shifts left by an immediate count; `srli` shifts right. Bits pushed beyond the register\u2019s 64 positions are discarded.",
-      "The warning pattern below stores a three-bit gear field in positions 4 through 6. Shift it right by four so the field reaches positions 0 through 2. Then mask with 7 to remove every other position that moved down with it.",
+      "A logical shift moves bits and fills the newly empty positions with zeros. `slli` shifts left by an immediate count; `srli` shifts right. Bits pushed beyond the register’s 64 positions are discarded.",
+      "A field is a group of bit positions that holds one value. The warning pattern below stores a three-bit gear field in positions 4 through 6. Shift it right by four so the field reaches positions 0 through 2. Then mask with 7 to remove every other position that moved down with it.",
       "To write a field, first limit the new value to its field width, shift it into position, and clear the old field before combining them with OR. Those are separate jobs. Skipping the clear can leave old one bits in place."
     ],
     "starter": "li t0, 0x2a\nsrli t2, t0, 4\nandi t2, t2, 7\n",
@@ -1260,7 +1260,7 @@
       "prompt": "What value will t2 hold after extracting bits 4 through 6?",
       "register": "t2",
       "reading": "signed",
-      "hint": "Follow the instruction inputs in order, then inspect the requested register after the fragment."
+      "hint": "Move the original pattern right by four positions before applying the mask. Keep only the three new low positions."
     },
     "explanation": [
       "A shift changes positions; a mask chooses which of those positions remain. Their order matters when reading a field because the mask must match the positions after the move.",
@@ -1268,7 +1268,7 @@
       "Immediate counts for these full-width shifts range from 0 to 63. The register-count forms, sll and srl, use the low six bits of a supplied count. A register count of 64 therefore does not request a full-width shift to zero."
     ],
     "experiment": {
-      "task": "Change the original packed pattern while keeping its gear field the same. Confirm that the extraction ignores the neighbouring warning bits.",
+      "task": "Change only the first line to `li t0, 0xaa`, then choose Build & Run. Compare t2 in Registers with its previous value. Use the hexadecimal patterns, or Inspect the register bits with Low bits selected, to identify the changed input bit. Why does a change outside positions 4 through 6 leave the extracted field unchanged?",
       "hint": "After the right shift, keep only the three positions that belong to the field."
     },
     "challenge": {
@@ -1278,7 +1278,7 @@
       "hints": [
         "The new value must be limited to three bits before it is shifted.",
         "Clear the old field with a full-width mask whose zero positions are 4 through 6.",
-        "\u2212113 supplies that clear mask; combine the cleared word with the shifted replacement."
+        "−113 supplies that clear mask; combine the cleared pattern with the shifted replacement."
       ],
       "cases": [
         {
@@ -1344,7 +1344,7 @@
       "prompt": "What signed value will t2 hold after shifting \u22129 right by one?",
       "register": "t2",
       "reading": "signed",
-      "hint": "Follow the instruction inputs in order, then inspect the requested register after the fragment."
+      "hint": "Move the bits right while copying the top bit into the vacated position. For a negative odd input, distinguish rounding down from truncation towards zero."
     },
     "explanation": [
       "Copying the sign bit is the rule that keeps an arithmetic shift consistent with a negative two\u2019s-complement reading. Clearing the top positions instead creates a different, non-negative pattern when at least one place is shifted.",
@@ -1352,7 +1352,7 @@
       "The register-count form sra uses the low six bits of the shift count for a 64-bit operation. The chosen filling rule and the effective count are independent parts of the instruction\u2019s meaning."
     ],
     "experiment": {
-      "task": "Try \u22128, \u22129 and \u22121 with a shift count of one, then compare them with the same positive magnitudes. Identify where rounding matters.",
+      "task": "Change only the constant in the first li line to -8, -9 and -1, then to 8, 9 and 1. Keep both shift counts at one and choose Build & Run for each input. In Registers, read t2 as Signed and compare it with dividing the input by two and discarding the fractional part towards zero. Which inputs distinguish that rule from rounding down?",
       "hint": "For a negative odd input, rounding down moves farther from zero than truncation towards zero."
     },
     "challenge": {
