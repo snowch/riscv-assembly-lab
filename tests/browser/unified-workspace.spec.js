@@ -1,6 +1,47 @@
 // Copyright © 2026 Christopher Snow
 import { test, expect } from "@playwright/test";
 import { fillSource, loadExercise } from "./editor-helpers.js";
+test("custom lesson setup explains its project copy and preserves unapplied fields and saved projects", async ({
+  page,
+}) => {
+  test.setTimeout(90000);
+  await page.goto("/lessons/addition/");
+  await expect(page.locator("#run")).toBeEnabled();
+  await fillSource(page, "add t2, t0, t1");
+  await tools(page, "setup");
+  await expect(page.locator("#lesson-setup-note")).toBeVisible();
+  await expect(page.locator("#lesson-setup-note")).toContainText(
+    "project copy",
+  );
+  await page.locator("#project-inputs").fill("t0 = 81\nt1 = 4");
+  await fillSource(page, "add t2, t0, t1\n# keep this draft");
+  await tools(page, "program");
+  await tools(page, "setup");
+  await expect(page.locator("#project-inputs")).toHaveValue("t0 = 81\nt1 = 4");
+  await page.locator("#setup-form button[type=submit]").click();
+  await expect(page.locator("#lesson-setup-note")).toBeHidden();
+  await expect(page.locator("#return-lesson")).toBeVisible();
+  await page.locator("#run").click();
+  await finished(page);
+  await expect(page.locator("#t2-decimal")).toHaveText("85");
+  await page.locator("#return-lesson").click();
+  await expect(page.locator("#source")).toHaveValue(
+    "add t2, t0, t1\n# keep this draft",
+  );
+  await page.locator("#run").click();
+  await finished(page);
+  await expect(page.locator("#t2-decimal")).toHaveText("0");
+  await tools(page, "projects");
+  await page.locator(".project-actions > summary").click();
+  await expect(page.locator("#delete-project")).toBeDisabled();
+  await expect(page.locator("#project-picker option")).toHaveCount(2);
+  await page.reload();
+  await expect(page.locator("#source")).toHaveValue(
+    "add t2, t0, t1\n# keep this draft",
+  );
+  await tools(page, "projects");
+  await expect(page.locator("#project-picker option")).toHaveCount(2);
+});
 async function tools(page, name) {
   const toggle = page.locator("#workspace-tools-toggle");
   if ((await toggle.getAttribute("aria-expanded")) !== "true")

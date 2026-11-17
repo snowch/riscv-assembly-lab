@@ -104,7 +104,8 @@
       "dataBytes": "{count} supplied data bytes",
       "zeroData": "64 zero data bytes",
       "fullProgram": "Defined in source"
-    }
+    },
+    "lessonHelp": "Apply setup opens a project copy with these values. Your lesson draft and its starting setup stay unchanged."
   },
   "messages": {
     "saved": "Project saved in this browser.",

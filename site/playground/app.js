@@ -109,6 +109,7 @@ export function mountProjects(
         ? lesson.summary
         : type.description;
     }
+    $("lesson-setup-note").hidden = !inLesson;
     $("delete-project").disabled = inLesson;
     $("project-name").disabled = inLesson;
     $("project-name").value = project.name;

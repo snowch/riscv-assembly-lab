@@ -20,6 +20,8 @@ Reviewed the uncommitted implementation independently from the actual interface 
 
 7. **Project feedback and recovery must remain visible.** Applying setup or changing projects should not force a different inspection tab and hide the resulting message or Undo control. The final independent recheck confirmed Save a copy retains Projects and its message; Apply setup retains Setup and its entered values; Delete project retains Projects and exposes Undo delete; Undo restores the project and its heading without leaving Projects.
 
+8. **Explain the lesson setup action before it changes context.** The lesson-only setup note now states: “Apply setup opens a project copy with these values. Your lesson draft and its starting setup stay unchanged.” A final 390-pixel touch recheck confirmed the note is visible before Apply; entering t0 = 9 and t1 = 10 opens a project copy with those values and keeps Setup selected; the note is hidden in project mode. Return to lesson restores the exact source and original empty starting-register setup, hides Return to lesson, and shows the note again. No page exceptions occurred. This makes the automatic context change explicit before the learner chooses it.
+
 An apparent source/gutter alignment problem in an initial full-page screenshot was challenged and rejected as a persistent defect. The editor was below the viewport and CodeMirror deferred measurement. Scrolling the editor into view aligned source and gutters exactly, with the existing 44-pixel touch line height. No implementation change was requested for that observation.
 
 ## Functional evidence
