@@ -65,6 +65,9 @@
 .unified-workbench .workspace-tools button::before {
   content: none;
 }
+.unified-workbench #expand-editor {
+  display: inline-flex;
+}
 .unified-workbench #workspace-tools-toggle {
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -365,7 +368,6 @@
   margin: 1rem 0 0;
 }
 .project-active #lesson-c-intent,
-.project-active #open-playground,
 .project-active .lesson-guide,
 .project-active #prediction-block,
 .project-active .lesson-explanation,
@@ -397,9 +399,6 @@
 .unified-workbench.workbench-fullscreen .workspace {
   height: auto;
   min-height: 0;
-}
-.unified-workbench.workbench-fullscreen .workspace .editor {
-  height: max(280px, 50dvh);
 }
 @media (max-width: 950px) {
   .unified-workbench .workspace {

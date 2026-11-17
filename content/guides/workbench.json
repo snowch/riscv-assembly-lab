@@ -23,10 +23,7 @@
         "The workbench shows the registers relevant to the current example. Open Tools for further inspection, starting setup and saved projects. Choosing a tool keeps your source in the same editor.",
         "Observations belong to the named pause or completed run. If you edit the code afterwards, build again before using the values to explain your changes."
       ],
-      "headers": [
-        "Tab",
-        "What it shows"
-      ],
+      "headers": ["Tab", "What it shows"],
       "rows": [
         [
           "Registers",
@@ -36,10 +33,7 @@
           "Memory",
           "Observed bytes in the selected data or stack region. Before and After compare the supplied data with the captured data."
         ],
-        [
-          "Stack",
-          "Observed bytes around sp, the stack pointer."
-        ],
+        ["Stack", "Observed bytes around sp, the stack pointer."],
         [
           "Debugger",
           "Breakpoints and the register or memory values you choose to watch."
@@ -88,27 +82,12 @@
       "paragraphs": [
         "Syntax highlighting and bracket matching help you read the code. Diagnostics report whether the tools accept it."
       ],
-      "headers": [
-        "Keys",
-        "Action"
-      ],
+      "headers": ["Keys", "Action"],
       "rows": [
-        [
-          "Ctrl / ⌘ + F",
-          "Find text."
-        ],
-        [
-          "Ctrl / ⌘ + Z",
-          "Undo an edit."
-        ],
-        [
-          "Ctrl / ⌘ + Enter",
-          "Build and run."
-        ],
-        [
-          "Tab",
-          "Indent code."
-        ],
+        ["Ctrl / ⌘ + F", "Find text."],
+        ["Ctrl / ⌘ + Z", "Undo an edit."],
+        ["Ctrl / ⌘ + Enter", "Build and run."],
+        ["Tab", "Indent code."],
         [
           "Escape, then Tab",
           "Leave the editor using the keyboard. Close Find first if it is open."
@@ -138,7 +117,7 @@
         "Use the lesson’s example and optional exercise for guided work. To keep an independent experiment, open Tools → Projects and choose Save a copy. The project opens in the same editor with its own source and starting setup.",
         "In a lesson draft, Apply setup opens a project copy with the values you entered. The lesson draft and its starting setup stay unchanged.",
         "A copy of an exercise uses the selected case’s inputs and data. Project edits keep the lesson draft unchanged. Choose Return to lesson to restore the example or exercise you left.",
-        "The playground link opens the same workspace for independent projects. The lesson resource Open a copy in Playground remains available if you want the copy in a separate tab."
+        "Open the playground from the course overview to work on independent projects. In a lesson, use Tools → Projects to keep working in the same editor."
       ],
       "link": {
         "href": "../playground/",
