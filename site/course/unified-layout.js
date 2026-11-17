@@ -62,7 +62,8 @@ export function createUnifiedDock(root, { program, inspector, copy }) {
     dock.hidden = !value;
     tools.setAttribute("aria-expanded", String(value));
     root.dataset.toolsOpen = String(value);
-    tools.textContent = value ? "Close tools" : "Tools";
+    // Keep the disclosure label stable so opening it cannot wrap the toolbar.
+    tools.textContent = "Tools";
     window.dispatchEvent(new Event("resize"));
   }
   function select(name, focus = false) {

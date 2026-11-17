@@ -60,8 +60,6 @@ test("tool switches preserve editor geometry, independent scroll and the paused 
   await page.locator("#step").click();
   await paused(page);
   const pc = await page.locator("#step-location").textContent();
-  const geometry = await page.locator(".workspace").boundingBox();
-  const documentTop = await page.evaluate(() => scrollY);
   await page.locator(".cm-scroller").evaluate((el) => {
     el.scrollTop = 220;
   });
@@ -69,6 +67,10 @@ test("tool switches preserve editor geometry, independent scroll and the paused 
     .locator(".cm-scroller")
     .evaluate((el) => el.scrollTop);
   await openTools(page, "program");
+  // Reaching the below-editor dock can deliberately scroll the page on a phone.
+  // Compare tool-to-tool switches after that navigation, using the same tolerance.
+  const geometry = await page.locator(".workspace").boundingBox();
+  const documentTop = await page.evaluate(() => scrollY);
   await page.locator("#program-source-view").evaluate((el) => {
     el.scrollTop = 120;
   });
