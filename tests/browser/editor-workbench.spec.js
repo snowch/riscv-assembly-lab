@@ -1,6 +1,6 @@
 // Copyright © 2026 Christopher Snow
 import { test, expect } from "@playwright/test";
-import { fillSource, loadExercise } from "./editor-helpers.js";
+import { fillSource, loadExercise, openTools } from "./editor-helpers.js";
 
 const go = async (page, id = "addition") => {
   await page.goto(`/lessons/${id}/`);
@@ -52,6 +52,7 @@ test("inspector tabs use keyboard navigation and preserve before/after memory", 
   page,
 }) => {
   await go(page, "loads-and-stores");
+  await openTools(page, "registers");
   await page.getByRole("tab", { name: "Registers", exact: true }).focus();
   await page.keyboard.press("ArrowRight");
   await expect(
@@ -62,7 +63,7 @@ test("inspector tabs use keyboard navigation and preserve before/after memory", 
   await expect(page.locator("#memory-note")).toContainText("before execution");
   await page.keyboard.press("End");
   await expect(
-    page.getByRole("tab", { name: "Debugger", exact: true }),
+    page.getByRole("tab", { name: "Projects", exact: true }),
   ).toBeFocused();
   await page.keyboard.press("Home");
   await expect(

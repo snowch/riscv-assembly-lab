@@ -1,6 +1,6 @@
 // Copyright © 2026 Christopher Snow
 import { test, expect } from "@playwright/test";
-import { fillSource } from "./editor-helpers.js";
+import { fillSource, openTools } from "./editor-helpers.js";
 const go = async (page) => {
   await page.goto("/playground/");
   await expect(page.locator("#run")).toBeEnabled();
@@ -12,13 +12,14 @@ test("execution context names the interval and opens real supplied sections", as
   page,
 }) => {
   await go(page);
+  await openTools(page, "program");
   await expect(page.locator("#execution-interval")).toContainText(
     "Supplied setup prepares inputs",
   );
   await expect(page.locator("#open-complete-guide")).toBeVisible();
   const scroll = await page.evaluate(() => scrollY);
   await page.locator("#execution-route button").first().click();
-  await expect(page.locator("#workspace-program")).toHaveAttribute(
+  await expect(page.locator("#tab-program")).toHaveAttribute(
     "aria-selected",
     "true",
   );
@@ -51,6 +52,7 @@ test("helper execution offers a named PC recovery without changing scope automat
 }) => {
   test.setTimeout(120000);
   await go(page);
+  await openTools(page, "projects");
   await page.locator(".project-examples > summary").click();
   await page
     .locator("#project-example")
@@ -62,7 +64,7 @@ test("helper execution offers a named PC recovery without changing scope automat
   );
   await page.locator("#step").click();
   await paused(page);
-  await page.locator("#workspace-program").click();
+  await openTools(page, "program");
   await page.locator("#program-mode").selectOption("instructions");
   for (
     let i = 0;
@@ -91,12 +93,11 @@ test("helper execution offers a named PC recovery without changing scope automat
   await page.locator("#stop").click();
 });
 
-test("phone observation values stay with every workspace view and source changes are explicit", async ({
+test("compact observations stay visible while tools change and source edits are explicit", async ({
   page,
 }, info) => {
   await go(page);
   await expect(page.locator("#registers .register.pinned")).toHaveCount(3);
-  if (info.project.name !== "phone") return;
   await expect(page.locator(".phone-observation")).toBeVisible();
   const first = await page.locator(".cm-line").first().boundingBox();
   expect(first.y).toBeLessThan(720);
@@ -114,8 +115,8 @@ test("phone observation values stay with every workspace view and source changes
     .locator("#phone-observation-registers")
     .textContent();
   const pc = await page.locator("#phone-observation-next").textContent();
-  for (const tab of ["program", "inspect", "code"]) {
-    await page.locator("#workspace-" + tab).click();
+  for (const tab of ["program", "registers", "memory"]) {
+    await openTools(page, tab);
     await expect(page.locator("#phone-observation-registers")).toHaveText(
       observed,
     );
@@ -199,7 +200,7 @@ test("All instructions retain project and supplied source identities", async ({
   await go(page);
   await page.locator("#step").click();
   await paused(page);
-  await page.locator("#workspace-program").click();
+  await openTools(page, "program");
   await page.locator("#program-mode").selectOption("instructions");
   await expect(
     page
@@ -228,6 +229,7 @@ test("complete-program guide opens independent worked and fresh projects with re
   await go(page);
   await fillSource(page, "li t2,123\n");
   const original = await page.locator("#project-picker").inputValue();
+  await openTools(page, "program");
   await page.locator("#open-complete-guide").click();
   await expect(page.locator("#complete-program-guide")).toHaveJSProperty(
     "open",
@@ -243,6 +245,7 @@ test("complete-program guide opens independent worked and fresh projects with re
       exact: true,
     })
     .click();
+  await openTools(page, "debugger");
   await page.locator("#debug").click();
   await paused(page);
   await expect(page.locator("#s0-decimal")).toHaveText("42");
@@ -253,14 +256,15 @@ test("complete-program guide opens independent worked and fresh projects with re
   await expect(page.locator("#state-badge")).toHaveText("Finished", {
     timeout: 45000,
   });
-  if (await page.locator("#workspace-inspect").isVisible())
-    await page.locator("#workspace-inspect").click();
+  await openTools(page, "registers");
   await expect(page.locator("#observation-note")).toContainText(
     "not show the exit state",
   );
+  await openTools(page, "program");
   await page.locator("#open-complete-guide").click();
   await page.locator("#open-fresh-counts").click();
   await expect(page.locator("#source")).toHaveValue(/\.quad 31, 17/);
+  await openTools(page, "projects");
   await page.locator("#project-picker").selectOption(original);
   await expect(page.locator("#source")).toHaveValue("li t2,123\n");
 });
@@ -282,6 +286,7 @@ for (const fallback of [false, true])
     const pc = await page.locator("#step-location").textContent();
     await page.locator("#fullscreen-workspace").click();
     await expect(page.locator(".workbench-dialog")).toBeVisible();
+    await openTools(page, "program");
     await page.locator("#open-complete-guide").click();
     await expect(page.locator(".workbench-dialog")).not.toBeVisible();
     expect(await page.evaluate(() => document.fullscreenElement)).toBe(null);
@@ -313,10 +318,9 @@ test("the observation strip labels high-bit readings without advancing the CPU",
     "-1",
   );
   const pc = await page.locator("#step-location").textContent();
-  if (await page.locator("#workspace-inspect").isVisible())
-    await page.locator("#workspace-inspect").click();
+  await openTools(page, "registers");
   await page.locator("#reading").selectOption("unsigned");
-  await page.locator("#workspace-code").click();
+  await openTools(page, "registers");
   await expect(page.locator("#phone-observation-reading")).toHaveText(
     "Unsigned reading",
   );
@@ -334,6 +338,7 @@ test("raw programs without a pause request debugging and never imply exit regist
   page,
 }) => {
   await go(page);
+  await openTools(page, "projects");
   await page.locator(".project-examples > summary").click();
   await page
     .locator("#project-example")

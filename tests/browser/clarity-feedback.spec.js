@@ -1,6 +1,6 @@
 // Copyright © 2026 Christopher Snow
 import { test, expect } from "@playwright/test";
-import { fillSource, loadExercise } from "./editor-helpers.js";
+import { fillSource, loadExercise, openTools } from "./editor-helpers.js";
 
 test("a valid edited experiment compares the entered prediction with this run", async ({
   page,
@@ -90,7 +90,7 @@ test("build errors, stopped execution and faults do not leave predictions checki
   await expect(page.locator("#prediction-feedback")).toContainText(
     "Prediction not checked",
   );
-  await page.locator("#tab-output").click();
+  await openTools(page, "output");
   await page.locator("#serial-log > summary").click();
   await expect(page.locator("#serial")).toContainText("usertrap");
 });

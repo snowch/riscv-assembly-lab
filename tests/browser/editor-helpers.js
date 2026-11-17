@@ -1,6 +1,16 @@
 // Copyright © 2026 Christopher Snow
 import { expect } from "@playwright/test";
 
+// Advanced views share the same editor. Opening a tool never loads another draft.
+export async function openTools(page, tab = "registers") {
+  const toggle = page.locator("#workspace-tools-toggle");
+  await expect(toggle).toBeEnabled();
+  if ((await toggle.getAttribute("aria-expanded")) !== "true")
+    await toggle.click();
+  await expect(page.locator("#workspace-tools-dock")).toBeVisible();
+  if (tab) await page.locator(`#tab-${tab}`).click();
+}
+
 // Edit the visible CodeMirror surface. The original textarea is only a
 // progressive-enhancement fallback and a reflection of the actual document.
 export async function fillSource(page, value) {

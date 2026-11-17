@@ -32,6 +32,8 @@ export function createWorkbench(
 ) {
   const $ = (id) => document.getElementById(id);
   let lesson = initialContext;
+  const lessonPage = curriculum;
+  let lessonSession = null;
   let activity = "explore",
     caseIndex = 0,
     state = null,
@@ -189,6 +191,18 @@ export function createWorkbench(
     });
   }
   function controls() {
+    for (const button of document.querySelectorAll(
+      ".project-tools button,.project-tools select,#setup-form button",
+    )) {
+      if (batch) {
+        if (!button.hasAttribute("data-batch-disabled"))
+          button.dataset.batchDisabled = String(button.disabled);
+        button.disabled = true;
+      } else if (button.hasAttribute("data-batch-disabled")) {
+        button.disabled = button.dataset.batchDisabled === "true";
+        delete button.dataset.batchDisabled;
+      }
+    }
     $("run").disabled = busy || batch;
     $("debug").disabled = busy || batch;
     debuggerPanel.setBusy({ busy, paused, batch });
@@ -234,7 +248,7 @@ export function createWorkbench(
   function observed() {
     return [
       ...new Set([
-        ...lesson.observe,
+        ...REGISTERS,
         ...(activity === "challenge"
           ? Object.keys(fixture().expect ?? {})
           : []),
@@ -282,7 +296,7 @@ export function createWorkbench(
         bitPattern.className = "register-hex";
         bitPattern.id = name + "-hex";
         bitPattern.textContent = value ? hex(value) : "Not run yet";
-        bitPattern.hidden = !lesson.ui?.hex;
+        bitPattern.hidden = false;
         card.append(title, decimal, bitPattern);
         return card;
       }),
@@ -1096,7 +1110,7 @@ export function createWorkbench(
     publishView();
   });
   $("bit-register").replaceChildren(
-    ...lesson.observe.map((name) => {
+    ...REGISTERS.map((name) => {
       const option = document.createElement("option");
       option.value = name;
       option.textContent = name;
@@ -1194,6 +1208,90 @@ export function createWorkbench(
     "Ready. Build and run locally, or start stepping through real machine instructions.",
   );
 
+  function updateContextUI() {
+    if (!lessonPage) return;
+    document.body.classList.toggle("project-active", !curriculum);
+    $("return-lesson").hidden = curriculum;
+    $("prediction-block").hidden = !curriculum || activity !== "explore";
+    $("workspace-kind").textContent = curriculum
+      ? toolCopy.identity.lessonKind
+      : toolCopy.identity.projectKind;
+    $("workspace-name").textContent = curriculum ? lesson.title : lesson.name;
+    $("editor-context").textContent = curriculum
+      ? activity === "challenge"
+        ? "Exercise"
+        : "Example"
+      : "Project";
+    document.querySelector(".workspace-identity").dataset.context = curriculum
+      ? "lesson"
+      : "project";
+  }
+  function replaceContext(next) {
+    cancelExecution();
+    source.destroy();
+    lesson = next;
+    activity = "explore";
+    caseIndex = 0;
+    undoSource = null;
+    builtSource = null;
+    builtFingerprint = null;
+    builtInfo = null;
+    currentPc = null;
+    memoryMoment = "before";
+    $("source").value = next.starter;
+    $("source").setAttribute(
+      "aria-label",
+      next.language === "c"
+        ? "C source"
+        : curriculum
+          ? "Lesson assembly source"
+          : "Project assembly source",
+    );
+    $("source-heading").textContent =
+      next.sourceName ?? (next.language === "c" ? "lesson.c" : "lesson.s");
+    $("source-editor").classList.toggle(
+      "breakpoint-editor",
+      next.language !== "c",
+    );
+    $("source-editor").classList.remove("expanded");
+    $("expand-editor").textContent = "Expand editor";
+    $("expand-editor").setAttribute("aria-expanded", "false");
+    $("restore").textContent = curriculum
+      ? "Restore starter"
+      : "Restore loaded source";
+    $("debugger-panel").outerHTML = debuggerMarkup(next, {
+      separateStack: true,
+    });
+    source = mountEditor();
+    debuggerPanel = mountDebugger();
+    $("compiled-listing").hidden = next.language !== "c";
+    if ($("complete-c-block"))
+      $("complete-c-block").hidden = next.language !== "c";
+    $("bit-register").value = next.result;
+    $("memory-heading").textContent =
+      next.memory === "stack" ? "Stack bytes" : "Memory bytes";
+    $("console").textContent = "Not run yet.";
+    $("serial").textContent = "Not started yet.";
+    $("diagnostic-lines").replaceChildren();
+    $("diagnostics-summary").textContent = "Not built yet";
+    $("elf-layout").textContent =
+      "Build once to inspect its actual load segments.";
+    $("step-location").textContent = "";
+    startingState();
+    completeSource();
+    clearState();
+    controls();
+    // Keep the active tool and its feedback visible across deliberate context changes.
+    status(
+      messages.projectOpened ??
+        "Project opened. Build or start stepping for a fresh machine.",
+    );
+
+    $("reading").value =
+      next.prediction?.reading === "unsigned" ? "unsigned" : "signed";
+    document.querySelector(".editor-panel .tag").textContent =
+      next.language === "c" ? "TinyCC · RV64" : "RV64GC · xv6";
+  }
   return {
     closeWorkspace() {
       return workbench.close();
@@ -1208,6 +1306,7 @@ export function createWorkbench(
     },
     snapshot() {
       return {
+        curriculum,
         source: source.value,
         pins: [...debuggerPanel.pins],
         lesson,
@@ -1216,60 +1315,46 @@ export function createWorkbench(
       };
     },
     loadProject(next) {
-      if (curriculum)
-        throw new Error("Project switching is available in the playground.");
-      cancelExecution();
-      source.destroy();
-      lesson = next;
-      activity = "explore";
-      caseIndex = 0;
-      undoSource = null;
-      builtSource = null;
-      builtFingerprint = null;
-      builtInfo = null;
-      currentPc = null;
-      memoryMoment = "before";
-      $("source").value = next.starter;
-      $("source").setAttribute(
-        "aria-label",
-        next.language === "c" ? "C source" : "Project assembly source",
-      );
-      $("source-heading").textContent = next.sourceName;
-      $("source-editor").classList.toggle(
-        "breakpoint-editor",
-        next.language !== "c",
-      );
-      $("source-editor").classList.remove("expanded");
-      $("expand-editor").textContent = "Expand editor";
-      $("expand-editor").setAttribute("aria-expanded", "false");
-      $("restore").textContent = "Restore loaded source";
-      $("debugger-panel").outerHTML = debuggerMarkup(next, {
-        separateStack: true,
+      if (batch)
+        throw new Error("Stop checking cases before switching projects.");
+      if (curriculum) {
+        saveDraft();
+        lessonSession = {
+          context: lesson,
+          activity,
+          caseIndex,
+          source: source.value,
+          prediction: $("prediction")?.value ?? "",
+        };
+      }
+      curriculum = false;
+      workbench.preservePosition(() => {
+        replaceContext(next);
+        updateContextUI();
       });
-      source = mountEditor();
-      debuggerPanel = mountDebugger();
-      $("compiled-listing").hidden = next.language !== "c";
-      if ($("complete-c-block"))
-        $("complete-c-block").hidden = next.language !== "c";
-      $("bit-register").value = next.result;
-      $("memory-heading").textContent =
-        next.memory === "stack" ? "Stack bytes" : "Memory bytes";
-      $("console").textContent = "Not run yet.";
-      $("serial").textContent = "Not started yet.";
-      $("diagnostic-lines").replaceChildren();
-      $("diagnostics-summary").textContent = "Not built yet";
-      $("elf-layout").textContent =
-        "Build once to inspect its actual load segments.";
-      $("step-location").textContent = "";
-      startingState();
-      completeSource();
-      clearState();
-      controls();
-      workbench.inspect(next.kind === "program" ? "output" : "registers");
-      status(
-        messages.projectOpened ??
-          "Project opened. Build or start stepping for a fresh machine.",
-      );
+    },
+    returnToLesson() {
+      if (batch) return;
+      if (!lessonSession) return;
+      const saved = lessonSession;
+      curriculum = true;
+      workbench.preservePosition(() => {
+        replaceContext(saved.context);
+        activity = saved.activity;
+        caseIndex = saved.caseIndex;
+        source.value = saved.source;
+        $("prediction").value = saved.prediction;
+        $("editor-context").textContent =
+          activity === "challenge" ? "Exercise" : "Example";
+        $("return-example").hidden = activity !== "challenge";
+        $("challenge-controls").hidden = activity !== "challenge";
+        clearState();
+        startingState();
+        completeSource();
+        controls();
+        updateContextUI();
+        status("Lesson draft restored. Build or step to inspect a fresh run.");
+      });
     },
     stop() {
       session.stop();

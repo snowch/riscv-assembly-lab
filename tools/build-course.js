@@ -50,7 +50,7 @@ function document(
     styles = [],
   } = {},
 ) {
-  return `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#087e72"><meta name="description" content="Learn RISC-V by writing and running real assembly and C in your browser."><title>${escape(title)} · RISC-V Assembly Lab</title><link rel="icon" href="${prefix}icon.svg" type="image/svg+xml"><link rel="stylesheet" href="${prefix}style.css"><link rel="stylesheet" href="${prefix}course/course.css"><link rel="stylesheet" href="${prefix}course/debugger.css"><link rel="stylesheet" href="${prefix}course/workbench.css">${styles.map((path) => `<link rel="stylesheet" href="${escape(path)}">`).join("")}<link rel="stylesheet" href="${prefix}course/calculator.css"><script type="module" src="${prefix}course/calculator.js"></script><script type="module" src="${script}"></script></head><body class="course-page">${header(prefix)}${body}${footer(prefix)}${data}</body></html>\n`
+  return `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#087e72"><meta name="description" content="Learn RISC-V by writing and running real assembly and C in your browser."><title>${escape(title)} · RISC-V Assembly Lab</title><link rel="icon" href="${prefix}icon.svg" type="image/svg+xml"><link rel="stylesheet" href="${prefix}style.css"><link rel="stylesheet" href="${prefix}course/course.css"><link rel="stylesheet" href="${prefix}course/debugger.css"><link rel="stylesheet" href="${prefix}course/workbench.css">${styles.map((path) => `<link rel="stylesheet" href="${escape(path)}">`).join("")}<link rel="stylesheet" href="${prefix}playground/playground.css"><link rel="stylesheet" href="${prefix}course/unified-workspace.css"><link rel="stylesheet" href="${prefix}course/calculator.css"><script type="module" src="${prefix}course/calculator.js"></script><script type="module" src="${script}"></script></head><body class="course-page">${header(prefix)}${body}${footer(prefix)}${data}</body></html>\n`
     .split("\n")
     .map((line) => line.trimEnd())
     .join("\n");
@@ -158,7 +158,7 @@ for (let index = 0; index < lessons.length; index++) {
  <section class="lesson-explanation" aria-labelledby="explanation-heading"><h2 id="explanation-heading">What the instructions do</h2>${paragraphs(lesson.explanation)}</section>
  <section id="experiment" class="next-step"><div><h2>Change it and run again</h2><p>${inline(lesson.experiment.task)}</p><details><summary>A hint</summary><p>${inline(lesson.experiment.hint)}</p></details></div></section>
  <details id="challenge" class="challenge-section"><summary>Optional exercise <span>Check your code on fresh inputs</span></summary><div class="exercise-body"><p>${inline(lesson.challenge.task)}</p><p>Load your saved exercise draft, or its starter code. Your example draft stays available through Return to example.</p><button id="start-challenge">Load exercise</button><div id="challenge-controls" hidden><p>Build &amp; Run uses the selected case. Check all cases runs your code against every case, each on a fresh machine.</p><div id="case-picker"></div><button id="check-cases" class="primary">Check all cases</button><p id="challenge-status" role="status">No cases checked yet.</p><ol id="case-results"></ol><div class="hint-controls"><button id="next-hint">Show a hint</button><ol id="challenge-hints"></ol></div><details id="reference-solution"><summary>Reference solution</summary><p>Compare the mechanism after you have tried the challenge. Your code can differ and still pass.</p><pre tabindex="0">${escape(lesson.challenge.reference)}</pre><button id="use-reference">Load reference into editor</button></details></div></div></details>
- ${lesson.c ? `<details class="explanation"><summary>Compare the C intent</summary><p>Equivalent intent for this target. This assembly was written for teaching; it is not presented as compiler output.</p><div class="paired-listing"><div><h3>C intent</h3><pre>${escape(lesson.c)}</pre></div><div><h3>Current assembly fragment</h3><pre id="c-intent-assembly">${escape(lesson.starter)}</pre></div></div></details>` : ""}
+ ${lesson.c ? `<details id="lesson-c-intent" class="explanation"><summary>Compare the C intent</summary><p>Equivalent intent for this target. This assembly was written for teaching; it is not presented as compiler output.</p><div class="paired-listing"><div><h3>C intent</h3><pre>${escape(lesson.c)}</pre></div><div><h3>Current assembly fragment</h3><pre id="c-intent-assembly">${escape(lesson.starter)}</pre></div></div></details>` : ""}
  ${programResourcesMarkup(lesson)}
  <details class="explanation resource-row">${resourceSummary("References", "book")}<ul>${[...new Set([...lesson.references, "assembler"])].map((key) => `<li><a href="${REFERENCES[key][1]}">${escape(REFERENCES[key][0])}</a></li>`).join("")}<li><a href="../../NOTICE.md">Runtime, source and licensing record</a></li></ul></details><a id="open-playground" class="resource-link" href="../../playground/" target="_blank" rel="noopener" aria-label="${escape(playgroundCopy.links.lessonAccessibleLabel)}">${icon("code")}<span class="resource-label">${escape(playgroundCopy.links.lessonLabel)}<span class="resource-description">${escape(playgroundCopy.links.lessonDescription)}</span></span><span class="resource-chevron" aria-hidden="true"></span></a><a class="resource-link" href="../../using-the-workbench/">${icon("guide")}<span class="resource-label">Using the workbench</span><span class="resource-chevron" aria-hidden="true"></span></a></section>
  <div class="lesson-completion"><label><input type="checkbox" id="lesson-complete"> Mark lesson complete</label><p>Saved in this browser when storage is available.</p></div><nav class="lesson-navigation" aria-label="Lesson navigation">${previous ? `<a href="../${previous.id}/"><span>← Previous lesson</span>${escape(previous.title)}</a>` : '<a href="../../"><span>Course overview</span>Choose a lesson</a>'}${next ? `<a href="../${next.id}/"><span>Next lesson →</span>${escape(next.title)}</a>` : '<a href="../../"><span>Course overview</span>Choose another topic</a>'}</nav>
@@ -281,6 +281,26 @@ ${workbenchMarkup(project, { prefix: "../", standalone: true, identity: toolCopy
 <dialog id="new-project-dialog" aria-labelledby="new-project-heading"><form id="new-project-form"><h2 id="new-project-heading">${escape(labels.newProject)}</h2><label>${escape(labels.projectName)}<input id="new-project-name" value="Untitled project" maxlength="80" required></label><label>${escape(labels.projectType)}<select id="new-project-kind">${typeOptions}</select></label><p id="new-project-description"></p><p id="new-project-error" class="project-error" role="status"></p><div class="dialog-actions"><button type="button" data-close-dialog>${escape(labels.cancel)}</button><button type="submit" class="primary">${escape(labels.createProject)}</button></div></form></dialog>
 <dialog id="import-project-dialog" aria-labelledby="import-heading"><form id="import-project-form"><h2 id="import-heading">${escape(labels.import)}</h2><label>${escape(labels.projectName)}<input id="import-project-name" maxlength="80" required></label><label>${escape(labels.importAs)}<select id="import-project-kind">${typeOptions}</select></label><pre id="import-preview" tabindex="0" aria-label="Source preview"></pre><p id="import-error" class="project-error" role="status"></p><div class="dialog-actions"><button type="button" data-close-dialog>${escape(labels.cancel)}</button><button type="submit" class="primary">${escape(labels.openImportedProject)}</button></div></form></dialog>
 </main>`;
+const sharedToolsMarkup =
+  playgroundBody.slice(
+    playgroundBody.indexOf('<section class="project-tools"'),
+    playgroundBody.indexOf("<noscript>"),
+  ) +
+  playgroundBody.slice(
+    playgroundBody.indexOf('<details id="complete-program-guide"'),
+    playgroundBody.lastIndexOf("</main>"),
+  );
+await writeFile(
+  new URL("course/project-tools-config.js", root),
+  "// Copyright © 2026 Christopher Snow\n// Generated by tools/build-course.js\nexport default " +
+    JSON.stringify({
+      defaultProject,
+      examples,
+      copy,
+      markup: sharedToolsMarkup,
+    }).replaceAll("<", "\\u003c") +
+    ";\n",
+);
 await mkdir(new URL("playground/", root), { recursive: true });
 await writeFile(
   new URL("playground/index.html", root),

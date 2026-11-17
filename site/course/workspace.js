@@ -22,6 +22,7 @@ export function setupWorkbench() {
     if (name === "debugger")
       document.getElementById("debugger-panel").open = true;
     if (focus) next.focus();
+    root.dispatchEvent(new Event("workbench:inspect"));
   }
   tabs.forEach((tab, index) => {
     tab.addEventListener("click", () => inspect(tab.id.slice(4)));

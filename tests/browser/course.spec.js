@@ -4,6 +4,7 @@ import {
   selectedSource,
   loadExercise,
   returnToExample,
+  openTools,
 } from "./editor-helpers.js";
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
@@ -113,7 +114,7 @@ test("byte views identify decimal offsets and preserve before/after observations
   page,
 }, info) => {
   await go(page, "loads-and-stores");
-  await page.getByRole("tab", { name: "Memory", exact: true }).click();
+  await openTools(page, "memory");
   await expect(page.locator(".memory-offset").nth(2)).toHaveText("+16");
   await expect(page.locator("#memory-note")).toContainText("decimal");
   await page.locator("#run").click();
@@ -239,6 +240,7 @@ test("completion and independent drafts survive navigation without forcing progr
   );
   await expect(page.locator("#lesson-complete")).toBeChecked();
   await go(page, "signed-readings");
+  await openTools(page, "registers");
   await expect(page.locator("#reading")).toBeVisible();
   await expect(page.locator("#bit-view")).toBeVisible();
   await page.goto("/lessons/hello-world/");

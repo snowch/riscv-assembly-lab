@@ -2,6 +2,7 @@
 import { escape } from "../course/html.js";
 import { hex, registerIndex } from "../course/model.js";
 import toolCopy from "../course/tool-context-copy.js";
+import { createUnifiedDock } from "../course/unified-layout.js";
 import { createExecutionContext } from "./context-view.js";
 
 // These views retain the editor and inspector DOM, including their scroll state.
@@ -60,6 +61,7 @@ export function createPlaygroundLayout(copy) {
     .join("");
   workspace.before(tabs);
   right.id = "workspace-inspect-panel";
+  let unified = null;
   let selected = "code",
     lastLeft = "code",
     lastContext = null,
@@ -71,6 +73,7 @@ export function createPlaygroundLayout(copy) {
     closeWorkspace = async () => {},
     registerFilter = "all";
   function select(name, focus = false) {
+    if (unified) return unified.select(name, focus);
     selected = name;
     if (name !== "inspect") lastLeft = name;
     const active =
@@ -448,10 +451,14 @@ export function createPlaygroundLayout(copy) {
       $("tab-registers").click();
     },
   });
+  unified = createUnifiedDock(root, { program, inspector: right, copy });
   select("code");
   return {
     update,
     select,
+    setToolsOpen(value) {
+      unified.open(value);
+    },
     bindPin(handler) {
       togglePin = handler;
     },
