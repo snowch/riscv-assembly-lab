@@ -25,7 +25,7 @@
       "prompt": "What unsigned value is in a0 when lesson(6, 4) returns?",
       "register": "a0",
       "reading": "unsigned",
-      "hint": "Follow the values on the path that executes, then inspect the captured register."
+      "hint": "Work out the product assigned to charge, then add the constant in the return expression."
     },
     "explanation": [
       "The name `charge` belongs to the C program. It does not attach a permanent type or name to a physical register. A compiler can keep a value in a register, place it on the stack, or replace it with another calculation that preserves the required result. Read the emitted instructions to find what this compiler chose.",
@@ -33,7 +33,7 @@
       "Compiling successfully establishes that the tool accepted the source. Running one call checks that call. The exercise uses several fresh calls so a function that returns a fixed answer cannot satisfy the whole contract."
     ],
     "experiment": {
-      "task": "Change the fixed charge from 7 to 11. Predict the new returned value, build again, and compare the emitted instructions.",
+      "task": "In the return expression, change charge + 7 to charge + 11. Predict the new return value, then choose Build & Run and inspect a0 in Registers.",
       "hint": "The product is unchanged. Follow only the constant added by the return expression."
     },
     "challenge": {
@@ -108,7 +108,7 @@
       "prompt": "What is in a0 after the capped measurement lesson(28, 20) returns?",
       "register": "a0",
       "reading": "signed",
-      "hint": "Follow the values on the path that executes, then inspect the captured register."
+      "hint": "Evaluate a > b first. Use the return statement on that path; the other return does not run."
     },
     "explanation": [
       "The comparison determines which value reaches the return location. It does not change the stored bits of the original measurement by itself. Follow the condition first, then the return statement on that path. Reading the listing from top to bottom without following a branch can make mutually exclusive operations look as though they both execute.",
@@ -116,8 +116,8 @@
       "The challenge asks for a value in a closed range. It supplies only non-negative upper limits, keeping that contract consistent even when the measurement is negative. The function does not need a particular branch spelling to pass; it needs the correct returned value for every supplied call."
     ],
     "experiment": {
-      "task": "Run the same source with the comparison changed from > to >=. Decide whether equality changes the returned value, then explain why.",
-      "hint": "At equality, the two candidate return values are equal even if control takes a different path."
+      "task": "Before the if statement, add a = b; so this call compares equal values. Run once with > and once with >=. Compare a0 in Registers after each return. Explain whether the returned value alone tells you which return statement ran.",
+      "hint": "Both runs compare equal values. Follow the condition to identify the return statement each run reaches."
     },
     "challenge": {
       "task": "Return a clamped measurement: return 0 when signed a is negative, return b when a exceeds b, and return a otherwise. The supplied upper limit b is always non-negative.",
@@ -201,7 +201,7 @@
       "prompt": "What unsigned total is returned after all iterations for a = 4 and b = 3?",
       "register": "a0",
       "reading": "unsigned",
-      "hint": "Follow the values on the path that executes, then inspect the captured register."
+      "hint": "List the counter values that satisfy i < a. Each one adds b to the total, which starts at zero."
     },
     "explanation": [
       "A zero count makes the continuation test false before the first body execution. Initialising the total before the loop therefore matters: the function still needs a result when it performs no additions. A test after the body would describe a different loop, with at least one body execution.",
@@ -209,7 +209,7 @@
       "These exercises restrict counts to at most 1000. That keeps the loop bounded well before its unsigned counter can wrap. Passing the supplied cases does not prove that an arbitrary loop terminates for every possible 64-bit input. Keep a bound or a progress argument with any repeated calculation."
     ],
     "experiment": {
-      "task": "Change the comparison to i <= a. Predict how many extra body executions occur for the starting count, then build and run again.",
+      "task": "In the for loop, change i < a to i <= a. Predict how many extra times the body runs for the starting count. Choose Build & Run and compare the returned total in a0 with the original run.",
       "hint": "The added path is the one where the counter equals the bound."
     },
     "challenge": {
@@ -294,7 +294,7 @@
       "prompt": "What is returned after the three initialised elements are added for a = 8 and b = -3?",
       "register": "a0",
       "reading": "signed",
-      "hint": "Follow the values on the path that executes, then inspect the captured register."
+      "hint": "Follow the assignment to each samples element before adding them. An array subscript selects an element, not a byte."
     },
     "explanation": [
       "The assignments give every element a value before this function reads it. Leaving an automatic local element uninitialised and then using its indeterminate value is not a sound way to create a test. The function also must not read beyond the array just because surrounding stack memory happens to be mapped.",
@@ -302,7 +302,7 @@
       "The exercise uses unsigned long elements so the requested weighted sum has defined 64-bit wrapping. The pointer must still stay within the two-element array. Arithmetic wrapping is a rule for integer values; it is not permission to form or dereference arbitrary addresses."
     ],
     "experiment": {
-      "task": "Change the fixed third element from 2 to -2. Predict which part of the returned sum changes. Keep every subscript inside the declared array.",
+      "task": "Change samples[2] = 2 to samples[2] = -2. Predict how the returned sum changes, then choose Build & Run and compare a0 in Registers. Keep every subscript inside the declared array.",
       "hint": "The first two elements still come from the same arguments; only the adjustment changes."
     },
     "challenge": {
@@ -372,10 +372,9 @@
       "Apply unsigned byte conversion before widening the result."
     ],
     "before": [
-      "`sizeof` gives a C type\u2019s size in bytes. The expression below encodes two sizes into one returned number: the size of int contributes the hundreds, and the size of long contributes the units. This is a measurement of the selected compiler target. It is not a statement that the C language gives every machine those sizes.",
-      "This lab uses the RV64 LP64 data model: int is 32 bits and long and pointers are 64 bits. A returned int-sized value can still occupy a 64-bit architectural register. The compiler and calling convention determine which bits carry the value and how a narrower value is extended.",
-      "A cast requests a conversion to a chosen type. Converting an integer to `unsigned char` keeps its value modulo 256 on this eight-bit-byte target. Returning that converted value as unsigned long then widens the value already obtained. Widening afterwards cannot recover high bits discarded by the earlier conversion.",
-      "At a standard RV64 integer call boundary, an argument narrower than 64 bits is first widened to 32 bits using its type\u2019s signedness. That 32-bit value is then sign-extended to 64 bits. Even `unsigned int` arguments copy bit 31 into the upper register bits. This differs from `lwu`, which zero-extends a load from memory. This page\u2019s function accepts 64-bit `unsigned long` arguments, so its fixtures do not demonstrate an `unsigned int` call."
+      "`sizeof` gives a C type’s size in bytes. The expression below encodes two sizes into one returned number: the size of int contributes the hundreds, and the size of long contributes the units. This is a measurement of the selected compiler target. It is not a statement that the C language gives every machine those sizes.",
+      "The result register is 64 bits wide. That width does not tell you the C type sizes. If you have not measured this compiler target, leave the prediction blank. Choose Build & Run with the expression unchanged, then read a0 in Registers to measure its size code.",
+      "A cast requests a conversion to a chosen type. Converting an integer to `unsigned char` keeps its value modulo 256 on this eight-bit-byte target. Returning that converted value as unsigned long then widens the value already obtained. Widening afterwards cannot recover high bits discarded by the earlier conversion."
     ],
     "starter": "unsigned long lesson(unsigned long a, unsigned long b) {\n    return sizeof(int) * 100 + sizeof(long);\n}\n",
     "inputs": {
@@ -385,18 +384,18 @@
     "observe": ["a0", "sp"],
     "result": "a0",
     "prediction": {
-      "prompt": "What size code does the current target return: 100*sizeof(int) + sizeof(long)?",
+      "prompt": "You may leave the prediction blank and measure first. What code does 100*sizeof(int) + sizeof(long) return on this target?",
       "register": "a0",
       "reading": "unsigned",
-      "hint": "Follow the values on the path that executes, then inspect the captured register."
+      "hint": "sizeof reports bytes, not bits. The result register’s width does not establish the sizes of the C types."
     },
     "explanation": [
-      "The register\u2019s width does not make an int operation into a long operation. Likewise, the fact that a pointer and a long have the same size on this target does not make them the same C type. Keep the source operation, its conversion rules and the machine instructions as separate parts of the explanation.",
+      "This lab uses the RV64 LP64 data model: int is 32 bits, while long and pointers are 64 bits. The result register’s width does not make an int operation into a long operation. A pointer and a long having the same size does not make them the same C type.",
       "For the byte exercise, first perform the conversion to unsigned char, then read the returned widened value. A value just above the byte range does not remain just above the range. The conversion wraps within the destination type. If an application must reject that value instead, it must check the original input before narrowing.",
       "Do not generalise the byte rule to an out-of-range conversion to signed char without checking the selected language version and implementation rules. This exercise deliberately uses unsigned char, where the conversion needed for its cases is defined. The unused second argument does not affect either measurement or conversion."
     ],
     "experiment": {
-      "task": "Replace sizeof(long) with sizeof(void *). Predict whether the returned size code changes for this target, then compile it.",
+      "task": "In the return expression, replace sizeof(long) with sizeof(void *), which asks for a pointer’s size. Predict whether the size code changes, then choose Build & Run and compare a0 in Registers.",
       "hint": "This target has 64-bit pointers as well as a 64-bit long; that equality is target-specific."
     },
     "challenge": {
@@ -485,7 +484,7 @@
       "prompt": "What unsigned value is returned when the largest unsigned long is increased by two?",
       "register": "a0",
       "reading": "unsigned",
-      "hint": "Follow the values on the path that executes, then inspect the captured register."
+      "hint": "Form the unsigned sum, then keep only its low 64 bits. A carry beyond bit 63 is not stored."
     },
     "explanation": [
       "Interpret the result in the type used by the source calculation. A signed decimal display can show a negative reading for a perfectly valid unsigned result whose top bit is set. The hexadecimal bits identify the same stored value without choosing a signed reading. A display choice does not change the C arithmetic that produced those bits.",
@@ -493,7 +492,7 @@
       "Tests and compiler warnings help find mistakes, but neither proves that all possible inputs are safe. A run-time checker also observes only paths that execute. The exercise\u2019s boundary cases make the intended behaviour visible without asking the browser compiler to diagnose every kind of C error."
     ],
     "experiment": {
-      "task": "Change the unsigned return calculation to a - b and use a = 0, b = 1 in a fresh call. Explain the hexadecimal result using unsigned arithmetic.",
+      "task": "Inside lesson, add a = 0; and b = 1; before the return statement. Change that statement to return a - b;. These assignments replace the supplied arguments within this call. Choose Build & Run and explain a0’s hexadecimal reading in Registers.",
       "hint": "Subtraction has the same unsigned modulo rule; the signed decimal reading is a separate choice."
     },
     "challenge": {
@@ -568,7 +567,7 @@
       "prompt": "What Boolean does the unsigned range check return for the largest unsigned long plus one?",
       "register": "a0",
       "reading": "unsigned",
-      "hint": "Follow the values on the path that executes, then inspect the captured register."
+      "hint": "The function returns the comparison, not the sum. Compare the wrapped unsigned sum with the original a."
     },
     "explanation": [
       "A range check answers whether the mathematical result fits the required destination. It does not make the wrapped bits into that mathematical result. Keep those two facts separate when choosing whether to store, reject, clamp or report a value. Different applications can use the same check and choose different policies.",
@@ -576,8 +575,8 @@
       "Signed checking needs its own rule. In ordinary signed C, do not first calculate an overflowing signed sum to discover overflow afterwards. Check operands against valid bounds before adding, or use a checked-arithmetic facility supported by the chosen environment. The freestanding browser exercises do not provide a host checked-arithmetic library."
     ],
     "experiment": {
-      "task": "Change the starting second argument to zero and predict the range-check result. Then try a pair whose sum sets the top bit without carrying beyond it.",
-      "hint": "The predicate checks a carry beyond the width, not whether the signed reading is negative."
+      "task": "Before the sum assignment, add b = 0;. Predict the returned Boolean, then choose Build & Run and inspect a0. Next replace that line with a = 0x7fffffffffffffffUL; and b = 1;. Predict whether setting the sum’s top bit makes the range check true, then run again.",
+      "hint": "These assignments change the arguments used inside the function. The returned Boolean checks a carry beyond bit 63, not the signed reading of the sum."
     },
     "challenge": {
       "task": "Return a saturated unsigned sum. Calculate a + b; if it overflows unsigned long, return ~0UL. Otherwise return the sum. Use only defined unsigned operations.",
@@ -645,8 +644,8 @@
       "Keep a byte count separate from a zero-terminated string length."
     ],
     "before": [
-      "A user program asks the operating system to perform an operation with a system call. For xv6 write, a0 names the open file, a1 holds the address of the first byte, and a2 gives the number of bytes. Put the system call number 16 in a7, then execute `ecall` to enter xv6.",
-      "The supplied program has file 1 open for standard output, the console used here. The example writes five bytes from lesson_data, then copies write\u2019s returned value from a0 into t2. The snapshot is taken after that copy. The report is separate from the text that write sends to the console.",
+      "A user program asks the operating system to perform an operation with a system call. For xv6 write, a0 holds a file descriptor: a number naming an open file. a1 holds the first byte’s address, and a2 gives the byte count. Put system call number 16 in a7, then execute ecall to enter xv6.",
+      "The supplied program has file 1 open for standard output, the console used here. The example writes five bytes from lesson_data, then copies write’s returned value from a0 into t2. The snapshot is taken after that copy. The report is separate from the text that write sends to the console.",
       "These numbers belong to xv6. Linux and teaching simulators can use different system call conventions even when they execute RISC-V instructions. `ecall` requests service from the execution environment; the instruction itself does not define what a file number or a write operation means."
     ],
     "starter": "li a0, 1\nla a1, lesson_data\nli a2, 5\nli a7, 16\necall\nmv t2, a0\n",
@@ -664,15 +663,15 @@
       "prompt": "How many bytes does t2 report after the starting write succeeds?",
       "register": "t2",
       "reading": "signed",
-      "hint": "Follow the values on the path that executes, then inspect the captured register."
+      "hint": "a2 supplies a byte count, not a zero-terminated string length. t2 receives the value returned in a0 after ecall."
     },
     "explanation": [
       "Write uses the explicit count, not a search for a zero terminator. A zero byte inside the requested range is still one byte to write. Conversely, text beyond the requested range is not part of this request. A byte count also differs from a character count for text whose characters use more than one encoded byte.",
-      "The returned value reports the operation\u2019s result. A successful xv6 write returns the bytes written; an error can return -1. The general purpose of checking the return is to distinguish an attempted operation from one that completed. The exercise keeps the file descriptor and source range valid so it can focus on the count.",
-      "The supplied reporting code also writes to the console after your fragment. That later write does not change the earlier snapshot of t2. Inspect Program output when you want to separate your message bytes from the lab\u2019s register report. No CPU flag announces that a system call succeeded."
+      "The returned value reports the operation’s result. A successful xv6 write returns the bytes written; an error can return -1. The general purpose of checking the return is to distinguish an attempted operation from one that completed. The exercise keeps the file descriptor and source range valid so it can focus on the count.",
+      "The supplied reporting code also writes to the console after your fragment. That later write does not change the earlier snapshot of t2. In Inspect, choose Output. Program output shows your message bytes; xv6 serial log also includes the lab’s register report. No CPU flag announces that a system call succeeded."
     ],
     "experiment": {
-      "task": "Change the requested count from five to four. Predict the returned count and inspect which message byte is no longer sent.",
+      "task": "Change li a2, 5 to li a2, 4. Predict the returned count, then choose Build & Run. Compare t2 in Registers and the message under Output, Program output. Which final message byte is no longer sent?",
       "hint": "The final byte is a newline. Omitting it affects presentation, not the number of earlier bytes requested."
     },
     "challenge": {
@@ -743,7 +742,7 @@
       "prompt": "What result is in a0 after advance returns and the fragment reaches entry_done?",
       "register": "a0",
       "reading": "signed",
-      "hint": "Follow the values on the path that executes, then inspect the captured register."
+      "hint": "Apply both arithmetic instructions in the helper named advance. After ret, the caller’s jump skips the helper body."
     },
     "explanation": [
       "The source label _start and the executable\u2019s entry field serve related but different jobs. The label names code during assembly and linking. The ELF header tells xv6 the resulting start address. A file loader uses the executable\u2019s loading information, not the visual position of the first interesting line in the editor.",
@@ -751,8 +750,8 @@
       "Changing the editor does not change an executable that was already built or a process that already ran. Build & Run creates and launches a fresh image. The source-change notice keeps that distinction visible when the displayed register snapshot belongs to an earlier version. Returning the correct value still matters independently of assembling and loading successfully."
     ],
     "experiment": {
-      "task": "Remove the jump after call advance. Predict where control goes after the helper returns, then use Stop if execution cannot reach a completed report. Restore the jump afterwards.",
-      "hint": "A return selects an address; it does not make the following function body disappear from the instruction stream."
+      "task": "Remove j entry_done immediately after call advance. Predict where ret sends control after the helper returns. Choose Start stepping and follow that return with Step instruction; use Stop to end the repeated path. Restore the jump afterwards.",
+      "hint": "The call’s return address is the instruction immediately after the call. Check which instruction occupies that address after removing the jump."
     },
     "challenge": {
       "task": "Write a fragment that calls adjust, then skips its body. Pass t0, t1 and t2 into a0, a1 and a2 before the call. The helper must return a0 + a1 - a2 in a0. Keep ret inside the helper, not at the end of the top-level fragment.",
@@ -833,15 +832,15 @@
       "prompt": "What is in t2 after the valid byte load and adjustment?",
       "register": "t2",
       "reading": "signed",
-      "hint": "Follow the values on the path that executes, then inspect the captured register."
+      "hint": "t0 holds an address; lbu puts the byte at that address in t1. The following addi adjusts that loaded value."
     },
     "explanation": [
-      "A trap is a transfer to the execution environment in response to an event such as an invalid memory access. It is not an ordinary function return. If your fragment faults before the reporting code, there may be no completed register snapshot. Inspect the actual serial log rather than treating a blank result as a numeric answer.",
+      "A trap transfers control to the execution environment in response to an event such as an invalid memory access. It is not an ordinary function return. If your fragment faults before reporting, there may be no completed register snapshot. In Inspect, choose Output and open xv6 serial log to read what happened.",
       "The challenge supplies an unsigned offset and a capacity. The comparison must happen before the address is used for a byte load. Equality is already outside the allowed offset range: a capacity of three permits offsets zero, one and two. A zero capacity permits no reads at all.",
-      "Unsigned comparison matters for addresses and counts. A large bit pattern that has a negative signed reading is not a small valid offset. A bounds test, a valid mapping and the intended object\u2019s lifetime answer different questions. None should be substituted for another just because one example happens to run without a fault."
+      "Unsigned comparison matters for addresses and counts. A large bit pattern that has a negative signed reading is not a small valid offset. A bounds test, a valid mapping and the intended object’s lifetime answer different questions. None should be substituted for another just because one example happens to run without a fault."
     ],
     "experiment": {
-      "task": "In a separate experiment, replace la t0, lesson_data with li t0, -1 and run the load. Inspect the serial log if xv6 stops the process before reporting. Restore the safe address afterwards.",
+      "task": "Replace la t0, lesson_data with li t0, -1, then choose Build & Run. In Inspect, choose Output and open xv6 serial log. Check whether the load faults before a register report is produced. Restore la t0, lesson_data afterwards.",
       "hint": "The changed bit pattern is not an address inside the supplied user data region. Do not expect a normal returned byte."
     },
     "challenge": {
@@ -899,7 +898,7 @@
           }
         },
         {
-          "name": "At the mapped data boundary",
+          "name": "At the inspection-area limit",
           "inputs": {
             "t0": "64",
             "t1": "64"
@@ -966,7 +965,7 @@
       "prompt": "What scaled total is returned after only the first three records are considered?",
       "register": "a0",
       "reading": "signed",
-      "hint": "Follow the values on the path that executes, then inspect the captured register."
+      "hint": "Consider only the records selected by the count. Include a distance when status AND mask is nonzero, then scale the accumulated total."
     },
     "explanation": [
       "The count check precedes the read. For a zero count, the loop skips all record accesses and the zero total reaches the scaling helper. Otherwise the pointer advances by the full four-byte record size, not by the two-byte distance field or the one-byte status field.",
@@ -974,7 +973,7 @@
       "The helper call separates accumulation from scaling. Its result contract is a0, so the caller uses that returned value rather than assuming an earlier temporary register still holds the answer. This program combines the mechanisms already taught, but one successful example is not enough evidence. Fresh cases include an empty list, different selected bits and a mask selecting nothing."
     ],
     "experiment": {
-      "task": "Change the record count from three to four. Predict whether the extra record contributes under the current mask, then run again without changing the data.",
+      "task": "Add li t0, 4 before la t3, lesson_data. This replaces the supplied record count inside the fragment. Predict whether the fourth record contributes under the current mask. Choose Build & Run and compare a0 after the helper returns. Keep the data unchanged.",
       "hint": "First decide whether the fourth record is inspected; then test its status against the mask."
     },
     "challenge": {
@@ -1068,16 +1067,15 @@
       "prompt": "What signed reading does t2 have after complementing the starting pattern and adding one?",
       "register": "t2",
       "reading": "signed",
-      "hint": "Follow the values on the path that executes, then inspect the captured register."
+      "hint": "The complement in t1 is an intermediate value. Include the following addition before choosing the signed reading of t2."
     },
     "explanation": [
       "For a 64-bit pattern x, complementing every bit gives the unsigned maximum minus x. Adding one therefore gives the low-bit representation of zero minus x. The modulo operation also explains why a carry out of the width is discarded rather than stored in an extra register bit.",
-      "Zero is a useful boundary: complementing it first produces all ones, and the following addition wraps back to zero. Two\u2019s complement has one zero pattern. It also has one more negative signed value than positive values, so negating the most-negative value leaves the same stored pattern at this width.",
-      "A miniature four-bit drawing can make the arithmetic easier to follow, but a four-bit carry belongs to that miniature width. The live instructions here still operate on 64-bit registers. Keep the width visible whenever you compare an arithmetic diagram with an executed instruction."
+      "Zero is a useful boundary: complementing it first produces all ones, and the following addition wraps back to zero. Two’s complement has one zero pattern. It also has one more negative signed value than positive values, so negating the most-negative value leaves the same stored pattern at this width."
     ],
     "experiment": {
-      "task": "Replace the starting value with zero, then with the most-negative 64-bit pattern. Predict which stored patterns return unchanged after negation.",
-      "hint": "Work modulo the fixed register width, then choose the signed reading of the remaining bits."
+      "task": "Change li t0, 5 to li t0, 0 and run it. Then use li t0, 0x8000000000000000, the most-negative 64-bit pattern. Before each run, predict whether t2’s stored pattern will match t0. Compare their hexadecimal readings in Registers.",
+      "hint": "Work modulo the fixed register width before choosing a signed reading. Hexadecimal compares the stored patterns directly."
     },
     "challenge": {
       "task": "Leave the low 64 bits of zero minus the incoming t0 pattern in t2. Use complement followed by addition. The challenge compares stored bit patterns, including the most-negative signed pattern.",
@@ -1153,7 +1151,7 @@
       "prompt": "What Boolean is in t3 after the explicit unsigned carry check?",
       "register": "t3",
       "reading": "unsigned",
-      "hint": "Follow the values on the path that executes, then inspect the captured register."
+      "hint": "Compare the low 64-bit sum with the original first operand using unsigned ordering. sltu returns the truth of that comparison."
     },
     "explanation": [
       "Translate the required relationship first. An unsigned maximum needs an unsigned ordering of the two stored patterns. RISC-V can express that choice with a direct branch such as bgeu; it does not need an instruction that reproduces an Arm compare\u2019s flags before the branch.",
@@ -1161,7 +1159,7 @@
       "The environment remains a separate concern. Two machines may use RISC-V instructions while assigning different meanings to a system call number or a device address. Match the instruction set, width, calling convention and operating environment independently. A familiar mnemonic alone does not establish that a complete program can run unchanged."
     ],
     "experiment": {
-      "task": "Replace the initial all-ones input with 255 while keeping the addition 64 bits wide. Predict whether the explicit carry check still reports overflow.",
+      "task": "Change li t0, -1 to li t0, 255. Keep the add and sltu instructions unchanged. Predict the unsigned carry check, then choose Build & Run and compare t3 in Registers.",
       "hint": "Crossing an eight-bit boundary is not a carry beyond a 64-bit register."
     },
     "challenge": {
@@ -1221,7 +1219,7 @@
       "Extract a binary32 field without claiming to execute floating-point instructions."
     ],
     "before": [
-      "A floating-point format stores a sign, a fraction and a power-of-two scale. IEEE 754 binary32 uses one sign bit, eight exponent bits and 23 fraction bits. A normal value has an implied leading one before its binary fraction. The stored exponent includes a bias of 127.",
+      "IEEE 754 binary32 stores a sign in bit 31, an exponent in bits 30 through 23, and a fraction in bits 22 through 0. The stored exponent controls a power-of-two scale. A value whose exponent field is neither all zeros nor all ones is called a normal value. Its fraction has an implied leading one.",
       "The supplied four bytes encode 9.5 in binary32, in little-endian byte order. The live fragment uses lwu to load those bytes as an unsigned 32-bit bit pattern. It shifts away the fraction and masks the exponent field into t2. Predict that integer field, not a floating-point calculation.",
       "This experiment executes integer RISC-V instructions only. The current xv6 guest does not provide the floating-point context used by a floating-point application. Reading an encoding as integer bits does not show that floating-point instructions, exception flags or a rounding mode are being exercised."
     ],
@@ -1240,16 +1238,16 @@
       "prompt": "What unsigned exponent field is extracted from the supplied binary32 encoding?",
       "register": "t2",
       "reading": "unsigned",
-      "hint": "Follow the values on the path that executes, then inspect the captured register."
+      "hint": "Read the four bytes in little-endian order. The shift removes the fraction bits; the mask keeps only the exponent field."
     },
     "explanation": [
-      "For a normal binary32 value, subtract the bias from the stored exponent to obtain the power of two. The fraction field describes the bits after the implied leading one. Its weights are halves, quarters and further powers of one half. This representation is different from a two\u2019s-complement integer even when both occupy the same four bytes.",
-      "The normal rule has exceptions. An all-zero exponent with a zero fraction represents signed zero. With a nonzero fraction it represents a subnormal value, using a fixed small scale and no implied leading one. An all-one exponent represents infinity when the fraction is zero and NaN, \u201cnot a number\u201d, when it is nonzero.",
+      "For a normal binary32 value, subtract 127 from the stored exponent to obtain the power of two. That offset is called the exponent bias. The fraction field gives the bits after the implied leading one. Its weights are halves, quarters and further powers of one half. The encoding differs from a two’s-complement integer even when both occupy four bytes.",
+      "The normal rule has exceptions. An all-zero exponent with a zero fraction represents signed zero. With a nonzero fraction it represents a subnormal value, using a fixed small scale and no implied leading one. An all-one exponent represents infinity when the fraction is zero and NaN, “not a number”, when it is nonzero.",
       "The sign bit belongs to the floating-point encoding. In particular, positive and negative zero have different stored sign bits. Loading binary32 bytes with lwu zero-extends them into a 64-bit integer register, so a signed comparison of that widened integer is not a way to recover the binary32 sign. Extract bit 31 instead."
     ],
     "experiment": {
-      "task": "Change only the sign bit in the supplied encoding by using an integer bit operation before extracting the exponent. Predict whether the exponent field changes.",
-      "hint": "The sign occupies bit 31; the exponent occupies bits 30 through 23."
+      "task": "After lwu t1, 0(t0), insert li t3, 0x80000000 and xor t1, t1, t3 before the shift. This changes only bit 31 of the loaded copy in t1; it leaves the supplied memory bytes unchanged. Predict whether the exponent in t2 changes, then choose Build & Run and compare t1 and t2 in Registers.",
+      "hint": "XOR switches each bit selected by its mask. This mask selects the sign bit; the exponent occupies bits 30 through 23."
     },
     "challenge": {
       "task": "Load the first four bytes of lesson_data with lwu and leave their binary32 sign bit in t2 as 0 or 1. Do not classify the encoding with a signed integer comparison. Negative zero must retain its sign bit.",

@@ -17,6 +17,8 @@ import { createSourceEditor } from "./editor.js";
 import { setupWorkbench } from "./workspace.js";
 import { debuggerMarkup } from "./debugger.js";
 import { completion, setComplete, renderCompletion } from "./home.js";
+import toolCopy from "./tool-context-copy.js";
+const feedback = toolCopy.lessonFeedback;
 export function createWorkbench(
   initialContext,
   {
@@ -526,9 +528,19 @@ export function createWorkbench(
     if (!curriculum) return;
     if (activity !== "explore" || !state) return;
     const raw = predictionAtRun.trim();
+    const mode = lesson.prediction.reading ?? "signed";
+    const value =
+      state.registers[REGISTERS[registerIndex(lesson.prediction.register)]];
+    const resultText = (key) =>
+      feedback[key]
+        .replace("{register}", lesson.prediction.register)
+        .replace("{value}", reading(value, mode))
+        .replace(
+          "{reading}",
+          mode === "hex" ? "hexadecimal" : lesson.ui.signed ? mode : "decimal",
+        );
     if (!raw) {
-      $("prediction-feedback").textContent =
-        "Compare the observed register value with the result you expected.";
+      $("prediction-feedback").textContent = resultText("noPrediction");
       return;
     }
     try {
@@ -536,21 +548,22 @@ export function createWorkbench(
         negative = clean.startsWith("-"),
         text = negative ? clean.slice(1) : clean;
       let guessed = (negative ? -1n : 1n) * BigInt(text);
-      const mode = lesson.prediction.reading ?? "signed";
       if (/^0[xb]/i.test(text))
         guessed = BigInt(reading(guessed, mode === "hex" ? "unsigned" : mode));
-      const value =
-        state.registers[REGISTERS[registerIndex(lesson.prediction.register)]];
       const actual =
         mode === "hex" ? BigInt(value) : BigInt(reading(value, mode));
       $("prediction-feedback").textContent =
         guessed === actual
           ? "Your prediction matches the executed result."
-          : `The CPU reported ${lesson.prediction.register} = ${reading(value, mode)}. Revisit the operand order and reading, then try a fresh input.`;
+          : resultText("predictionMismatch");
     } catch {
       $("prediction-feedback").textContent =
         "Use a whole decimal number, 0x hexadecimal or 0b binary for the prediction.";
     }
+  }
+  function predictionUnavailable() {
+    if (curriculum && activity === "explore")
+      $("prediction-feedback").textContent = feedback.predictionUnavailable;
   }
   session = new Session((event) => {
     if (event.type === "phase") {
@@ -658,7 +671,11 @@ export function createWorkbench(
         showState(result, "Captured after your code completed");
         checkPrediction();
         status(
-          "Run finished. Inspect the result, then change an input.",
+          curriculum
+            ? activity === "challenge"
+              ? feedback.finishedExercise
+              : feedback.finishedLesson
+            : feedback.finishedProject,
           "Finished",
         );
       } else if (lesson.kind === "program") {
@@ -681,6 +698,7 @@ export function createWorkbench(
           "Finished",
         );
       } else {
+        predictionUnavailable();
         clearState(
           "No register snapshot was produced. Your code may have exited or faulted before reporting. Inspect the program output and serial log.",
         );
@@ -698,14 +716,16 @@ export function createWorkbench(
       paused = false;
       $("sticky-operation").hidden = true;
       controls();
+      predictionUnavailable();
       clearState("No completed register snapshot. Check the diagnostics.");
       diagnostics(event.message, true);
-      status("Could not finish. Check the diagnostics below.", "Error", true);
+      status(feedback.errorStatus, "Error", true);
     } else if (event.type === "stopped") {
       busy = false;
       paused = false;
       $("sticky-operation").hidden = true;
       controls();
+      predictionUnavailable();
       status(
         "Stopped. Build or start stepping for a fresh machine.",
         "Stopped",

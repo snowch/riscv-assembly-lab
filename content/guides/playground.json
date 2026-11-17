@@ -129,6 +129,7 @@
       "id": "workspace-views",
       "title": "Source and execution",
       "paragraphs": [
+        "On a phone or narrow window, use Code, Program and Inspect to switch views. On a wide screen, the inspector stays beside Code or Program.",
         "Code is your editable source. Program shows that source in its supplied program, with setup and reporting sections folded away. Expand a section to inspect the full source.",
         "Machine instructions shows the executable from your last successful build. Build again after editing the source. During stepping, PC marks the next instruction to execute.",
         "Inspect shows observations from execution. Pin useful registers, compare changed values, or choose All to see every integer register."
@@ -149,7 +150,7 @@
       "paragraphs": [
         "Build & Run assembles and links your source, then runs it as an xv6 user process. C projects first compile their function with TinyCC. Every new run starts a fresh machine.",
         "Start stepping pauses before your first machine instruction. Step instruction executes one machine instruction. A source line can expand into several machine instructions.",
-        "A breakpoint pauses before its instruction runs. Choose an assembly line number, then use Start debugging. Continue runs to a selected breakpoint or the end of your code. For C, select actual instruction addresses in Debugger; this compiler does not provide C source-line mappings.",
+        "A breakpoint pauses before its instruction runs. Choose the numbered button beside an assembly instruction, then use Start debugging. Continue runs to a selected breakpoint or the end of your code. For C, select actual instruction addresses in Debugger; this compiler does not provide C source-line mappings.",
         "Register and memory readings belong to the observation named beside them. Assembly fragments and C functions capture a report after their code. Complete programs can exit without that report: a last paused observation is not an exit state."
       ]
     },

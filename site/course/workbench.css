@@ -131,6 +131,12 @@
   font-size: 0.8rem;
   padding: 0.45rem 0.65rem;
 }
+.workbench .run-actions #continue:disabled,
+.workbench .run-actions #stop:disabled,
+.hello-page .run-actions #stop:disabled {
+  /* Reserve their positions; show these actions only when they can be used. */
+  visibility: hidden;
+}
 .workbench #run-status {
   font-size: 0.76rem;
   flex: 1 1 220px;

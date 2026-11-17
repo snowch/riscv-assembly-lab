@@ -11,7 +11,7 @@
     "before": [
       "The trip computer turns sensor pulses into a distance by multiplying the pulse count by a scale. The answer to a multiplication is its product. Two 64-bit inputs can require 128 bits for their full product, but one register still has room for only 64.",
       "`mul t2, t0, t1` multiplies the values in `t0` and `t1` and writes the low 64 product bits into `t2`. Any higher bits are discarded. This instruction uses the same low bits for signed and unsigned readings; it does not set an overflow flag.",
-      "The editor loads the two factors explicitly. Predict the hexadecimal pattern in `t2` after all three lines run. Read the whole 64-bit result, rather than assuming that multiplication makes the destination wider."
+      "The first two `li` instructions load the factors. Predict the hexadecimal pattern in `t2` after all three lines run. The destination still holds only 64 bits."
     ],
     "starter": "li t0, 0x100000000\nli t1, 0x100000000\nmul t2, t0, t1\n",
     "observe": ["t0", "t1", "t2"],
@@ -24,11 +24,11 @@
     },
     "explanation": [
       "A destination register cannot retain bits above its width. Reading the result with a different interpretation changes what the retained pattern means; it cannot recover discarded product bits. Small examples can hide that loss because their full product already fits.",
-      "A multiply followed by an add implements a scaled running total. Keep the existing total until the addition reads it. The challenge uses `t3`, another temporary register, to hold the product while `t2` still holds its incoming total.",
+      "A multiply followed by an add implements a scaled running total. Keep the existing total until the addition reads it. The optional exercise uses `t3`, another temporary register, to hold the product while `t2` still holds its incoming total.",
       "Unsigned C multiplication has a corresponding wrapping rule for its result type. Signed C multiplication is different: an unrepresentable mathematical result has undefined behaviour. The existence of a hardware low-bit result does not give that signed C expression a defined answer. Undefined behaviour means that C makes no promise about what that program does."
     ],
     "experiment": {
-      "task": "Load 0x7fffffff and 2. Run mul, then replace it with mulw and run again. Compare the full hexadecimal patterns.",
+      "task": "In the example, change the first two instructions to `li t0, 0x7fffffff` and `li t1, 2`. Choose Build & Run and note the hexadecimal pattern for t2 in Registers. Change only `mul t2, t0, t1` to `mulw t2, t0, t1`, run again and compare t2.",
       "hint": "mulw keeps a 32-bit product and sign-extends that result to 64 bits. It does not provide an unsigned wider product."
     },
     "challenge": {
@@ -98,7 +98,7 @@
     ],
     "before": [
       "A full product of two 64-bit inputs can be split across two registers. The low half contains product bits 0 through 63. The high half contains bits 64 through 127. `mul` supplies the low half; a separate instruction supplies the high half.",
-      "`mulh` treats both factors as signed values. `mulhu` treats both as unsigned values. They can therefore produce different high halves for the same input bits. The editor applies both instructions to one pair of factors and also retains their common low half.",
+      "`mulh` treats both factors as signed values. `mulhu` treats both as unsigned values. They can therefore produce different high halves for the same input bits. The example uses both instructions on one pair of factors and also retains their common low half with `mul`.",
       "The `li` lines establish the inputs before either multiplication. Temporary registers `t3` and `t4` hold additional observations. Predict the unsigned value of `t3` after the entire fragment runs; its instruction is `mulhu`."
     ],
     "starter": "li t0, -1\nli t1, 2\nmulh t2, t0, t1\nmulhu t3, t0, t1\nmul t4, t0, t1\n",
@@ -112,11 +112,11 @@
     },
     "explanation": [
       "The high half records information that the low-half instruction discards. You cannot reconstruct that information by sign-extending the low result: different full products can share the same low pattern.",
-      "Keep both original factors until both instructions have read them. Using a source register as the destination of the first multiplication would change an input to the second. The challenge puts the two halves in distinct destinations, so neither factor is overwritten.",
+      "Keep both original factors until both instructions have read them. Using a source register as the destination of the first multiplication would change an input to the second. The optional exercise puts the two halves in distinct destinations, so neither factor is overwritten.",
       "RISC-V also has `mulhsu` for a signed first factor and an unsigned second factor. The order of those roles matters. Choose from the required interpretation of each factor, rather than from whether a register happens to display a minus sign. The result cards also show hexadecimal patterns so the bits remain visible."
     ],
     "experiment": {
-      "task": "Set both inputs to -1. Compare mulh with mulhu, then change mulhu to mulhsu and run again. Keep the common mul result.",
+      "task": "Change `li t1, 2` to `li t1, -1`, so both inputs have all bits set. Choose Build & Run and compare the hexadecimal t2, t3 and t4 patterns in Registers. Change only `mulhu t3, t0, t1` to `mulhsu t3, t0, t1`, run again and compare t3. Keep the mul instruction unchanged.",
       "hint": "The same all-ones input represents a negative signed value or a large unsigned value. Changing only the high-product instruction changes which mathematical product is represented."
     },
     "challenge": {
@@ -203,7 +203,7 @@
       "C does not define integer division or remainder when the divisor is zero or the quotient is unrepresentable. Observe the hardware cases in this assembly exercise without treating them as valid outcomes of corresponding C expressions. Check the conditions before performing such an operation in C."
     ],
     "experiment": {
-      "task": "Replace div and rem with divu and remu while retaining the same loaded input bits. Compare the result patterns, then restore the signed instructions.",
+      "task": "Keep both li instructions unchanged. Replace `div t2, t0, t1` with `divu t2, t0, t1` and `rem t3, t0, t1` with `remu t3, t0, t1`. Choose Build & Run and compare the t2 and t3 hexadecimal patterns in Registers with the signed version. Then restore div and rem.",
       "hint": "Unsigned division sees a large positive dividend where the signed reading sees a negative one. A later reinterpretation cannot undo that instruction choice."
     },
     "challenge": {
@@ -286,7 +286,7 @@
     "before": [
       "The trip computer records fuel in millilitres and distance in metres. To obtain whole millilitres per 100 metres, multiply fuel by 100 and divide that product by distance. Integer division discards any fractional part, so the order of these operations matters.",
       "For this activity both inputs are unsigned 32-bit values already placed in 64-bit registers with their upper bits clear. Their product with the scale fits in 64 bits. A normal RV64 `mul` retains that complete intermediate; `mulw` would discard needed bits and sign-extend its 32-bit result.",
-      "The example uses a nonzero distance. The challenge adds an application rule: zero distance must return zero. That rule is chosen by this calculation; it is not the result that a RISC-V unsigned divide by zero supplies."
+      "The example uses a nonzero distance. The optional exercise adds an application rule: zero distance must return zero. That rule is chosen by this calculation; it is not the result that a RISC-V unsigned divide by zero supplies."
     ],
     "starter": "li t0, 0xffffffff\nli t1, 1000\nli t2, 100\nmul t2, t0, t2\ndivu t2, t2, t1\n",
     "observe": ["t0", "t1", "t2"],
@@ -300,10 +300,10 @@
     "explanation": [
       "A wide destination helps only when the arithmetic producing it keeps the needed bits. Multiplying with `mulw` and then using `divu` cannot recover the higher product bits lost by the earlier operation. Choose the multiplication width before the product is formed.",
       "Dividing fuel by distance first introduces a different loss. A small fuel count can produce a zero quotient even though the scaled calculation would return a nonzero whole number. Multiplying that already-truncated quotient afterwards does not restore the discarded fraction.",
-      "The stated input bounds make the product safe here. For arbitrary unsigned 64-bit fuel, multiplication by the scale could itself wrap. Such a broader contract would need a range check or a multi-register calculation; changing the final division alone would not solve it. The challenge keeps the narrower, explicit input bounds."
+      "The stated input bounds make the product safe here. For arbitrary unsigned 64-bit fuel, multiplication by the scale could itself wrap. Such a broader contract would need a range check or a multi-register calculation; changing the final division alone would not solve it. The optional exercise keeps the narrower, explicit input bounds."
     ],
     "experiment": {
-      "task": "Load fuel 1 and distance 3. Compare multiply-then-divide with divide-then-multiply. Restore the former order, then try mulw with the original large fuel reading.",
+      "task": "Set the opening loads to `li t0, 1` and `li t1, 3`; keep `li t2, 100`. Run and note t2 in Registers. To divide first, replace the final two instructions with `divu t3, t0, t1` followed by `mul t2, t3, t2`, then run again. Restore the starter. Change only mul to mulw and run with the original large fuel value to test the intermediate width.",
       "hint": "The first comparison loses a fraction too early; the second loses high product bits. They are different mistakes."
     },
     "challenge": {
@@ -401,7 +401,7 @@
       "`call` and `ret` are assembler pseudo-instructions. GNU tools expand them into machine instructions as needed. Do not infer a fixed return-address increment from the number of source lines or assume that every pseudo-instruction occupies one instruction."
     ],
     "experiment": {
-      "task": "Change the starting argument to an odd distance, then change the reserve added by the caller. Move the caller\u2019s addition before the call and compare the result.",
+      "task": "Change `li a0, 84` to `li a0, 85` and the caller’s addition to `addi a0, a0, 5`. Choose Build & Run and note a0 in Registers after completion. Move that same addi before `call half_distance`, run again and compare a0. Keep the argument and helper unchanged between those two runs.",
       "hint": "Adding before halving and adding after halving describe different calculations. Follow which value is in a0 at each operation."
     },
     "challenge": {
@@ -461,7 +461,7 @@
       "A function that calls another function needs two return destinations at different times. It first receives the address of its own caller in `ra`. Its nested `call` then replaces `ra` with an address inside the current function. Save the first address before making that call.",
       "The stack is memory used by active calls. Its current boundary is the stack pointer, `sp`; reserving space subtracts from that pointer because this stack grows towards lower addresses. The space reserved by one invocation is its stack frame.",
       "The standard calling convention requires 16-byte stack alignment throughout a procedure: `sp` stays a multiple of 16. This example reserves 16 bytes, uses `sd ra, 8(sp)` to save the 64-bit address eight bytes above the new pointer, and uses `ld` to restore it. Releasing the frame adds the same size back to `sp`.",
-      "Run the whole fragment and inspect the final `a0` and `sp`. The snapshot is after both functions return, not a sequence of intermediate stack states. The lab supplies an aligned initial stack pointer and its reserved inspection area."
+      "Choose Build & Run and inspect a0 and sp in Registers after both functions return. These are final values, not intermediate stack states. The lab supplies an aligned initial stack pointer and its reserved inspection area."
     ],
     "starter": "li a0, 64\ncall report_once\nj report_done\nreport_once:\naddi sp, sp, -16\nsd ra, 8(sp)\ncall half_distance\naddi a0, a0, 1\nld ra, 8(sp)\naddi sp, sp, 16\nret\nhalf_distance:\nsrli a0, a0, 1\nret\nreport_done:\n",
     "observe": ["a0", "sp", "ra"],
@@ -475,10 +475,10 @@
     "explanation": [
       "The helper\u2019s return and the report\u2019s return need different addresses. Restoring the saved `ra` after the nested call lets the report\u2019s final `ret` reach the original caller. The call instruction does not allocate a frame or preserve an older return address automatically.",
       "If the report returns through the nested call\u2019s address, it can revisit its own post-call instructions rather than leave the function. The helper may have returned correctly even though its caller can no longer return correctly.",
-      "Restoring `sp` releases the frame\u2019s space. It does not erase the saved bytes. Released storage is no longer a place where that function may keep live values. The challenge checks the actual stack pointer against its captured initial value, rather than relying on a fixed numerical stack address."
+      "Restoring `sp` releases the frame’s space. It does not erase the saved bytes. Released storage is no longer a place where that function may keep live values. The optional exercise checks the actual stack pointer against its captured initial value, rather than relying on a fixed numerical stack address."
     ],
     "experiment": {
-      "task": "Temporarily remove the ra save and restore while keeping the nested call. Run the changed program, use Stop if it does not finish, and then restore the two instructions.",
+      "task": "In the example, delete `sd ra, 8(sp)` and `ld ra, 8(sp)`. Set a breakpoint on the ret inside report_once, then choose Start debugging. Inspect ra in Registers and use Step instruction to see where that return goes. Choose Stop, then restore the two deleted instructions.",
       "hint": "Identify which address the helper call leaves in ra. The final ret uses that address unless you restore the report\u2019s incoming one."
     },
     "challenge": {
@@ -545,7 +545,7 @@
     "before": [
       "A return address is not the only value a caller may need after a helper runs. Argument registers such as `a1` are caller-saved: a callee is allowed to change them. Registers `s0` through `s11` are callee-preserved, so a function that changes one must restore its incoming value before returning.",
       "The example first copies the starting `sp` into temporary register `t0`, then reserves a 64-byte frame. It saves `s0` at offset zero, changes the working `s0`, and loads the saved value into `t1`. Subtracting the current pointer from the earlier pointer records the reservation size in `t2`.",
-      "This example deliberately stops with the frame still active. Its memory view begins at the final `sp`, so the first eight bytes belong to the saved 64-bit value. Little-endian order puts its lowest byte at the lowest address. The challenge completes a returning function instead, and must release its frame."
+      "This example deliberately stops with the frame still active. Its memory view begins at the final `sp`, so the first eight bytes belong to the saved 64-bit value. Little-endian order puts its lowest byte at the lowest address. The optional exercise completes a returning function instead, and must release its frame."
     ],
     "starter": "li s0, 73\nmv t0, sp\naddi sp, sp, -64\nsd s0, 0(sp)\nli s0, 9\nld t1, 0(sp)\nsub t2, t0, sp\n",
     "observe": ["s0", "t1", "t2", "sp"],
@@ -566,10 +566,10 @@
     "explanation": [
       "A saved value and the register currently used for a calculation are different storage locations. The load reads the frame bytes, so reusing `s0` afterwards does not destroy the saved copy. The byte view connects the offset in `sd` and `ld` to the addressed storage.",
       "A callee-preserved register solves a different problem from a temporary register. A function may use `s0` to keep a reserve across a call because its helper must preserve `s0`. That function still owes its own caller the incoming `s0`, so it saves the old value before reusing it.",
-      "The challenge\u2019s helper deliberately clears `a1`. Keep the reserve somewhere that survives the call, then restore the saved register and release the frame before returning. The final snapshot shows the restored state; it does not promise that popped frame bytes below `sp` remain visible in the inspection window."
+      "The optional exercise’s helper deliberately clears `a1`. Keep the reserve somewhere that survives the call, then restore the saved register and release the frame before returning. The final snapshot shows the restored state; it does not promise that popped frame bytes below `sp` remain visible in the inspection window."
     ],
     "experiment": {
-      "task": "Change the value saved into the active frame and inspect its low-address bytes. Then load from offset 8 instead of offset 0 and compare the observation. Restore the correct offset afterwards.",
+      "task": "Change `li s0, 73` to `li s0, 258`, run, and inspect byte offsets zero and one in Memory. Insert `sd zero, 8(sp)` immediately before `ld t1, 0(sp)` to prepare a distinct second slot. Run and note t1 in Registers. Change only that load to `ld t1, 8(sp)`, run again and compare t1. Restore the original load afterwards.",
       "hint": "Each 64-bit slot occupies eight bytes. Reserving a frame does not put the saved value into every slot."
     },
     "challenge": {
@@ -646,7 +646,7 @@
       "The display repeatedly halves its unsigned brightness until it reaches zero. A function can add all the nonzero brightness levels by asking the same function to handle the remaining levels. A function that calls itself uses recursion.",
       "Recursion needs a base case: an input the function can answer without another call. Here zero returns zero. `beqz a0, fade_zero` branches when `a0` is zero. It is a pseudo-instruction for `beq a0, zero, fade_zero`. Every nonzero call saves its own brightness and return address, halves the argument in `a0`, and calls `fade_sum` again.",
       "When the smaller call returns, `a0` holds its result. The current call loads its saved original brightness, adds it to that result, restores `ra`, releases its frame and returns. Each active invocation has a separate 16-byte frame, even though every invocation runs the same instructions.",
-      "The editor supplies the starting brightness explicitly. Predict the final returned sum in `a0`. The result and restored stack pointer are final observations; do not read them as a drawing of every intermediate frame."
+      "The first li instruction loads the starting brightness. Predict the final returned sum in a0. After Build & Run finishes, a0 and sp in Registers show the result and restored stack pointer. They do not show every intermediate frame."
     ],
     "starter": "li a0, 7\ncall fade_sum\nj fade_done\nfade_sum:\nbeqz a0, fade_zero\naddi sp, sp, -16\nsd ra, 8(sp)\nsd a0, 0(sp)\nsrli a0, a0, 1\ncall fade_sum\nld t0, 0(sp)\nadd a0, a0, t0\nld ra, 8(sp)\naddi sp, sp, 16\nret\nfade_zero:\nli a0, 0\nret\nfade_done:\n",
     "observe": ["a0", "sp", "ra"],
@@ -663,7 +663,7 @@
       "A base case works only if later arguments move towards it. Repeated logical right shifts eventually remove every set bit of an unsigned 64-bit value. Passing the unchanged nonzero input would keep allocating frames without reaching zero. A finite xv6 stack can run out; a run limit or Stop ends the experiment rather than completing the recursive calculation."
     ],
     "experiment": {
-      "task": "Change the brightness to 8 and compare the returned sum. Then temporarily remove the right shift before the recursive call; use Stop or inspect a guest fault, and restore the progressing version.",
+      "task": "Change `li a0, 7` to `li a0, 8`, choose Build & Run and compare a0 in Registers after completion. Then remove only `srli a0, a0, 1` before the recursive call and run again. Choose Stop if it keeps running, or inspect Output → xv6 serial log if the guest stops with a fault. Restore the right shift before continuing.",
       "hint": "The smaller argument must change before the call. Adding after a call cannot help if that call never returns."
     },
     "challenge": {

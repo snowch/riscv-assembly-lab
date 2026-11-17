@@ -7,7 +7,8 @@
       "title": "Edit, run and compare",
       "paragraphs": [
         "Registers are the processor’s working storage. Open the addition workbench. If a saved draft differs from the example below, choose Restore starter; Undo restore recovers your draft. This example’s first two lines load values into registers; the third adds them into t2.",
-        "Predict what t2 will hold, then choose Build & Run. Inspect Registers after the code finishes. Change a starting number in the editor, predict again, and run the edited code. Each run starts a fresh machine. Stop ends the current run."
+        "Predict what t2 will hold, then choose Build & Run. Inspect Registers after the code finishes. Change a starting number in the editor, predict again, and run the edited code. Each run starts a fresh machine. Stop ends the current run.",
+        "A prediction is checked against the code you run, including your edits. A valid edit can produce a different result from the original example."
       ],
       "example": true,
       "link": {
@@ -19,7 +20,7 @@
       "id": "inspect-results",
       "title": "Choose what to inspect",
       "paragraphs": [
-        "The inspector sits beside the editor on a wide screen and below it on a phone. Select a named tab. The addition example has no Memory tab."
+        "In a lesson workspace, the inspector sits beside the editor on a wide screen and below it on a phone. Select a named tab. The addition example has no Memory tab."
       ],
       "headers": ["Tab", "What it shows"],
       "rows": [
@@ -50,7 +51,7 @@
       "title": "Follow execution",
       "paragraphs": [
         "Start stepping pauses before the first machine instruction of your code. Step instruction executes one machine instruction. In assembly, the execution highlight identifies the source line for the next instruction. A source line can expand into several machine instructions.",
-        "A breakpoint pauses before its instruction runs. In the addition example, select the line number beside `add`, then choose Start debugging. Continue runs to the next selected breakpoint or the end of your code. C debugging uses actual instruction addresses because this compiler provides no C source-line mappings."
+        "A breakpoint pauses before its instruction runs. In the addition example, choose the numbered button beside `add`, then choose Start debugging. Continue runs to the next selected breakpoint or the end of your code. C debugging uses actual instruction addresses because this compiler provides no C source-line mappings."
       ]
     },
     {
