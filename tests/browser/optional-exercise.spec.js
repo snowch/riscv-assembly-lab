@@ -11,6 +11,30 @@ const barTop = (page) =>
     .locator(".workbench-bar")
     .evaluate((el) => el.getBoundingClientRect().top);
 
+test("loading the reference keeps the example and the prior exercise draft across reload", async ({
+  page,
+}) => {
+  await go(page);
+  const example = "li t0, 19\nli t1, 23\nadd t2, t0, t1\n";
+  const attempt = "# My exercise attempt\nsub t2, t0, t1\n";
+  await fillSource(page, example);
+  await expect(page.locator("#exercise-work")).toBeHidden();
+  await loadExercise(page);
+  await expect(page.locator("#exercise-work #exercise-task")).toBeVisible();
+  await expect(page.locator("#check-cases")).toHaveClass(/primary/);
+  await fillSource(page, attempt);
+  await page.locator("#reference-solution > summary").press("Enter");
+  await page.locator("#use-reference").press("Enter");
+  await expect(page.locator("#source")).not.toHaveValue(attempt);
+  await page.reload();
+  await expect(page.locator("#source")).toHaveValue(example);
+  await loadExercise(page);
+  await page.getByRole("button", { name: "Undo restore", exact: true }).press("Enter");
+  await expect(page.locator("#source")).toHaveValue(attempt);
+  await returnToExample(page);
+  await expect(page.locator("#source")).toHaveValue(example);
+});
+
 test("the optional exercise leaves a paused example untouched until explicitly loaded", async ({
   page,
 }) => {
