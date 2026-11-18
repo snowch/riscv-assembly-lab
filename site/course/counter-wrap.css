@@ -1,0 +1,25 @@
+/* Copyright © 2026 Christopher Snow */
+.counter-wrap { margin: 1.2rem 0 .4rem; padding: 1rem; background: var(--soft); border: 1px solid var(--border); border-radius: 12px; }
+.counter-wrap h3 { margin: 0; font-size: 1.1rem; }
+.counter-wrap h4 { margin: 0 0 .35rem; font-size: .9rem; }
+.counter-wrap p { margin: .65rem 0; font-size: .86rem; }
+.counter-wrap .counter-model-note { color: var(--muted); font-size: .78rem; }
+.counter-wrap-display { display: flex; flex-wrap: wrap; gap: 1rem 2rem; align-items: start; margin: .85rem 0; }
+.counter-label { display: block; font-size: .8rem; }
+.counter-bits { display: flex; gap: .25rem; margin: .35rem 0 .6rem; }
+.counter-bits span { display: grid; place-items: center; width: 2.2rem; height: 2.5rem; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); font: 600 1.2rem ui-monospace, monospace; }
+.counter-readings, .counter-calculation { margin: 0; font-size: .8rem; }
+.counter-readings div { display: flex; gap: .5rem; justify-content: space-between; }
+.counter-wrap dt { color: var(--muted); }
+.counter-wrap dd { margin: 0; font-family: ui-monospace, monospace; }
+.counter-addition { min-width: 0; flex: 1; }
+.counter-equation { font-family: ui-monospace, monospace; font-size: 1rem; }
+.counter-trace output { font-family: ui-monospace, monospace; font-weight: 600; }
+.counter-calculation { display: flex; flex-wrap: wrap; gap: .35rem .8rem; margin-top: .45rem; }
+.counter-calculation div { padding: .3rem .45rem; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); }
+.counter-calculation .counter-carry { border-style: dashed; }
+.counter-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin: .85rem 0 0; }
+.counter-actions button { font-size: .8rem; }
+.counter-elapsed { margin-top: .85rem; padding-top: .85rem; border-top: 1px solid var(--border); }
+.counter-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 520px) { .counter-wrap { padding: .8rem; } .counter-wrap-display { gap: .8rem; } .counter-addition { flex-basis: 100%; } }

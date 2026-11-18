@@ -6,6 +6,7 @@ import {
   programResourcesMarkup,
 } from "../site/course/workbench-markup.js";
 import { REGISTERS, registerIndex } from "../site/course/model.js";
+import { counterWrapMarkup } from "../site/course/counter-wrap.js";
 const root = new URL("../site/", import.meta.url),
   lessons = await loadLessons();
 import { escape, icon, resourceSummary } from "../site/course/html.js";
@@ -26,6 +27,7 @@ const toolCopy = JSON.parse(
     "utf8",
   ),
 );
+const counterWrapCopy = JSON.parse(await readFile(new URL("../content/guides/counter-wrap.json", import.meta.url), "utf8"));
 await writeFile(
   new URL("course/tool-context-copy.js", root),
   "// Copyright © 2026 Christopher Snow\n// Generated from content/guides/tool-context.json.\nexport default " +
@@ -155,7 +157,7 @@ for (let index = 0; index < lessons.length; index++) {
  <section id="prediction-block" class="prediction-block" aria-labelledby="prediction-heading"><h2 id="prediction-heading">Predict, then check</h2><p>${inline(lesson.prediction.prompt)}</p><div class="prediction-entry"><label for="prediction">Your prediction <span>(${escape(lesson.ui.signed || lesson.prediction.reading === "hex" ? (lesson.prediction.reading ?? "signed") : "decimal")} reading)</span></label><input id="prediction" inputmode="text" autocomplete="off" placeholder="Optional: predict before running"><button id="prediction-hint-button" type="button">Hint</button></div><p id="prediction-hint" hidden>${inline(lesson.prediction.hint)}</p><p id="prediction-feedback" role="status">Run the code to check against the CPU’s result.</p></section>
  <noscript><p>Building and stepping require JavaScript and WebAssembly. <a href="./${lesson.language === "c" ? "lesson.c" : "lesson.s"}">Read the starting code</a>.</p></noscript>
  ${workbenchMarkup(lesson, { identity: toolCopy.identity, feedback: toolCopy.lessonFeedback })}
- <section class="lesson-explanation" aria-labelledby="explanation-heading"><h2 id="explanation-heading">What the instructions do</h2>${paragraphs(lesson.explanation)}</section>
+ <section class="lesson-explanation" aria-labelledby="explanation-heading"><h2 id="explanation-heading">What the instructions do</h2>${paragraphs(lesson.explanation)}${["addition-wraps", "elapsed-time"].includes(lesson.id) ? counterWrapMarkup(counterWrapCopy, lesson.id === "elapsed-time") : ""}</section>
  <section id="experiment" class="next-step"><div><h2>Change it and run again</h2><p>${inline(lesson.experiment.task)}</p><details><summary>A hint</summary><p>${inline(lesson.experiment.hint)}</p></details></div></section>
  <details id="challenge" class="challenge-section"><summary>Optional exercise <span>Check your code on fresh inputs</span></summary><div class="exercise-body"><p>${inline(lesson.challenge.task)}</p><p>Load your saved exercise draft, or its starter code. Your example draft stays available through Return to example.</p><button id="start-challenge">Load exercise</button><div id="challenge-controls" hidden><p>Build &amp; Run uses the selected case. Check all cases runs your code against every case, each on a fresh machine.</p><div id="case-picker"></div><button id="check-cases" class="primary">Check all cases</button><p id="challenge-status" role="status">No cases checked yet.</p><ol id="case-results"></ol><div class="hint-controls"><button id="next-hint">Show a hint</button><ol id="challenge-hints"></ol></div><details id="reference-solution"><summary>Reference solution</summary><p>Compare the mechanism after you have tried the challenge. Your code can differ and still pass.</p><pre tabindex="0">${escape(lesson.challenge.reference)}</pre><button id="use-reference">Load reference into editor</button></details></div></div></details>
  ${lesson.c ? `<details id="lesson-c-intent" class="explanation"><summary>Compare the C intent</summary><p>Equivalent intent for this target. This assembly was written for teaching; it is not presented as compiler output.</p><div class="paired-listing"><div><h3>C intent</h3><pre>${escape(lesson.c)}</pre></div><div><h3>Current assembly fragment</h3><pre id="c-intent-assembly">${escape(lesson.starter)}</pre></div></div></details>` : ""}
@@ -169,6 +171,7 @@ for (let index = 0; index < lessons.length; index++) {
   await writeFile(
     new URL("index.html", dir),
     document(lesson.title, body, {
+      styles: ["addition-wraps", "elapsed-time"].includes(lesson.id) ? ["../../course/counter-wrap.css"] : [],
       data: `<script type="application/json" id="lesson-data">${payload}</script>`,
     }),
   );
