@@ -35,6 +35,18 @@ test("loading the reference keeps the example and the prior exercise draft acros
   await expect(page.locator("#source")).toHaveValue(example);
 });
 
+test("an exercise build error is separate from an output mismatch", async ({ page }) => {
+  await go(page);
+  await loadExercise(page);
+  await fillSource(page, "unrecognised_instruction t2, t0, t1\n");
+  await page.locator("#check-cases").press("Enter");
+  await expect(page.locator("#state-badge")).toHaveText("Error", { timeout: 45000 });
+  await expect(page.locator("#challenge-status")).toContainText("Could not run 3");
+  await expect(page.locator("#case-results li").first()).toContainText("Could not run");
+  await fillSource(page, "add t2, t0, t1\n");
+  await expect(page.locator("#case-result-context")).toBeVisible();
+});
+
 test("the optional exercise leaves a paused example untouched until explicitly loaded", async ({
   page,
 }) => {

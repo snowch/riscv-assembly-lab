@@ -478,7 +478,7 @@
       "This loop does all requested iterations even if the brightness has already become zero. It is correct for the small counts used here, but it can waste work. A later lesson on stopping values uses the result itself to decide when further iterations cannot help."
     ],
     "experiment": {
-      "task": "Change `li t0, 128` to `li t0, 129` and choose Build & Run. Note t2, then change `li t1, 3` to `li t1, 0` and rerun. What happens to t2 when no shift is requested? Keep zero ticks and delete `beq t1, zero, done`. Choose Start stepping, then Step instruction until the next instruction is `bne t1, zero, again`. Read t1 in Registers after the decrement. Choose Stop and restore the entry test.",
+      "task": "Change `li t0, 128` to `li t0, 129` and choose Build & Run. Note t2, then change `li t1, 3` to `li t1, 0` and rerun. What happens to t2 when no shift is requested? Keep zero ticks and delete `beq t1, zero, done`. Choose Start stepping, then Step instruction until the editor highlights `bne t1, zero, again` as the next source line. Read t1 in Registers after the decrement. Choose Stop and restore the entry test.",
       "hint": "A right shift discards the low bit. The initial count test protects the no-work case before any shift occurs."
     },
     "challenge": {
@@ -654,7 +654,7 @@
       "A long trace alone does not prove an infinite loop. This repaired loop gives a stronger reason for a short run: each useful shift moves set bits towards the bottom until none remain. A huge remaining count is harmless once the zero-brightness path can end execution."
     ],
     "experiment": {
-      "task": "Replace the first two lines with `li t0, 1` and `li t1, 0xffffffffffffffff`. Choose Build & Run and note t2 and the remaining count in t1. Delete only `beq t2, zero, done` and choose Start stepping. Use Step instruction until the next instruction is the loop’s `bne`. Note t1 and t2, then step three more instructions until the next `bne` and compare the same registers. What keeps changing after the brightness reaches zero? Choose Stop, then restore the brightness test.",
+      "task": "Replace the first two lines with `li t0, 1` and `li t1, 0xffffffffffffffff`. Choose Build & Run and note t2 and the remaining count in t1. Delete only `beq t2, zero, done` and choose Start stepping. Use Step instruction until the editor highlights the loop’s `bne` as the next source line. Note t1 and t2, then step three more instructions until the next `bne` and compare the same registers. What keeps changing after the brightness reaches zero? Choose Stop, then restore the brightness test.",
       "hint": "The answer may stop changing long before the remaining-work count reaches zero."
     },
     "challenge": {

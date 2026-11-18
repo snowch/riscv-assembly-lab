@@ -113,9 +113,9 @@ export function createWorkbench(
     tabDrafts.set(undoKey(), undoSource);
     try {
       // Save the previous draft before replacing the current durable draft.
-      if (undoSource === null) localStorage.removeItem(undoKey());
-      else localStorage.setItem(undoKey(), undoSource);
+      if (undoSource !== null) localStorage.setItem(undoKey(), undoSource);
       localStorage.setItem(key(), source.value);
+      if (undoSource === null) localStorage.removeItem(undoKey());
       $("save-state").textContent = "Draft saved in this browser";
     } catch {
       $("save-state").textContent = "Draft is tab-only · download to keep it";
@@ -1039,6 +1039,7 @@ export function createWorkbench(
       caseRecords.clear();
       $("case-results").replaceChildren();
       let passed = 0;
+      let executionErrors = 0;
       for (let index = 0; index < lesson.challenge.cases.length; index++) {
         if (stopped) break;
         caseIndex = index;
@@ -1055,8 +1056,9 @@ export function createWorkbench(
           result = await runOnce({ code: submitted, test });
           verdict = checkState(result.state, test);
         } catch (error) {
+          executionErrors++;
           result = captureRecord(error.message);
-          verdict = { pass: false, messages: [error.message] };
+          verdict = { pass: false, messages: [`Could not run. ${error.message}`] };
         }
         if (stopped) {
           item.textContent = `${test.name}: stopped before checking finished.`;
@@ -1077,22 +1079,17 @@ export function createWorkbench(
       }
       batch = false;
       controls();
+      const total = lesson.challenge.cases.length;
       $("challenge-status").textContent = stopped
         ? "Checking stopped. Your source is unchanged."
-        : `${passed} of ${lesson.challenge.cases.length} cases passed.`;
-      status(
-        stopped
-          ? "Stopped."
-          : passed === lesson.challenge.cases.length
-            ? "Every case passed. You can mark the lesson complete."
-            : "Some cases failed. Inspect their observations and revise the code.",
-        stopped
-          ? "Stopped"
-          : passed === lesson.challenge.cases.length
-            ? "Passed"
-            : "Try again",
-        !stopped && passed !== lesson.challenge.cases.length,
-      );
+        : `${passed} of ${total} cases passed.${executionErrors ? ` Could not run ${executionErrors}.` : ""}`;
+      if (stopped) status("Stopped.", "Stopped");
+      else if (executionErrors)
+        status("Some cases could not run. Inspect the error in the case results.", "Error", true);
+      else if (passed === total)
+        status("Every case passed. You can mark the lesson complete.", "Passed");
+      else
+        status("Some outputs differ from the exercise requirements. Inspect the case observations.", "Try again", true);
     });
   }
   $("restore").addEventListener("click", () => {
