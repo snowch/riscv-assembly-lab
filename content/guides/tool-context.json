@@ -160,14 +160,14 @@
     "workedAction": "Open worked program",
     "workedSteps": [
       "Open the worked program as a new project. Your existing project is kept.",
-      "Select the line number beside the exit ecall to set a breakpoint. Choose Start debugging.",
-      "At that pause, inspect s0 and the data bytes. Explain how each loaded count reached the helper and how the result reached s0.",
+      "Select the line number beside the exit ecall to set a breakpoint. Open Tools if it is closed, then choose Start debugging.",
+      "At that pause, read s0 in Registers and inspect the stored counts under Tools → Memory. Explain how each loaded count reached the helper and how the result reached s0.",
       "Choose Continue to let the exit call complete. The retained observations describe the last pause, not the exit state."
     ],
     "freshTitle": "Apply it to a different calculation",
     "freshProject": "Complete program: compare two counts",
-    "freshTask": "The fresh project stores 31 and 17. Change combine to return the first count minus the second. Keep the result in s0 before exit.",
-    "freshPrediction": "Predict s0 before running. Set a breakpoint at the exit ecall and inspect the actual observation.",
+    "freshTask": "The fresh project stores 31 and 17. In combine, replace add a0, a0, a1 with sub a0, a0, a1. The caller still copies the result into s0 before exit.",
+    "freshPrediction": "Predict s0. Set a breakpoint on the exit ecall, open Tools and choose Start debugging. How does the paused s0 compare with your prediction?",
     "freshQuestions": [
       "Which source defines the starting counts, and which instructions load them?",
       "Where does call transfer control, and where does ret return?",

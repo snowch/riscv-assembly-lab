@@ -51,6 +51,7 @@ export function createWorkbench(
     activeLine = null,
     hintIndex = 0,
     undoSource = null,
+    checkedSource = null,
     memoryMoment = "before",
     predictionAtRun = "",
     debugFinalState = null,
@@ -94,6 +95,7 @@ export function createWorkbench(
   let source = mountEditor();
   let debuggerPanel = mountDebugger();
   const key = () => `riscv-assembly-lab:${lesson.id}:${activity}:v2`;
+  const undoKey = () => `${key()}:previous`;
   const fixture = () =>
     activity === "challenge" ? lesson.challenge.cases[caseIndex] : {};
   const fingerprint = () => JSON.stringify([source.value, activity, caseIndex]);
@@ -108,12 +110,46 @@ export function createWorkbench(
       return;
     }
     tabDrafts.set(key(), source.value);
+    tabDrafts.set(undoKey(), undoSource);
     try {
+      // Save the previous draft before replacing the current durable draft.
+      if (undoSource !== null) localStorage.setItem(undoKey(), undoSource);
       localStorage.setItem(key(), source.value);
+      if (undoSource === null) localStorage.removeItem(undoKey());
       $("save-state").textContent = "Draft saved in this browser";
     } catch {
       $("save-state").textContent = "Draft is tab-only · download to keep it";
     }
+  }
+  function restoreUndo() {
+    try {
+      undoSource = tabDrafts.has(undoKey())
+        ? tabDrafts.get(undoKey())
+        : localStorage.getItem(undoKey());
+    } catch {
+      undoSource = null;
+    }
+    updateRestoreLabel();
+  }
+  function updateRestoreLabel() {
+    $("restore").textContent = undoSource !== null
+      ? "Undo restore"
+      : curriculum ? "Restore starter" : "Restore loaded source";
+  }
+  function updateExercise() {
+    if (!lessonPage) return;
+    const active = curriculum && activity === "challenge";
+    $("exercise-work").hidden = !active;
+    $("challenge-controls").hidden = !active;
+    $("check-cases").hidden = !active;
+    $("run").classList.toggle("primary", !active);
+    const task = $("exercise-task");
+    $(active ? "exercise-work" : "exercise-preview").prepend(task);
+    $("start-challenge").textContent = active ? "Go to exercise editor" : "Load exercise";
+  }
+  function updateCaseResultContext() {
+    const note = $("case-result-context");
+    if (note) note.hidden = checkedSource === null || checkedSource === source.value;
   }
   function restoreDraft(fallback) {
     if (!curriculum) return fallback;
@@ -177,8 +213,7 @@ export function createWorkbench(
     $("complete-source").textContent = program.source;
     if ($("complete-c-source"))
       $("complete-c-source").textContent = source.value;
-    if ($("c-intent-assembly"))
-      $("c-intent-assembly").textContent = source.value;
+    updateCaseResultContext();
     sizeEditor();
     lineNumbers();
     stale();
@@ -561,6 +596,7 @@ export function createWorkbench(
       const clean = raw.replaceAll("−", "-").replace(/[\s,_]/g, ""),
         negative = clean.startsWith("-"),
         text = negative ? clean.slice(1) : clean;
+      if (!text) throw new SyntaxError("A prediction needs digits.");
       let guessed = (negative ? -1n : 1n) * BigInt(text);
       if (/^0[xb]/i.test(text))
         guessed = BigInt(reading(guessed, mode === "hex" ? "unsigned" : mode));
@@ -889,10 +925,8 @@ export function createWorkbench(
       activeLine = null;
     }
     debuggerPanel.sourceChanged();
-    undoSource = null;
-    $("restore").textContent = curriculum
-      ? "Restore starter"
-      : "Restore loaded source";
+    if (!curriculum) undoSource = null;
+    updateRestoreLabel();
     saveDraft();
     completeSource();
     if ($("prediction-feedback"))
@@ -944,7 +978,7 @@ export function createWorkbench(
         saveDraft();
         activity = next;
         caseIndex = 0;
-        undoSource = null;
+        restoreUndo();
         debuggerPanel.sourceChanged();
         source.value = restoreDraft(
           activity === "challenge" ? lesson.challenge.starter : lesson.starter,
@@ -952,7 +986,7 @@ export function createWorkbench(
         $("editor-context").textContent =
           activity === "challenge" ? "Exercise" : "Example";
         $("return-example").hidden = activity !== "challenge";
-        $("challenge-controls").hidden = activity !== "challenge";
+        updateExercise();
         $("prediction-block").hidden = activity !== "explore";
         clearState();
         startingState();
@@ -985,11 +1019,6 @@ export function createWorkbench(
           cancelExecution();
           debuggerPanel.sourceChanged();
           caseIndex = index;
-          $("case-picker")
-            .querySelectorAll("button")
-            .forEach((b, i) =>
-              b.setAttribute("aria-pressed", String(i === index)),
-            );
           clearState();
           startingState();
           completeSource();
@@ -1004,10 +1033,13 @@ export function createWorkbench(
       stopped = false;
       controls();
       const submitted = source.value;
+      checkedSource = submitted;
+      updateCaseResultContext();
       debuggerPanel.sourceChanged();
       caseRecords.clear();
       $("case-results").replaceChildren();
       let passed = 0;
+      let executionErrors = 0;
       for (let index = 0; index < lesson.challenge.cases.length; index++) {
         if (stopped) break;
         caseIndex = index;
@@ -1024,8 +1056,9 @@ export function createWorkbench(
           result = await runOnce({ code: submitted, test });
           verdict = checkState(result.state, test);
         } catch (error) {
+          executionErrors++;
           result = captureRecord(error.message);
-          verdict = { pass: false, messages: [error.message] };
+          verdict = { pass: false, messages: [`Could not run. ${error.message}`] };
         }
         if (stopped) {
           item.textContent = `${test.name}: stopped before checking finished.`;
@@ -1046,22 +1079,17 @@ export function createWorkbench(
       }
       batch = false;
       controls();
+      const total = lesson.challenge.cases.length;
       $("challenge-status").textContent = stopped
         ? "Checking stopped. Your source is unchanged."
-        : `${passed} of ${lesson.challenge.cases.length} cases passed.`;
-      status(
-        stopped
-          ? "Stopped."
-          : passed === lesson.challenge.cases.length
-            ? "Every case passed. You can mark the lesson complete."
-            : "Some cases failed. Inspect their observations and revise the code.",
-        stopped
-          ? "Stopped"
-          : passed === lesson.challenge.cases.length
-            ? "Passed"
-            : "Try again",
-        !stopped && passed !== lesson.challenge.cases.length,
-      );
+        : `${passed} of ${total} cases passed.${executionErrors ? ` Could not run ${executionErrors}.` : ""}`;
+      if (stopped) status("Stopped.", "Stopped");
+      else if (executionErrors)
+        status("Some cases could not run. Inspect the error in the case results.", "Error", true);
+      else if (passed === total)
+        status("Every case passed. You can mark the lesson complete.", "Passed");
+      else
+        status("Some outputs differ from the exercise requirements. Inspect the case observations.", "Try again", true);
     });
   }
   $("restore").addEventListener("click", () => {
@@ -1072,14 +1100,11 @@ export function createWorkbench(
     if (undoSource !== null) {
       source.value = undoSource;
       undoSource = null;
-      $("restore").textContent = curriculum
-        ? "Restore starter"
-        : "Restore loaded source";
-    } else {
+    } else if (source.value !== fallback) {
       undoSource = source.value;
       source.value = fallback;
-      $("restore").textContent = "Undo restore";
     }
+    updateRestoreLabel();
     saveDraft();
     completeSource();
   });
@@ -1094,13 +1119,22 @@ export function createWorkbench(
     $("use-reference").addEventListener("click", () => {
       cancelExecution();
       debuggerPanel.sourceChanged();
+      if (source.value !== lesson.challenge.reference) undoSource = source.value;
       source.value = lesson.challenge.reference;
+      updateRestoreLabel();
       saveDraft();
       completeSource();
       source.focus();
     });
     $("prediction-hint-button").addEventListener("click", () => {
-      $("prediction-hint").hidden = !$("prediction-hint").hidden;
+      const show = $("prediction-hint").hidden;
+      $("prediction-hint").hidden = !show;
+      $("prediction-hint-button").setAttribute("aria-expanded", String(show));
+    });
+    $("prediction").addEventListener("input", () => {
+      if (state && activity === "explore")
+        $("prediction-feedback").textContent =
+          "This result used the prediction entered before the run. Choose Build & Run to check the current prediction.";
     });
   }
   $("reading").value =
@@ -1198,6 +1232,7 @@ export function createWorkbench(
     });
   }
   source.value = restoreDraft(lesson.starter);
+  if (curriculum) restoreUndo();
   if (lesson.id === "system-calls" || lesson.kind === "program")
     workbench.inspect("output");
   startingState();
@@ -1213,6 +1248,7 @@ export function createWorkbench(
     document.body.classList.toggle("project-active", !curriculum);
     $("return-lesson").hidden = curriculum;
     $("prediction-block").hidden = !curriculum || activity !== "explore";
+    updateExercise();
     $("workspace-kind").textContent = curriculum
       ? toolCopy.identity.lessonKind
       : toolCopy.identity.projectKind;
@@ -1342,12 +1378,12 @@ export function createWorkbench(
         replaceContext(saved.context);
         activity = saved.activity;
         caseIndex = saved.caseIndex;
+        restoreUndo();
         source.value = saved.source;
         $("prediction").value = saved.prediction;
         $("editor-context").textContent =
           activity === "challenge" ? "Exercise" : "Example";
         $("return-example").hidden = activity !== "challenge";
-        $("challenge-controls").hidden = activity !== "challenge";
         clearState();
         startingState();
         completeSource();

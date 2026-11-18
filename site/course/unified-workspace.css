@@ -97,7 +97,7 @@
   white-space: normal;
   overflow: visible;
 }
-.unified-workbench .workspace {
+.workbench.unified-workbench .workspace {
   display: grid;
   grid-template-columns: minmax(0, var(--editor-share, 65%)) 10px minmax(0, 1fr);
   gap: 0;
@@ -107,6 +107,16 @@
   resize: none;
   overflow: visible;
   align-items: start;
+}
+.unified-workbench #workspace-divider {
+  position: relative;
+  align-self: stretch;
+}
+.unified-workbench #workspace-divider::after {
+  position: absolute;
+  inset: 50% 0 auto;
+  margin: 0 auto;
+  transform: translateY(-50%);
 }
 .unified-workbench .workspace > .editor-panel {
   grid-column: 1;
@@ -401,7 +411,7 @@
   min-height: 0;
 }
 @media (max-width: 950px) {
-  .unified-workbench .workspace {
+  .workbench.unified-workbench .workspace {
     grid-template-columns: minmax(0, 1fr);
   }
   .unified-workbench .workspace > .editor-panel {
@@ -461,4 +471,15 @@
   .shared-project-tools select {
     font-size: 16px;
   }
+}
+
+.unified-workbench .exercise-work {
+  padding: 0.65rem 0.7rem;
+  border-top: 1px solid var(--border);
+}
+.unified-workbench .exercise-work h2 {
+  font-size: 1rem;
+}
+.unified-workbench .exercise-work p {
+  margin: 0.35rem 0;
 }

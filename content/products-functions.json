@@ -285,7 +285,7 @@
     ],
     "before": [
       "The trip computer records fuel in millilitres and distance in metres. To obtain whole millilitres per 100 metres, multiply fuel by 100 and divide that product by distance. Integer division discards any fractional part, so the order of these operations matters.",
-      "For this activity both inputs are unsigned 32-bit values already placed in 64-bit registers with their upper bits clear. Their product with the scale fits in 64 bits. A normal RV64 `mul` retains that complete intermediate; `mulw` would discard needed bits and sign-extend its 32-bit result.",
+      "The first two instructions load unsigned 32-bit values into 64-bit registers and leave the upper bits clear. Their product with the scale fits in 64 bits. A normal RV64 `mul` retains that complete intermediate; `mulw` would discard needed bits and sign-extend its 32-bit result.",
       "The example uses a nonzero distance. The optional exercise adds an application rule: zero distance must return zero. That rule is chosen by this calculation; it is not the result that a RISC-V unsigned divide by zero supplies."
     ],
     "starter": "li t0, 0xffffffff\nli t1, 1000\nli t2, 100\nmul t2, t0, t2\ndivu t2, t2, t1\n",
@@ -303,7 +303,7 @@
       "The stated input bounds make the product safe here. For arbitrary unsigned 64-bit fuel, multiplication by the scale could itself wrap. Such a broader contract would need a range check or a multi-register calculation; changing the final division alone would not solve it. The optional exercise keeps the narrower, explicit input bounds."
     ],
     "experiment": {
-      "task": "Set the opening loads to `li t0, 1` and `li t1, 3`; keep `li t2, 100`. Run and note t2 in Registers. To divide first, replace the final two instructions with `divu t3, t0, t1` followed by `mul t2, t3, t2`, then run again. Restore the starter. Change only mul to mulw and run with the original large fuel value to test the intermediate width.",
+      "task": "Set the opening loads to `li t0, 1` and `li t1, 3`. Keep `li t2, 100`, choose Build & Run and note t2. Replace the last two instructions with `divu t3, t0, t1` followed by `mul t2, t3, t2`, then run and compare t2. Choose Restore starter, change only `mul t2, t0, t2` to `mulw t2, t0, t2` and run with the supplied large fuel value. In the two comparisons, does the first loss happen during division or multiplication?",
       "hint": "The first comparison loses a fraction too early; the second loses high product bits. They are different mistakes."
     },
     "challenge": {
@@ -569,7 +569,7 @@
       "The optional exercise’s helper deliberately clears `a1`. Keep the reserve somewhere that survives the call, then restore the saved register and release the frame before returning. The final snapshot shows the restored state; it does not promise that popped frame bytes below `sp` remain visible in the inspection window."
     ],
     "experiment": {
-      "task": "Change `li s0, 73` to `li s0, 258`, run, and inspect byte offsets zero and one in Memory. Insert `sd zero, 8(sp)` immediately before `ld t1, 0(sp)` to prepare a distinct second slot. Run and note t1 in Registers. Change only that load to `ld t1, 8(sp)`, run again and compare t1. Restore the original load afterwards.",
+      "task": "Change `li s0, 73` to `li s0, 258`, run, and open Tools → Memory and inspect offsets zero and one in Stack bytes. Insert `sd zero, 8(sp)` immediately before `ld t1, 0(sp)` to prepare a distinct second slot. Run and note t1 in Registers. Change only that load to `ld t1, 8(sp)`, run again and compare t1. Restore the original load afterwards.",
       "hint": "Each 64-bit slot occupies eight bytes. Reserving a frame does not put the saved value into every slot."
     },
     "challenge": {
@@ -663,7 +663,7 @@
       "A base case works only if later arguments move towards it. Repeated logical right shifts eventually remove every set bit of an unsigned 64-bit value. Passing the unchanged nonzero input would keep allocating frames without reaching zero. A finite xv6 stack can run out; a run limit or Stop ends the experiment rather than completing the recursive calculation."
     ],
     "experiment": {
-      "task": "Change `li a0, 7` to `li a0, 8`, choose Build & Run and compare a0 in Registers after completion. Then remove only `srli a0, a0, 1` before the recursive call and run again. Choose Stop if it keeps running, or inspect Output → xv6 serial log if the guest stops with a fault. Restore the right shift before continuing.",
+      "task": "Change `li a0, 7` to `li a0, 8`, choose Build & Run and compare a0 in Registers after completion. Then remove only `srli a0, a0, 1` before the recursive call and run again. Choose Stop if it keeps running, or open Tools → Output → xv6 serial log if the guest stops with a fault. Restore the right shift before continuing.",
       "hint": "The smaller argument must change before the call. Adding after a call cannot help if that call never returns."
     },
     "challenge": {

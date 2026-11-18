@@ -10,13 +10,12 @@ export async function mountWorkbench(options = {}) {
     language: "asm",
     breakpoints: false,
     onChange() {
-      undoRestore = null;
-      $("restore").textContent = "Restore starter";
       edited();
     },
   });
   source.readOnly = true;
   const draftKey = options.draftKey ?? "riscv-assembly-lab:hello-source:v1",
+    undoKey = `${draftKey}:undo-restore`,
     themeKey = "riscv-assembly-lab:theme";
   let starter = "",
     worker = null,
@@ -46,10 +45,14 @@ export async function mountWorkbench(options = {}) {
     }, ms);
   }
 
-  function edited() {
+  function edited({ clearUndo = false } = {}) {
     try {
+      if (undoRestore !== null) localStorage.setItem(undoKey, undoRestore);
       localStorage.setItem(draftKey, source.value);
-      $("save-state").textContent = "Draft saved in this browser";
+      if (clearUndo) localStorage.removeItem(undoKey);
+      $("save-state").textContent = undoRestore === null
+        ? "Draft saved in this browser"
+        : "Draft saved. Undo restore recovers the previous source.";
     } catch {
       $("save-state").textContent = "Draft is tab-only · download to keep it";
     }
@@ -208,16 +211,17 @@ export async function mountWorkbench(options = {}) {
     }
   });
   $("restore").addEventListener("click", () => {
-    if (undoRestore !== null) {
+    const restoringPrevious = undoRestore !== null;
+    if (restoringPrevious) {
       source.value = undoRestore;
       undoRestore = null;
       $("restore").textContent = "Restore starter";
-    } else {
+    } else if (source.value !== starter) {
       undoRestore = source.value;
       source.value = starter;
       $("restore").textContent = "Undo restore";
     }
-    edited();
+    edited({ clearUndo: restoringPrevious });
   });
   $("download").addEventListener("click", () => {
     const url = URL.createObjectURL(
@@ -257,12 +261,15 @@ export async function mountWorkbench(options = {}) {
     let draft = null;
     try {
       draft = localStorage.getItem(draftKey);
+      undoRestore = localStorage.getItem(undoKey);
       $("save-state").textContent =
-        draft === null ? "Draft saves in this browser" : "Saved draft restored";
+        undoRestore !== null ? "Draft saved. Undo restore recovers the previous source."
+          : draft === null ? "Draft saves in this browser" : "Saved draft restored";
     } catch {
       $("save-state").textContent = "Draft is tab-only · download to keep it";
     }
     source.value = draft ?? starter;
+    $("restore").textContent = undoRestore === null ? "Restore starter" : "Undo restore";
     options.onSourceChange?.(source.value);
     source.readOnly = false;
     run.disabled = false;

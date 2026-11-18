@@ -6,8 +6,8 @@
       "id": "run-an-example",
       "title": "Edit, run and compare",
       "paragraphs": [
-        "Registers are the processor’s working storage. Open the addition workbench. If a saved draft differs from the example below, choose Restore starter; Undo restore recovers your draft. The first two lines load values into registers. The third adds them into t2.",
-        "Predict what t2 will hold, then choose Build & Run. Inspect the register values after the code finishes. Change a starting number in the editor, predict again, and run the edited code. Each run starts a fresh machine. Stop ends the current run.",
+        "Registers are the processor’s working storage. Open the addition workbench. If a saved draft differs from the example below, choose Restore starter. Undo restore recovers your previous draft. The first two lines load values into registers. The third adds them into t2.",
+        "Predict t2, choose Build & Run and record t2 in Registers after the run finishes. In the editor, change `li t0, 7` to `li t0, 19`. Predict t2 again, then choose Build & Run. How did increasing t0 change t2? Each run starts a fresh machine. Stop ends the current run.",
         "A prediction is checked against the code you run, including your edits. A valid edit can produce a different result from the original example."
       ],
       "example": true,
@@ -20,7 +20,7 @@
       "id": "inspect-results",
       "title": "Choose what to inspect",
       "paragraphs": [
-        "The workbench shows the registers relevant to the current example. Open Tools for further inspection, starting setup and saved projects. Choosing a tool keeps your source in the same editor.",
+        "The workbench shows the registers relevant to the example. Select Inspect registers for hexadecimal values, other decimal readings and individual bits. Open Tools to inspect memory, output, starting setup or saved projects.",
         "Observations belong to the named pause or completed run. If you edit the code afterwards, build again before using the values to explain your changes."
       ],
       "headers": ["Tab", "What it shows"],
@@ -65,7 +65,7 @@
       "title": "Follow execution",
       "paragraphs": [
         "Start stepping pauses before the first machine instruction of your code. Step instruction executes one machine instruction. In assembly, the execution highlight identifies the source line for the next instruction. A source line can expand into several machine instructions.",
-        "A breakpoint pauses before its instruction runs. In the addition example, choose the numbered button beside `add`, then choose Start debugging. Continue runs to the next selected breakpoint or the end of your code. Open Tools → Debugger to inspect breakpoints and watches.",
+        "A breakpoint pauses before its instruction runs. In the addition example, choose the numbered button beside `add` and open Tools if it is closed. Choose Start debugging. Read t0, t1 and t2 at the pause. Can t2 hold the sum yet? Choose Continue and compare t2 after the program finishes.",
         "C debugging uses actual instruction addresses because this compiler provides no C source-line mappings. In Tools → Program, choose Machine instructions to inspect the executable from the last successful build."
       ]
     },
@@ -73,7 +73,7 @@
       "id": "optional-exercise",
       "title": "Try an optional exercise",
       "paragraphs": [
-        "After Change it and run again, open Optional exercise. Read the task, then choose Load exercise. The editor opens your saved exercise draft, or the starter if none exists. Check all cases runs your code on fresh inputs. Return to example brings back your example draft."
+        "After the experiment, open Optional exercise. Read the task and choose Load exercise. The editor opens your saved exercise draft, or the starter if none exists. The task stays visible above that editor. Build & Run tries the selected case. Choose Check all cases to run your current code on fresh inputs, and read the case results below the editor. Return to example brings back your example draft."
       ]
     },
     {
@@ -106,7 +106,7 @@
       "title": "Keep or restore your work",
       "paragraphs": [
         "The example and optional exercise keep separate drafts. Drafts save in this browser when storage is available; check the save message. Download code keeps a source file.",
-        "Restore starter replaces your edits; Undo restore recovers them. In Tools → Program, inspect the complete source to see the supplied entry, reporting and exit code around your work.",
+        "Restore starter and Load reference solution replace the active draft. Undo restore recovers the previous draft in that activity. In Tools → Program you can read the supplied entry, reporting and exit code.",
         "A saved project keeps source and starting setup together. Export project saves both in one JSON file. Saved drafts and projects do not keep a running or paused machine."
       ]
     },

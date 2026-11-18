@@ -10,9 +10,9 @@
     ],
     "before": [
       "The trip computer must add the first t0 unsigned bytes in lesson_data. Valid indices stop before the count. The starting loop allows an extra iteration. The following byte is still readable, so a successful run does not establish that the loop used the right elements.",
-      "A breakpoint pauses execution before a chosen machine instruction. Open Debugger, then click the source line number beside lbu to mark that load. Start debugging builds a fresh machine and runs to the breakpoint. The marked line has not executed when the machine pauses.",
+      "A breakpoint pauses execution before a chosen machine instruction. Select the line number beside lbu to mark that load. Open Tools if it is closed and choose Start debugging to run to the breakpoint on a fresh machine. The marked line has not executed when the machine pauses.",
       "A watch keeps a value visible while you investigate. In Debugger, choose a Register and use Pin register. Pin t0, t2 and t3 to watch the count, index and byte address. Continue reaches the next selected breakpoint or code end. Compare index and count at each pause. Step instruction executes one machine instruction.",
-      "Predict the final a0 from the faulty program as written. Then pause at the load and find the first iteration that should not run."
+      "Predict a0 and choose Build & Run with the starter. Then use the load breakpoint to find the first iteration that should not run."
     ],
     "starter": "la t1, lesson_data\nli t2, 0\nli a0, 0\nscan_readings:\n    bltu t0, t2, readings_done\n    add t3, t1, t2\n    lbu t4, 0(t3)\n    add a0, a0, t4\n    addi t2, t2, 1\n    j scan_readings\nreadings_done:\n",
     "inputs": {
@@ -44,7 +44,7 @@
       "Repair the stopping condition before changing the arithmetic. An unsigned index must leave when it is greater than or equal to the unsigned count. Starting from zero also needs to leave immediately for an empty input. A zero count is a useful check because the faulty first load then has no valid reading to represent."
     ],
     "experiment": {
-      "task": "After `la t1, lesson_data`, insert `li t5, 9` followed by `sb t5, 3(t1)`. Keep the count in t0 unchanged. Run the faulty loop and note a0 in Registers. Remove the two inserted instructions and run again. Then repair the stopping test and repeat that pair of runs. Should changing a byte outside the requested range affect the corrected total?",
+      "task": "After `la t1, lesson_data`, insert `li t5, 9` followed by `sb t5, 3(t1)`. Keep the count in t0 unchanged. Run the faulty loop and note a0 in Registers. Remove the two inserted instructions and run again. Replace `bltu t0, t2, readings_done` with `bgeu t2, t0, readings_done` and repeat both runs. Compare a0 again. Should changing a byte outside the requested range affect the corrected total?",
       "hint": "The data cells display bytes; they do not edit them. The explicit store changes byte offset three. A total for the first t0 bytes must not depend on that byte."
     },
     "challenge": {
@@ -107,9 +107,9 @@
     ],
     "before": [
       "The trip computer stores a pulse count as one unsigned byte and multiplies it by the scale in t0. The starting program loads the byte with lb. That instruction copies bit 7 into the register’s upper bits. A byte whose top bit is one therefore becomes a negative signed register reading.",
-      "To find where the wrong reading enters, set a breakpoint by clicking the source line number beside mul. Start debugging pauses before that multiplication; the load has already run. Pin t2 in Debugger and compare its full register pattern with byte offset zero in Memory.",
+      "To find where the wrong reading enters, set a breakpoint by clicking the source line number beside mul. Open Tools if it is closed, then choose Start debugging. It pauses before the multiplication, after the load. Pin t2 in Debugger and compare its full register pattern with offset zero under Tools → Memory → After.",
       "The low eight register bits can match the memory byte even when the full register reading is wrong for the task. Inspect the upper bits and the signed and unsigned register readings. The request describes an unsigned byte, so the instruction choice must preserve that meaning when widening it.",
-      "Predict a0 after the faulty program completes, then use Step instruction or Continue to compare the multiplication with the loaded value you observed. The watch displays captured machine state; changing a decimal reading does not execute another load."
+      "Predict a0 and choose Build & Run with the starter. Next, pause at the breakpoint. Step instruction lets you compare a0 after the multiplication with the loaded t2 you saw at the pause. The watch displays captured machine state; changing a decimal reading does not execute another load."
     ],
     "starter": "la t1, lesson_data\nlb t2, 0(t1)\nmul a0, t2, t0\n",
     "inputs": {
@@ -137,7 +137,7 @@
       "The useful debugging pause is between the load and its consumer. First establish the memory byte, then the loaded register, then the scaled result. This order separates a bad input reading from a multiplication error and gives the repair a specific reason."
     ],
     "experiment": {
-      "task": "Replace `lb t2, 0(t1)` with `lbu t2, 0(t1)`. Edits clear breakpoints, so mark mul again and choose Start debugging. Compare the paused t2 pattern in Debugger. Then insert `li t3, 7` and `sb t3, 0(t1)` immediately after `la t1, lesson_data`. Compare lb with lbu on that byte, marking mul again after each edit. Keep the scale in t0 unchanged.",
+      "task": "Replace `lb t2, 0(t1)` with `lbu t2, 0(t1)`. Edits clear breakpoints, so mark mul again and choose Start debugging. Compare the paused t2 pattern in Debugger. Then insert `li t3, 7` and `sb t3, 0(t1)` immediately after `la t1, lesson_data`. Mark mul again, choose Start debugging and note the hexadecimal t2. Choose Stop, change the load to `lb t2, 0(t1)`, mark mul again and restart debugging. Why does t2 have the same pattern for this byte? Keep the scale in t0 unchanged.",
       "hint": "The explicit store changes the input byte; the data cells are read-only. Keep the scale unchanged. Only the load’s extension of that byte should differ between the two instruction choices."
     },
     "challenge": {
@@ -207,9 +207,9 @@
     ],
     "before": [
       "The starting program works: add_service doubles a0 through scale_ticks, then adds a service allowance. The outer helper must keep its caller’s return address while the nested call writes a new one into ra. The editor shows the save and restore.",
-      "Open Debugger and mark the line containing `call scale_ticks`. Choose Start debugging to pause before that call. Pin ra and sp, then open Inspect the stack within Debugger. The earlier `sd ra, 8(sp)` has stored the outer return address at sp + 8.",
+      "After running the starter, select the line number beside `call scale_ticks`. Open Tools if it is closed, then choose Start debugging to pause before the call. Note ra and sp in Registers. Open Tools → Stack → Inspect the stack. The earlier `sd ra, 8(sp)` stored the outer return address at sp + 8.",
       "Stack inspection shows observed addresses and bytes. A stored number becomes a saved return address because this code put ra there; the debugger does not infer a complete chain of callers. One source call can expand into several machine instructions. Use Step instruction until execution enters scale_ticks, and compare ra with the saved slot.",
-      "Predict a0 when the working example returns. The optional exercise removes the save and restore. Use Start debugging and Step instruction, then Stop when you understand the repeated return. Repair the code before Check all cases; otherwise it can run until the execution limit."
+      "The optional exercise removes the save and restore so you can investigate the broken return separately."
     ],
     "starter": "call add_service\nj service_done\nadd_service:\n    addi sp, sp, -16\n    sd ra, 8(sp)\n    call scale_ticks\n    addi a0, a0, 3\n    ld ra, 8(sp)\n    addi sp, sp, 16\n    ret\nscale_ticks:\n    slli a0, a0, 1\n    ret\nservice_done:\n",
     "inputs": {
@@ -230,11 +230,11 @@
       "The working frame reserves sixteen bytes and releases the same amount. Its saved ra occupies offset eight. Inspect that slot while the frame is active; after release, the current sp names a different area. The optional exercise checks the returned value and preservation of the prepared initial sp."
     ],
     "experiment": {
-      "task": "Mark `call scale_ticks` and `ld ra, 8(sp)` as breakpoints in the working example. Choose Start debugging, then Continue to reach the second pause. In Debugger, compare ra with the saved slot at byte offset eight in Inspect the stack at both pauses. sp still names the same outer frame.",
+      "task": "Keep the breakpoint beside `call scale_ticks` marked and also mark `ld ra, 8(sp)`. Choose Start debugging to reach the first pause. Compare ra in Registers with Observed bits at sp + 8 in Tools → Stack → Inspect the stack. Choose Continue and repeat the comparison at the second pause. Where is the outer return address while ra holds the inner return address?",
       "hint": "The stack bytes can keep the outer return address while ra holds the inner return destination. Follow both locations across the call."
     },
     "challenge": {
-      "task": "Repair add_service so it doubles the supplied a0, adds 3 and returns to service_done. Save its incoming ra before calling scale_ticks and restore that saved address afterwards. Preserve the starting sp. Keep scale_ticks as the nested helper.",
+      "task": "In the exercise, set a breakpoint on the ret inside add_service. Choose Start debugging, then Step instruction and check where it goes. Choose Stop. Repair add_service so it doubles the supplied a0, adds 3 and returns to service_done. Save its incoming ra before calling scale_ticks and restore that saved address afterwards. Preserve the starting sp. Keep scale_ticks as the nested helper.",
       "starter": "call add_service\nj service_done\nadd_service:\n    addi sp, sp, -16\n    call scale_ticks\n    addi a0, a0, 3\n    addi sp, sp, 16\n    ret\nscale_ticks:\n    slli a0, a0, 1\n    ret\nservice_done:\n",
       "reference": "call add_service\nj service_done\nadd_service:\n    addi sp, sp, -16\n    sd ra, 8(sp)\n    call scale_ticks\n    addi a0, a0, 3\n    ld ra, 8(sp)\n    addi sp, sp, 16\n    ret\nscale_ticks:\n    slli a0, a0, 1\n    ret\nservice_done:\n",
       "hints": [
@@ -296,9 +296,9 @@
     ],
     "before": [
       "The requested range begins at lesson_data and contains t1 bytes. The offset in t0 is valid only below that count. The starting code loads immediately, without checking. Its supplied offset lies beyond the logical range but still in readable memory.",
-      "Set a breakpoint on lbu and choose Start debugging. Pin t0, t1 and t3 to compare the offset, count and computed address before the load. A readable byte need not belong to the requested range. Predict t2 from the faulty load, then inspect the supplied byte at that offset.",
-      "A page is a block of memory with its own access permissions. The lab places its sixty-four data bytes immediately before a page protected from this xv6 user process. A forbidden access causes a fault: xv6 stops the process before it can report completed state. Output → xv6 serial log records that failure.",
-      "The optional exercise loads first and repairs the returned value afterwards. Pause before its load and inspect the order. A later check cannot undo an access. Repair that order before running the protected-boundary case."
+      "After Build & Run, mark the line containing lbu, open Tools if it is closed and choose Start debugging. Pin t0, t1 and t3 to compare the offset, count and computed address before the load. A readable byte need not belong to the requested range. Predict t2 from the faulty load, then inspect the supplied byte at that offset.",
+      "A page is a block of memory with its own access permissions. The lab places its sixty-four data bytes immediately before a page protected from this xv6 user process. A forbidden access causes a fault: xv6 stops the process before it can report completed state. Tools → Output → xv6 serial log records that failure.",
+      "The optional exercise attempts its load before checking the offset. A later check cannot undo a memory access."
     ],
     "starter": "la t3, lesson_data\nadd t3, t3, t0\nlbu t2, 0(t3)\n",
     "inputs": {
@@ -331,11 +331,11 @@
       "The boundary case distinguishes skipping a load from repairing its result. When offset and count both equal sixty-four, equality must leave before loading the protected following page. A failed access has no completed snapshot. Inspect the serial log and last paused address instead of treating a missing report as a numerical result."
     ],
     "experiment": {
-      "task": "Insert `li t0, 1` at the start of the example. Mark lbu and choose Start debugging to inspect t3 before the load. Repeat with `li t0, 3`, equal to the supplied count, and stop before loading. For the guarded version, place `li t2, -1` and `bgeu t0, t1, range_done` after the new li but before la. Add `range_done:` after lbu. Run each offset again and compare t2 in Registers: the invalid path must skip the load.",
+      "task": "Insert `li t0, 1` at the start of the example. Mark lbu and choose Start debugging to inspect t3 before the load. Choose Stop, change the new line to `li t0, 3` and mark lbu again. Choose Start debugging. How does the offset compare with the count? Choose Stop before the load. For the guarded version, place `li t2, -1` and `bgeu t0, t1, range_done` after the new li but before la. Add `range_done:` after lbu. Run each offset again and compare t2 in Registers: the invalid path must skip the load.",
       "hint": "Change t0 through the source instruction; Starting inputs shows the supplied value before that instruction runs. In Debugger, Add memory watch with Base lesson_data, Byte offset 3 and Width 1 byte keeps the extra byte visible. Check the protected-boundary case only after correcting the exercise code."
     },
     "challenge": {
-      "task": "Repair the access order. t0 is an unsigned byte offset and t1 is an unsigned capacity from 0 to 64. If offset is below capacity, load the unsigned byte at lesson_data + offset into t2. Otherwise leave t2 = -1 and do not perform the load.",
+      "task": "In the exercise, select the line number beside lbu, then choose Start debugging to pause before the load. Check t0 and t1, then choose Stop. Repair the access order before Check all cases. t0 is an unsigned byte offset and t1 is an unsigned capacity from 0 to 64. If offset is below capacity, load the unsigned byte at lesson_data + offset into t2. Otherwise leave t2 = -1 and do not perform the load.",
       "starter": "la t3, lesson_data\nadd t3, t3, t0\nlbu t2, 0(t3)\nbltu t0, t1, range_done\nli t2, -1\nrange_done:\n",
       "reference": "li t2, -1\nbgeu t0, t1, range_done\nla t3, lesson_data\nadd t3, t3, t0\nlbu t2, 0(t3)\nrange_done:\n",
       "hints": [

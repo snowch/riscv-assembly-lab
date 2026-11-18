@@ -1,5 +1,21 @@
 import { fillSource, selectedSource } from "./editor-helpers.js";
 import { test, expect } from "@playwright/test";
+
+test("Hello World can undo restoring the starter after reload", async ({ page }) => {
+  await page.goto("/lessons/hello-world/");
+  await expect(page.locator("#run")).toBeEnabled();
+  const starter = await page.locator("#source").inputValue();
+  const edited = starter.replace("Hello, RISC-V!", "Trip ready!");
+  await fillSource(page, edited);
+  await page.locator("#restore").press("Enter");
+  await expect(page.locator("#source")).toHaveValue(starter);
+  await page.reload();
+  await page.getByRole("button", { name: "Undo restore", exact: true }).press("Enter");
+  await expect(page.locator("#source")).toHaveValue(edited);
+  await page.reload();
+  await expect(page.locator("#source")).toHaveValue(edited);
+});
+
 test("real build, edited output, diagnostics, draft and recovery", async ({
   page,
 }) => {
