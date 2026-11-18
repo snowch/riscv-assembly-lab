@@ -6,6 +6,7 @@ import {
   programResourcesMarkup,
 } from "../site/course/workbench-markup.js";
 import { REGISTERS, registerIndex } from "../site/course/model.js";
+import { counterWrapMarkup } from "../site/course/counter-wrap.js";
 const root = new URL("../site/", import.meta.url),
   lessons = await loadLessons();
 import { escape, icon, resourceSummary } from "../site/course/html.js";
@@ -26,6 +27,7 @@ const toolCopy = JSON.parse(
     "utf8",
   ),
 );
+const counterWrapCopy = JSON.parse(await readFile(new URL("../content/guides/counter-wrap.json", import.meta.url), "utf8"));
 await writeFile(
   new URL("course/tool-context-copy.js", root),
   "// Copyright © 2026 Christopher Snow\n// Generated from content/guides/tool-context.json.\nexport default " +
@@ -155,7 +157,7 @@ for (let index = 0; index < lessons.length; index++) {
  <section id="prediction-block" class="prediction-block" aria-labelledby="prediction-heading"><h2 id="prediction-heading">Predict the result</h2><p>For your first comparison, run the starting code unchanged. If the editor holds a draft, choose Restore starter. Undo restore brings back your draft.</p><p>${inline(lesson.prediction.prompt)}</p><div class="prediction-entry"><label for="prediction">Your prediction <span>(optional, ${escape(lesson.ui.signed || lesson.prediction.reading === "hex" ? (lesson.prediction.reading ?? "signed") : "decimal")} reading)</span></label><input id="prediction" inputmode="text" autocomplete="off"><button id="prediction-hint-button" type="button" aria-expanded="false" aria-controls="prediction-hint">Hint</button></div><p id="prediction-hint" hidden>${inline(lesson.prediction.hint)}</p><p id="prediction-feedback" role="status">Choose Build &amp; Run to see the CPU’s result and check your prediction.</p></section>
  <noscript><p>Building and stepping require JavaScript and WebAssembly. <a href="./${lesson.language === "c" ? "lesson.c" : "lesson.s"}">Read the starting code</a>.</p></noscript>
  ${workbenchMarkup(lesson, { identity: toolCopy.identity, feedback: toolCopy.lessonFeedback })}
- <section class="lesson-explanation" aria-labelledby="explanation-heading"><h2 id="explanation-heading">What the instructions do</h2>${paragraphs(lesson.explanation)}</section>
+ <section class="lesson-explanation" aria-labelledby="explanation-heading"><h2 id="explanation-heading">What the instructions do</h2>${paragraphs(lesson.explanation)}${["addition-wraps", "elapsed-time"].includes(lesson.id) ? counterWrapMarkup(counterWrapCopy, lesson.id === "elapsed-time") : ""}</section>
  <section id="experiment" class="next-step"><div><h2>Change it and run again</h2><p>${inline(lesson.experiment.task)}</p><details><summary>A hint</summary><p>${inline(lesson.experiment.hint)}</p></details></div></section>
  <details id="challenge" class="challenge-section"><summary>Optional exercise <span>Practise on fresh inputs</span></summary><div id="exercise-preview" class="exercise-body"><p id="exercise-task">${inline(lesson.challenge.task)}</p><p>Load exercise opens your exercise draft or its starter. Return to example brings back your separate example draft.</p><button id="start-challenge">Load exercise</button></div></details>
  ${lesson.c ? `<details id="lesson-c-intent" class="explanation"><summary>Compare the C intent</summary><p>The C expresses the starter’s intent. The assembly was written for this lesson.</p><div class="paired-listing"><div><h3>C intent</h3><pre>${escape(lesson.c)}</pre></div><div><h3>Starter assembly</h3><pre id="c-intent-assembly">${escape(lesson.starter)}</pre></div></div></details>` : ""}
@@ -169,6 +171,7 @@ for (let index = 0; index < lessons.length; index++) {
   await writeFile(
     new URL("index.html", dir),
     document(lesson.title, body, {
+      styles: ["addition-wraps", "elapsed-time"].includes(lesson.id) ? ["../../course/counter-wrap.css"] : [],
       data: `<script type="application/json" id="lesson-data">${payload}</script>`,
     }),
   );
