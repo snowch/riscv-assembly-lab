@@ -282,7 +282,7 @@
   {
     "id": "riscv-and-arm",
     "module": "appendices",
-    "title": "Translate the mechanism, not the mnemonic"
+    "title": "Moving from RISC-V to Arm"
   },
   {
     "id": "floating-point-bits",

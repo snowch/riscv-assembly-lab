@@ -7,6 +7,7 @@ import {
 } from "../site/course/workbench-markup.js";
 import { REGISTERS, registerIndex } from "../site/course/model.js";
 import { counterWrapMarkup } from "../site/course/counter-wrap.js";
+import { transferGuideMarkup } from "../site/course/transfer-guide.js";
 const root = new URL("../site/", import.meta.url),
   lessons = await loadLessons();
 import { escape, icon, resourceSummary } from "../site/course/html.js";
@@ -27,7 +28,18 @@ const toolCopy = JSON.parse(
     "utf8",
   ),
 );
-const counterWrapCopy = JSON.parse(await readFile(new URL("../content/guides/counter-wrap.json", import.meta.url), "utf8"));
+const counterWrapCopy = JSON.parse(
+  await readFile(
+    new URL("../content/guides/counter-wrap.json", import.meta.url),
+    "utf8",
+  ),
+);
+const transferGuide = JSON.parse(
+  await readFile(
+    new URL("../content/guides/moving-to-arm.json", import.meta.url),
+    "utf8",
+  ),
+);
 await writeFile(
   new URL("course/tool-context-copy.js", root),
   "// Copyright © 2026 Christopher Snow\n// Generated from content/guides/tool-context.json.\nexport default " +
@@ -41,6 +53,20 @@ function header(prefix) {
 }
 function footer(prefix) {
   return `<footer><p>Copyright © 2026 Christopher Snow</p><div><a href="${prefix}NOTICE.md">Sources and licences</a><a href="https://snowch.github.io/assembly-lab/">Arm Assembly Lab</a><a href="https://github.com/snowch/riscv-assembly-lab/issues">Report a problem</a></div></footer>`;
+}
+function sourceReferences(lesson) {
+  const refs = [...new Set([...lesson.references, "assembler"])].map((key) => ({
+    label: REFERENCES[key][0],
+    href: REFERENCES[key][1],
+  }));
+  if (lesson.id === "riscv-and-arm")
+    refs.push(...(transferGuide.references ?? []));
+  return [...new Map(refs.map((ref) => [ref.href, ref])).values()]
+    .map(
+      (ref) =>
+        `<li><a href="${escape(ref.href)}">${escape(ref.label)}</a></li>`,
+    )
+    .join("");
 }
 function document(
   title,
@@ -153,6 +179,7 @@ for (let index = 0; index < lessons.length; index++) {
   const previous = lessons[index - 1],
     next = lessons[index + 1];
   const body = `<div class="course-layout"><main id="main">${navigation(lesson)}<div class="intro"><h1>${escape(lesson.title)}</h1><p>${inline(lesson.summary)}</p>${lesson.id === "addition" ? '<p class="optional-guide">Optional guide: <a href="../../using-the-workbench/">Using the workbench</a></p>' : ""}</div>
+ ${lesson.id === "riscv-and-arm" ? transferGuideMarkup(transferGuide) : ""}
  <section class="lesson-guide" aria-label="Before you run">${paragraphs(lesson.before.slice(0, 2))}${operandDiagram(lesson)}${paragraphs(lesson.before.slice(2))}</section>
  <section id="prediction-block" class="prediction-block" aria-labelledby="prediction-heading"><h2 id="prediction-heading">Predict the result</h2><p>For your first comparison, run the starting code unchanged. If the editor holds a draft, choose Restore starter. Undo restore brings back your draft.</p><p>${inline(lesson.prediction.prompt)}</p><div class="prediction-entry"><label for="prediction">Your prediction <span>(optional, ${escape(lesson.ui.signed || lesson.prediction.reading === "hex" ? (lesson.prediction.reading ?? "signed") : "decimal")} reading)</span></label><input id="prediction" inputmode="text" autocomplete="off"><button id="prediction-hint-button" type="button" aria-expanded="false" aria-controls="prediction-hint">Hint</button></div><p id="prediction-hint" hidden>${inline(lesson.prediction.hint)}</p><p id="prediction-feedback" role="status">Choose Build &amp; Run to see the CPU’s result and check your prediction.</p></section>
  <noscript><p>Building and stepping require JavaScript and WebAssembly. <a href="./${lesson.language === "c" ? "lesson.c" : "lesson.s"}">Read the starting code</a>.</p></noscript>
@@ -162,7 +189,7 @@ for (let index = 0; index < lessons.length; index++) {
  <details id="challenge" class="challenge-section"><summary>Optional exercise <span>Practise on fresh inputs</span></summary><div id="exercise-preview" class="exercise-body"><p id="exercise-task">${inline(lesson.challenge.task)}</p><p>Load exercise opens your exercise draft or its starter. Return to example brings back your separate example draft.</p><button id="start-challenge">Load exercise</button></div></details>
  ${lesson.c ? `<details id="lesson-c-intent" class="explanation"><summary>Compare the C intent</summary><p>The C expresses the starter’s intent. The assembly was written for this lesson.</p><div class="paired-listing"><div><h3>C intent</h3><pre>${escape(lesson.c)}</pre></div><div><h3>Starter assembly</h3><pre id="c-intent-assembly">${escape(lesson.starter)}</pre></div></div></details>` : ""}
  ${programResourcesMarkup(lesson)}
- <details class="explanation resource-row">${resourceSummary("References", "book")}<ul>${[...new Set([...lesson.references, "assembler"])].map((key) => `<li><a href="${REFERENCES[key][1]}">${escape(REFERENCES[key][0])}</a></li>`).join("")}<li><a href="../../NOTICE.md">Runtime, source and licensing record</a></li></ul></details><a class="resource-link" href="../../using-the-workbench/">${icon("guide")}<span class="resource-label">Using the workbench</span><span class="resource-chevron" aria-hidden="true"></span></a></section>
+ <details class="explanation resource-row">${resourceSummary("References", "book")}<ul>${sourceReferences(lesson)}<li><a href="../../NOTICE.md">Runtime, source and licensing record</a></li></ul></details><a class="resource-link" href="../../using-the-workbench/">${icon("guide")}<span class="resource-label">Using the workbench</span><span class="resource-chevron" aria-hidden="true"></span></a></section>
  <div class="lesson-completion"><label><input type="checkbox" id="lesson-complete"> Mark lesson complete</label><p>Saved in this browser when storage is available.</p></div><nav class="lesson-navigation" aria-label="Lesson navigation">${previous ? `<a href="../${previous.id}/"><span>← Previous lesson</span>${escape(previous.title)}</a>` : '<a href="../../"><span>Course overview</span>Choose a lesson</a>'}${next ? `<a href="../${next.id}/"><span>Next lesson →</span>${escape(next.title)}</a>` : '<a href="../../"><span>Course overview</span>Choose another topic</a>'}</nav>
  </main></div>`;
   const dir = new URL(`lessons/${lesson.id}/`, root);
@@ -171,7 +198,12 @@ for (let index = 0; index < lessons.length; index++) {
   await writeFile(
     new URL("index.html", dir),
     document(lesson.title, body, {
-      styles: lesson.id === "addition-wraps" ? ["../../course/counter-wrap.css"] : [],
+      styles:
+        lesson.id === "addition-wraps"
+          ? ["../../course/counter-wrap.css"]
+          : lesson.id === "riscv-and-arm"
+            ? ["../../course/transfer-guide.css"]
+            : [],
       data: `<script type="application/json" id="lesson-data">${payload}</script>`,
     }),
   );
