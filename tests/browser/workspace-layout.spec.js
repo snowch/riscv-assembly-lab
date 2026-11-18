@@ -92,8 +92,20 @@ test("resizing keeps breakpoint rows aligned and help opens the complete program
   page,
 }) => {
   await ready(page);
-  for (const width of [800, 390, 1440]) {
+  const divider = page.locator("#workspace-divider");
+  const panel = page.locator(".editor-panel");
+  for (const width of [800, 390, 1024, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
+    if (width > 950) {
+      await expect(divider).toBeVisible();
+      expect((await divider.boundingBox()).width).toBe(10);
+      const before = (await panel.boundingBox()).width;
+      await divider.press("ArrowRight");
+      await expect.poll(async () => (await panel.boundingBox()).width).toBeGreaterThan(before);
+      await divider.press("ArrowLeft");
+    } else {
+      await expect(divider).toBeHidden();
+    }
     await expect
       .poll(() =>
         page.locator("#source-editor").evaluate((el) => {

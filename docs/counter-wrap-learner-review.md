@@ -19,3 +19,7 @@ The addition lesson omits elapsed-time detail. The elapsed-time lesson adds the 
 Real Chromium against generated site files served independently on port 4382. Checked both target pages at desktop 1440×1000 and phone 390×844, with both selected and rendered light/dark themes. For all eight page/viewport/theme combinations: advanced all three ticks, inspected completed-addition quantities at every tick, reloaded, and reset. State restored separately for each lesson and reset returned the initial bits. No JavaScript page errors or page-level horizontal overflow occurred. Inspected phone dark screenshots of wrap and final elapsed states, and desktop captures.
 
 Independently used Enter and Space to advance twice on the elapsed-time page, then Tab and Enter to reset; the tick count followed both controls. Native execution and original exercises were not rerun by this reviewer; the implementation agent and parent own those suites. This review checks the visible interface and model explanation; it does not establish learning effectiveness.
+
+## Computed trace follow-up
+
+Rechecked the final elapsed-time page on phone in both light/dark themes after the computed history was added. The visible trace progresses from the starting reading through every advanced tick, finishing `14 → 15 → 0 → 1`. It remains separate from the last-addition panel and introduces no clipping or page overflow. This confirms the final trace addition was included in the independent browser review.

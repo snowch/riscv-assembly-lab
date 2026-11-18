@@ -16,7 +16,7 @@
       "id": "asm",
       "label": "Assembly fragment",
       "description": "Write the instructions you want to investigate. Supplied code starts the program, captures registers and exits.",
-      "sourceHelp": "Write assembly instructions. View complete program shows the supplied entry, reporting and exit code.",
+      "sourceHelp": "Write assembly instructions in the editor. Open Tools → Program to read the supplied entry, reporting and exit code.",
       "entryHelp": "The lab supplies entry, register capture and exit code around your assembly fragment.",
       "completeSourceDescription": "This is your fragment inside the supplied entry, capture and exit code. The supplied code prepares the listed inputs and records registers and memory before printing the report."
     },
@@ -143,7 +143,7 @@
       "id": "project-and-source",
       "title": "Choose the source you want to write",
       "paragraphs": [
-        "An assembly fragment is a group of instructions inside a supplied program. You can concentrate on those instructions; View complete program shows the entry, reporting and exit code around them.",
+        "An assembly fragment is a group of instructions inside a supplied program. You can concentrate on those instructions; Tools → Program shows the entry, reporting and exit code around them.",
         "A C project defines a function named lesson, such as long lesson(long a, long b). The supplied caller passes a0 and a1 as its arguments and captures the return value in a0. Do not add main, system headers or library calls.",
         "A complete assembly program defines _start and includes its own exit code. Its registers and data come from its source and xv6, so the fragment’s starting-register and data controls do not apply."
       ]
@@ -154,7 +154,7 @@
       "paragraphs": [
         "Build & Run assembles and links your source, then runs it as an xv6 user process. C projects first compile their function with TinyCC. Every new run starts a fresh machine.",
         "Start stepping pauses before your first machine instruction. Step instruction executes one machine instruction. A source line can expand into several machine instructions.",
-        "A breakpoint pauses before its instruction runs. Choose the numbered button beside an assembly instruction, then use Start debugging. Continue runs to a selected breakpoint or the end of your code. For C, select actual instruction addresses in Debugger; this compiler does not provide C source-line mappings.",
+        "A breakpoint pauses before its instruction runs. Choose the numbered button beside an assembly instruction, open Tools if it is closed, then choose Start debugging. Continue runs to a selected breakpoint or the end of your code. For C, select actual instruction addresses in Debugger; this compiler does not provide C source-line mappings.",
         "Register and memory readings belong to the observation named beside them. Assembly fragments and C functions capture a report after their code. Complete programs can exit without that report: a last paused observation is not an exit state."
       ]
     },
