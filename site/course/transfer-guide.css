@@ -1,0 +1,55 @@
+/* Copyright © 2026 Christopher Snow */
+.transfer-guide-section {
+  margin: 1.5rem 0;
+}
+.project-active .transfer-guide {
+  display: none;
+}
+.transfer-guide-section p {
+  max-width: 76ch;
+}
+.transfer-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.transfer-table-scroll table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.transfer-table-scroll th,
+.transfer-table-scroll td {
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  padding: 0.65rem 0.8rem;
+}
+.transfer-listings {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.transfer-listings figure {
+  margin: 0.5rem 0;
+  flex: 1 1 17rem;
+  min-width: 0;
+}
+.transfer-listings figcaption {
+  font-weight: 650;
+  margin-bottom: 0.5rem;
+}
+.transfer-listings pre {
+  margin: 0;
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  max-width: 100%;
+  overflow-x: auto;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+.transfer-listings pre code {
+  font: inherit;
+  background: none;
+  padding: 0;
+  border: 0;
+}

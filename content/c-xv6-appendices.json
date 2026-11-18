@@ -1133,8 +1133,8 @@
   {
     "id": "riscv-and-arm",
     "module": "appendices",
-    "title": "Translate the mechanism, not the mnemonic",
-    "summary": "Compare explicit RISC-V checks with Arm\u2019s flags and register-width rules.",
+    "title": "Moving from RISC-V to Arm",
+    "summary": "Translate a function\u2019s register roles and width, then run its Arm version in the other lab.",
     "objectives": [
       "Identify architecture-specific state when translating assembly.",
       "Choose an unsigned RISC-V branch from the required value relationship."
