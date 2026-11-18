@@ -54,7 +54,7 @@ test("canonical copy substitutes every number and is safe to embed", async () =>
   const values = {...state, ...state.addition};
   for (const text of Object.values(copy)) assert.doesNotMatch(counterWrapText(text, values), /\{\w+\}/);
   assert.throws(() => counterWrapText("{unknown}", state), /Missing counter value/);
-  const markup = counterWrapMarkup({...copy, title: "<unsafe>", instruction: "</script>"}, true);
+  const markup = counterWrapMarkup({...copy, title: "<unsafe>", instruction: "</script>"});
   assert.match(markup, /&lt;unsafe&gt;/);
   assert.match(markup, /\\u003c\/script>/);
   assert.doesNotMatch(markup, /<unsafe>/);
