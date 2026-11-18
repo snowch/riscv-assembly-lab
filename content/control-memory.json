@@ -25,10 +25,10 @@
     "explanation": [
       "The comparison interprets the same register bits using the signed reading you met earlier. A negative input is below zero even though its top bit is one. The instruction does not subtract into either source register or retain a mathematical difference.",
       "A strict comparison excludes equality. Changing the gradient to zero therefore changes the question from \u201cbelow zero\u201d to a comparison of equal values. This boundary is easy to miss when a warning rule really means at or below a threshold.",
-      "Keep the result register separate from the inputs while you investigate. Then replace `slt t2, t0, t1` with `slt t0, t0, t1` and run again. Inspect `t0`, where the comparison now writes its answer. It reads both old input values before writing, just as addition did."
+      "When the destination is also an input, slt reads both old input values before writing its answer. The last edit leaves that answer in t0."
     ],
     "experiment": {
-      "task": "In `li t0, -3`, try a negative value, zero and a positive value. Build & Run after each edit and compare `t2` in Registers. Then change the threshold in `li t1, 0` and check which gradients count as strictly below it.",
+      "task": "Replace the first line with `li t0, -1`, then `li t0, 0` and `li t0, 1`. Keep `li t1, 0` and choose Build & Run after each edit. Compare t2 in Registers. Keep t0 at 1, change the next line to `li t1, 2` and run again. Why did the answer change? Finally, replace `slt t2, t0, t1` with `slt t0, t0, t1`, run, and check where the answer now appears.",
       "hint": "Separate the direction of the comparison from the result location: the first source is tested against the second."
     },
     "challenge": {
@@ -203,7 +203,7 @@
       "Put more specific rules before broader rules when both could apply. Zero fuel is also below a positive reserve. If an empty tank needs a distinct warning value, test for zero before testing whether fuel is below the reserve. Equality with the reserve belongs to the normal path in this rule."
     ],
     "experiment": {
-      "task": "Change the fuel in `li t0, 7` to values below, equal to and above the reserve loaded into `t1`. Build & Run after each change and inspect the warning in `t2`. With the original inputs restored, swap only `t0` and `t1` in `bgeu` and check how that reverses the question.",
+      "task": "Try fuel values 9, 10 and 11 in the first li instruction. Leave the reserve in t1 at 10 and choose Build & Run after each edit. Compare t2. Which inputs set the warning? Restore `li t0, 7` and replace the branch with `bgeu t1, t0, safe`. Run again. How does swapping the inputs change which comparison skips the warning?",
       "hint": "Trace the condition in its written source order before deciding whether the warning assignment is skipped."
     },
     "challenge": {
@@ -385,7 +385,7 @@
       "A backward branch does not reset registers automatically. Each iteration starts with the state left by the previous one. The initialisations belong before `again`; placing the total\u2019s initialisation under that label would discard the work already accumulated."
     ],
     "experiment": {
-      "task": "Move `li t2, 0` from before `again:` to immediately after that label. Try several small limits in `li t0, 4`, building and running each time. Inspect the total in `t2`: does it keep earlier iterations? Restore the initialisation before `again:`, then set the limit to zero and run again.",
+      "task": "Run the starter and note t2. Move `li t2, 0` from before `again:` to immediately after that label. Run at the supplied limit 4, then replace the first line with `li t0, 2` and run again. What does t2 say about whether earlier iterations contributed? Move the initialisation back before `again:`, set `li t0, 0`, then run and check t1 and t2.",
       "hint": "Check whether each iteration continues the old total or replaces it with zero."
     },
     "challenge": {
@@ -461,7 +461,7 @@
     "before": [
       "The dashboard halves an unsigned brightness setting once per idle tick. This time, count the work still to do. `t0` holds the starting brightness, `t1` holds the remaining ticks, and `t2` will hold the brightness after the requested work.",
       "`srli t2, t2, 1` shifts right by one, filling the top bit with zero. For this unsigned value, it halves the brightness and discards any remainder. `addi t1, t1, -1` subtracts one from the remaining count. The following `bne` reads that updated register directly.",
-      "Check for a zero count before entering the body. Zero requested ticks must leave the starting brightness unchanged. Predict the result after all requested shifts in the shown example. The loop may change the remaining-work register, but the separate starting-brightness register stays available for comparison."
+      "The starter checks for a zero count before entering the body. Zero requested ticks must leave the starting brightness unchanged. Predict the result after all requested shifts in the shown example. The loop may change the remaining-work register, but the separate starting-brightness register stays available for comparison."
     ],
     "starter": "li t0, 128\nli t1, 3\nmv t2, t0\nbeq t1, zero, done\nagain:\nsrli t2, t2, 1\naddi t1, t1, -1\nbne t1, zero, again\ndone:\n",
     "observe": ["t0", "t1", "t2"],
@@ -475,10 +475,10 @@
     "explanation": [
       "The counter and brightness change for different reasons. The counter says how many iterations remain. The brightness says what those iterations have done. The branch reads the updated count in `t1` and compares it with zero.",
       "Removing the first zero test changes the meaning at the boundary. A request for no work would still perform one shift, then subtract one from zero. That unsigned subtraction wraps to an all-ones count, so the loop can run for an impractically long time. Use Stop if you deliberately try that broken version.",
-      "This loop does all requested iterations even if the brightness has already become zero. It is correct for the small counts used here, but it can waste work. The next lesson about useful stopping values will use the result itself to decide when further iterations cannot help."
+      "This loop does all requested iterations even if the brightness has already become zero. It is correct for the small counts used here, but it can waste work. A later lesson on stopping values uses the result itself to decide when further iterations cannot help."
     ],
     "experiment": {
-      "task": "Try an odd starting brightness in `li t0, 128`, then set `li t1, 3` to zero ticks. Build & Run after each edit and inspect `t2`. Keep zero ticks, delete `beq t1, zero, done`, and choose Start stepping. Step through the first shift and decrement, inspect `t1` in Registers, then choose Stop. Restore the entry test before running again.",
+      "task": "Change `li t0, 128` to `li t0, 129` and choose Build & Run. Note t2, then change `li t1, 3` to `li t1, 0` and rerun. What happens to t2 when no shift is requested? Keep zero ticks and delete `beq t1, zero, done`. Choose Start stepping, then Step instruction until the next instruction is `bne t1, zero, again`. Read t1 in Registers after the decrement. Choose Stop and restore the entry test.",
       "hint": "A right shift discards the low bit. The initial count test protects the no-work case before any shift occurs."
     },
     "challenge": {
@@ -575,7 +575,7 @@
       "Write the no-work rule before choosing the loop shape. If a request for zero items must perform no accesses, a pre-test is needed. If the task requires at least one attempt before deciding whether to repeat, the post-test structure can express that rule directly."
     ],
     "experiment": {
-      "task": "Change `li t0, 0` to a limit of one and then four. Build & Run after each edit and compare `t1` and `t2` in Registers with their zero-limit values. Which limit reveals that only one loop must enter its body?",
+      "task": "Run the starter and record t1 and t2 in Registers at limit zero. Replace the first line with `li t0, 1`, then `li t0, 4`, choosing Build & Run after each edit. Compare both counters with your recorded values. At which limit does the placement of the first test change how many times the body runs?",
       "hint": "Keep the same limit for both independent loops so only the test position changes."
     },
     "challenge": {
@@ -636,7 +636,7 @@
     ],
     "before": [
       "A very large tick count does not require equally much useful dimming. Once brightness is zero, another logical right shift still leaves it zero. The result itself can tell the loop that no more useful work remains.",
-      "A sentinel is a value used as a signal to stop. Here zero brightness is that signal. The loop checks both reasons to finish: no ticks remain, or the brightness is already zero. The first reason also protects a request for no work.",
+      "A sentinel is a value used as a signal to stop. Here zero brightness is that signal. The starter checks both reasons to finish: no ticks remain, or the brightness is already zero. The first reason also protects a request for no work.",
       "The example starts with a small brightness and more ticks than it needs to become dark. Predict the brightness at completion. Notice whether ticks remain in `t1` afterwards. Unlike the earlier countdown, this version promises the same final brightness, not that it will consume every requested tick."
     ],
     "starter": "li t0, 8\nli t1, 12\nmv t2, t0\nbeq t1, zero, done\nagain:\nbeq t2, zero, done\nsrli t2, t2, 1\naddi t1, t1, -1\nbne t1, zero, again\ndone:\n",
@@ -654,7 +654,7 @@
       "A long trace alone does not prove an infinite loop. This repaired loop gives a stronger reason for a short run: each useful shift moves set bits towards the bottom until none remain. A huge remaining count is harmless once the zero-brightness path can end execution."
     ],
     "experiment": {
-      "task": "Load one into `t0` and `0xffffffffffffffff` into `t1` in the first two lines. Build & Run and inspect `t2` and the remaining count in `t1`. Delete only `beq t2, zero, done` and choose Start stepping. Step through repeated shifts and inspect `t2` and `t1`: does the brightness change while ticks are still consumed? Choose Stop, then restore the brightness test.",
+      "task": "Replace the first two lines with `li t0, 1` and `li t1, 0xffffffffffffffff`. Choose Build & Run and note t2 and the remaining count in t1. Delete only `beq t2, zero, done` and choose Start stepping. Use Step instruction until the next instruction is the loop’s `bne`. Note t1 and t2, then step three more instructions until the next `bne` and compare the same registers. What keeps changing after the brightness reaches zero? Choose Stop, then restore the brightness test.",
       "hint": "The answer may stop changing long before the remaining-work count reaches zero."
     },
     "challenge": {
@@ -1297,7 +1297,7 @@
       "Initialise the total once before the loop and update it after each load. Resetting it on each visit retains only the last sample. Advancing the pointer by one instead of four reads overlapping byte groups rather than successive array elements; the memory addresses make that mistake visible."
     ],
     "experiment": {
-      "task": "Change the requested count in `li t0, 4` to two and then zero. Build & Run after each change and inspect `t2`. Restore the count to four, then change the pointer increment `addi t1, t1, 4` to eight. Run again and compare `t1` and `t2`: which supplied samples were skipped when the stride exceeded the four-byte element size? Restore the increment to four.",
+      "task": "Run the starter and record t1 and t2. In the first li instruction, set the count to 2, then 0. Choose Build & Run after each edit and inspect t2. Restore the count to 4 and change `addi t1, t1, 4` to `addi t1, t1, 8`. Rerun and compare t1 and t2 with the starter. The larger stride visits offsets 0, 8, 16 and 24. Use Tools → Memory → After to see which samples it skips and what bytes it reads beyond the four samples. Restore the increment to 4.",
       "hint": "Keep the requested count separate from the pointer stride: one counts elements and the other counts bytes."
     },
     "challenge": {

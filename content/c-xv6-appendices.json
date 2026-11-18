@@ -28,7 +28,7 @@
       "hint": "Work out the product assigned to charge, then add the constant in the return expression."
     },
     "explanation": [
-      "The name `charge` belongs to the C program. It does not attach a permanent type or name to a physical register. A compiler can keep a value in a register, place it on the stack, or replace it with another calculation that preserves the required result. Read the emitted instructions to find what this compiler chose.",
+      "The name `charge` belongs to the C program. It does not attach a permanent type or name to a physical register. A compiler can keep a value in a register, place it on the stack, or replace it with another calculation that preserves the required result. After a successful build, open Inspect the real compiler output to see what TinyCC emitted.",
       "A return statement provides the caller\u2019s result. The compiler also emits the instructions needed to leave the function and restore any state it must preserve. One C expression can therefore correspond to several instructions. The disassembly is output from the current compilation, not a handwritten promise about how every compiler must implement the function.",
       "Compiling successfully establishes that the tool accepted the source. Running one call checks that call. The exercise uses several fresh calls so a function that returns a fixed answer cannot satisfy the whole contract."
     ],
@@ -95,7 +95,7 @@
     "before": [
       "An `if` statement chooses whether its body runs. The function below compares a measured value `a` with a limit `b`. If the measurement is greater, it returns the limit. Otherwise it returns the original measurement. This is a cap: it prevents the returned value from exceeding the limit.",
       "The arguments and result use signed `long`, which is 64 bits on this target. A negative measurement therefore participates in a signed comparison. The result is observed in `a0` only after the selected path returns to the supplied caller. Neither path needs to execute the other path\u2019s return statement.",
-      "A compiler can implement a C decision with more than one instruction sequence. Inspect the current disassembly to see TinyCC\u2019s choice. RISC-V conditional branches compare register values directly; there is no separate Arm-style condition-flag register for the C expression to update."
+      "A compiler can implement a C decision with more than one instruction sequence. After Build & Run, open Inspect the real compiler output to see TinyCC’s choice. RISC-V conditional branches compare register values directly; there is no separate Arm-style condition-flag register for the C expression to update."
     ],
     "starter": "long lesson(long a, long b) {\n    if (a > b) {\n        return b;\n    }\n    return a;\n}\n",
     "inputs": {
@@ -373,7 +373,7 @@
     ],
     "before": [
       "`sizeof` gives a C type’s size in bytes. The expression below encodes two sizes into one returned number: the size of int contributes the hundreds, and the size of long contributes the units. This is a measurement of the selected compiler target. It is not a statement that the C language gives every machine those sizes.",
-      "The result register is 64 bits wide. That width does not tell you the C type sizes. If you have not measured this compiler target, leave the prediction blank. Choose Build & Run with the expression unchanged, then read a0 in Registers to measure its size code.",
+      "The result register is 64 bits wide. That width does not tell you the C type sizes. Choose Build & Run with the expression unchanged, then read a0 in Registers to measure its size code.",
       "A cast requests a conversion to a chosen type. Converting an integer to `unsigned char` keeps its value modulo 256 on this eight-bit-byte target. Returning that converted value as unsigned long then widens the value already obtained. Widening afterwards cannot recover high bits discarded by the earlier conversion."
     ],
     "starter": "unsigned long lesson(unsigned long a, unsigned long b) {\n    return sizeof(int) * 100 + sizeof(long);\n}\n",
@@ -644,7 +644,7 @@
       "Keep a byte count separate from a zero-terminated string length."
     ],
     "before": [
-      "A user program asks the operating system to perform an operation with a system call. For xv6 write, a0 holds a file descriptor: a number naming an open file. a1 holds the first byte’s address, and a2 gives the byte count. Put system call number 16 in a7, then execute ecall to enter xv6.",
+      "A user program asks the operating system to perform an operation with a system call. For xv6 write, a0 holds a file descriptor: a number naming an open file. a1 holds the first byte’s address, and a2 gives the byte count. The starter puts system call number 16 in a7 and executes ecall to ask xv6 to write.",
       "The supplied program has file 1 open for standard output, the console used here. The example writes five bytes from lesson_data, then copies write’s returned value from a0 into t2. The snapshot is taken after that copy. The report is separate from the text that write sends to the console.",
       "These numbers belong to xv6. Linux and teaching simulators can use different system call conventions even when they execute RISC-V instructions. `ecall` requests service from the execution environment; the instruction itself does not define what a file number or a write operation means."
     ],
@@ -668,10 +668,10 @@
     "explanation": [
       "Write uses the explicit count, not a search for a zero terminator. A zero byte inside the requested range is still one byte to write. Conversely, text beyond the requested range is not part of this request. A byte count also differs from a character count for text whose characters use more than one encoded byte.",
       "The returned value reports the operation’s result. A successful xv6 write returns the bytes written; an error can return -1. The general purpose of checking the return is to distinguish an attempted operation from one that completed. The exercise keeps the file descriptor and source range valid so it can focus on the count.",
-      "The supplied reporting code also writes to the console after your fragment. That later write does not change the earlier snapshot of t2. In Inspect, choose Output. Program output shows your message bytes; xv6 serial log also includes the lab’s register report. No CPU flag announces that a system call succeeded."
+      "The supplied reporting code also writes to the console after your fragment. That later write does not change the earlier snapshot of t2. Open Tools → Output. Program output shows your message bytes; xv6 serial log also includes the lab’s register report. No CPU flag announces that a system call succeeded."
     ],
     "experiment": {
-      "task": "Change li a2, 5 to li a2, 4. Predict the returned count, then choose Build & Run. Compare t2 in Registers and the message under Output, Program output. Which final message byte is no longer sent?",
+      "task": "Change li a2, 5 to li a2, 4. Predict the returned count, then choose Build & Run. Compare t2 in Registers and the message under Tools → Output → Program output. Which final message byte is no longer sent?",
       "hint": "The final byte is a newline. Omitting it affects presentation, not the number of earlier bytes requested."
     },
     "challenge": {
@@ -814,7 +814,7 @@
     ],
     "before": [
       "A user process has an address space: the addresses xv6 allows it to use. A load from an unmapped or forbidden address can trap into the kernel, which can terminate the process. The CPU\u2019s load instruction does not promise that every possible address is usable.",
-      "The safe starting fragment reads one byte from lesson_data, then adjusts that value. The supplied data region is mapped. In the Memory tab, Before shows the supplied bytes. After shows bytes observed at a pause or when the code completes. You can compare the address used by the load with the base of that region.",
+      "The starter reads one byte from the mapped data at lesson_data, then adjusts that value. After Build & Run, select Inspect registers to find the hexadecimal address in t0. Open Tools → Memory and choose After. Does the base address of the captured data match t0?",
       "An application often has a smaller boundary than the mapped memory region. A three-byte sensor record may sit inside a much larger mapped page. Reading its fourth byte can violate the record\u2019s contract without causing an operating-system fault. Your code must check the record\u2019s capacity before it performs the load."
     ],
     "starter": "la t0, lesson_data\nlbu t1, 0(t0)\naddi t2, t1, 1\n",
@@ -835,12 +835,12 @@
       "hint": "t0 holds an address; lbu puts the byte at that address in t1. The following addi adjusts that loaded value."
     },
     "explanation": [
-      "A trap transfers control to the execution environment in response to an event such as an invalid memory access. It is not an ordinary function return. If your fragment faults before reporting, there may be no completed register snapshot. In Inspect, choose Output and open xv6 serial log to read what happened.",
+      "A trap transfers control to the execution environment in response to an event such as an invalid memory access. It is not an ordinary function return. If your fragment faults before reporting, there may be no completed register snapshot. Open Tools → Output → xv6 serial log to read what happened.",
       "The challenge supplies an unsigned offset and a capacity. The comparison must happen before the address is used for a byte load. Equality is already outside the allowed offset range: a capacity of three permits offsets zero, one and two. A zero capacity permits no reads at all.",
       "Unsigned comparison matters for addresses and counts. A large bit pattern that has a negative signed reading is not a small valid offset. A bounds test, a valid mapping and the intended object’s lifetime answer different questions. None should be substituted for another just because one example happens to run without a fault."
     ],
     "experiment": {
-      "task": "Replace la t0, lesson_data with li t0, -1, then choose Build & Run. In Inspect, choose Output and open xv6 serial log. Check whether the load faults before a register report is produced. Restore la t0, lesson_data afterwards.",
+      "task": "Replace la t0, lesson_data with li t0, -1, then choose Build & Run. Open Tools → Output → xv6 serial log. Check whether the load faults before a register report is produced. Restore la t0, lesson_data afterwards.",
       "hint": "The changed bit pattern is not an address inside the supplied user data region. Do not expect a normal returned byte."
     },
     "challenge": {

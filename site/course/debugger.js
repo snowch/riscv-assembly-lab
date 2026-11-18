@@ -12,7 +12,7 @@ const option = (value, label = value) =>
 export function debuggerMarkup(lesson, { separateStack = false } = {}) {
   const c = lesson.language === "c";
   return `<details id="debugger-panel" class="debugger" ${lesson.module === "debugging" ? "open" : ""}>
-  <summary>Debugger <span>Breakpoints, watches and stack bytes</span></summary>
+  <summary>Debugger <span>Breakpoints and watches</span></summary>
   <div class="debugger-body">
     <p>A breakpoint pauses before its machine instruction executes. Choose a breakpoint, then use <strong>Start debugging</strong>. <strong>Continue</strong> runs to the next selected breakpoint or the end of your code. <strong>Step instruction</strong> executes one machine instruction.</p>
     <section aria-labelledby="debug-breakpoint-heading"><h3 id="debug-breakpoint-heading">Breakpoints</h3>
@@ -36,7 +36,7 @@ export function debuggerMarkup(lesson, { separateStack = false } = {}) {
   </div></details>`;
 }
 export function stackMarkup(lesson) {
-  return `<details id="debug-stack-section" ${lesson.ui?.stack === false ? "hidden" : ""}><summary>Inspect the stack</summary><p class="debug-note">The stack pointer, sp, addresses the current stack storage. ra holds the current return address. The slots below show eight observed doublewords from sp. Matching an instruction address does not establish a call frame or a saved return address.</p><p id="debug-stack-registers" class="debug-stack-registers">Pause to inspect sp and ra.</p><p id="debug-stack-moment" class="debug-note"></p><div class="debug-table-scroll" tabindex="0" aria-label="Stack doublewords"><table id="debug-stack"><thead><tr><th scope="col">Byte offset</th><th scope="col">Address</th><th scope="col">Observed bits</th><th scope="col">Exact address match</th></tr></thead><tbody></tbody></table></div></details>`;
+  return `<details id="debug-stack-section" ${lesson.ui?.stack === false ? "hidden" : ""}><summary>Inspect the stack</summary><p class="debug-note">The stack pointer, sp, addresses the current stack storage. ra holds the current return address. Each row shows eight observed bytes, starting at the stack pointer. Matching an instruction address does not establish a call frame or a saved return address.</p><p id="debug-stack-registers" class="debug-stack-registers">Pause to inspect sp and ra.</p><p id="debug-stack-moment" class="debug-note"></p><div class="debug-table-scroll" tabindex="0" aria-label="Stack values"><table id="debug-stack"><thead><tr><th scope="col">Byte offset</th><th scope="col">Address</th><th scope="col">Observed bits</th><th scope="col">Exact address match</th></tr></thead><tbody></tbody></table></div></details>`;
 }
 function el(tag, text, className) {
   const node = document.createElement(tag);
