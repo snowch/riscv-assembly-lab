@@ -1,14 +1,13 @@
 {
   "title": "How a counter wraps",
-  "modelNote": "Each real counter tick adds one. This teaching counter keeps only {width} bits; the program below uses {realWidth}-bit registers. Its readings are unsigned: zero or positive.",
-  "instruction": "Use +1 until the stored reading wraps to zero, then press −1. Watch Carry out change to Borrow needed. Keep counting in either direction.",
+  "modelNote": "Each tick adds one. This teaching counter keeps only {width} bits; the lesson program uses {realWidth}-bit registers. Its readings are unsigned: zero or positive.",
+  "instruction": "Press +1 to add a tick. Keep pressing until the stored reading returns to zero. Watch Carry out at the wrap. Reset starts at zero.",
   "previous": "−1",
   "previousLabel": "−1, subtract one",
   "advance": "+1",
   "advanceLabel": "+1, add one",
   "reset": "Reset",
-  "initialNote": "The dash means no addition or subtraction is shown yet.",
-  "initialMarkerLabel": "Carry / borrow",
+  "initialNote": "The dash means no addition is shown yet.",
   "carryLabel": "Carry out",
   "borrowLabel": "Borrow needed",
   "decimalLabel": "Unsigned decimal reading",
@@ -19,7 +18,12 @@
   "backwardWrapped": "Subtraction must borrow one group of {range} from the next position. Taking one leaves {stored} in {width} bits.",
   "forwardNormal": "The addition stays within the stored bits. Carry out is zero.",
   "backwardNormal": "The subtraction stays at or above zero. No borrow from beyond the stored bits is needed.",
-  "architectureNote": "RISC-V has no carry or signed-overflow flag. The carry or borrow marker belongs to this four-bit model.",
+  "architectureNote": "The carry shown belongs to this four-bit model. RISC-V has no carry flag.",
   "initialStatus": "Stored reading: {stored}. No step is shown.",
-  "stepStatus": "Change: {direction}. Stored reading: {stored}. {markerLabel}: {marker}."
+  "stepStatus": "Change: {direction}. Stored reading: {stored}. {markerLabel}: {marker}.",
+  "borrowTitle": "Optional: subtract one and inspect the borrow",
+  "borrowIntro": "The processor’s arithmetic and logic unit (ALU) can subtract when an instruction such as sub requests it. Subtracting one is a decrement. This separate {width}-bit counter explores subtraction; it does not reverse time or undo an earlier operation.",
+  "borrowInstruction": "Press −1 once from zero. Inspect Borrow needed and the stored reading. Keep pressing to count down through further wraps. Reset starts this counter at zero.",
+  "borrowInitialNote": "The dash means no subtraction is shown yet.",
+  "borrowArchitectureNote": "This marker describes borrow beyond the four stored bits. RISC-V has no borrow flag."
 }
