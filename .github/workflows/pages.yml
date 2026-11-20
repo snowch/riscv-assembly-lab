@@ -26,10 +26,12 @@ jobs:
         run: npm run build:editor && git diff --exit-code -- site/vendor/editor/ asset-manifest.json
       - run: npm run check:assets
       - name: Verify generated course pages
-        run: npm run build:course && git diff --exit-code -- site/index.html site/lessons/ site/using-the-workbench/ site/playground/index.html site/course/catalog.json site/course/tool-context-copy.js site/course/project-tools-config.js
+        run: npm run build:course && git diff --exit-code -- site/index.html site/lessons/ site/using-the-workbench/ site/playground/index.html site/course/catalog.json site/course/tool-context-copy.js site/course/project-tools-config.js site/course/reference-data.js
       - run: npm test
       - name: Install independent RISC-V execution checker
         run: sudo apt-get update && sudo apt-get install -y qemu-user
+      - name: Verify independent instruction-reference recordings
+        run: npm run test:reference
       - name: Check every lesson and challenge corpus
         run: npm run test:course
       - run: npx playwright install --with-deps chromium
