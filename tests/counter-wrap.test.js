@@ -131,7 +131,7 @@ test("both actual directions retain four bits and distinguish carry from borrow"
 
 test("the explorer cycles indefinitely in either direction and its history is bounded", () => {
   let state = initialCounterExplorer();
-  assert.deepEqual(state, { readings: [13] });
+  assert.deepEqual(state, { readings: [0] });
   assert.equal(counterExplorerState(state).operation, null);
   for (const direction of [1, 1, -1, -1]) {
     for (let step = 0; step < 16; step++) {
@@ -140,7 +140,7 @@ test("the explorer cycles indefinitely in either direction and its history is bo
       assert.ok(state.readings.length <= 5);
       assert.equal(counterExplorerState(state).operation.direction, direction);
     }
-    assert.equal(counterExplorerState(state).stored, 13n);
+    assert.equal(counterExplorerState(state).stored, 0n);
   }
   state = stepCounterExplorer({ readings: [0] }, -1);
   assert.equal(counterExplorerState(state).stored, 15n);

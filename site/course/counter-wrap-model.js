@@ -57,7 +57,7 @@ export function restoreCounterTicks(serialised) {
 }
 
 // Separate free exploration from the fixed worked elapsed-time example.
-export const COUNTER_EXPLORER_START = 13;
+export const COUNTER_EXPLORER_START = 0;
 export const COUNTER_HISTORY_LENGTH = 5;
 
 export function initialCounterExplorer() {
