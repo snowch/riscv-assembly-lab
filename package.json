@@ -11,7 +11,8 @@
     "build:course": "node tools/build-course.js",
     "test:course": "node tools/check-course.js",
     "build:editor": "node tools/build-editor.js",
-    "test:reference": "node tools/reference-recordings.js --check"
+    "test:reference": "node tools/reference-recordings.js --check",
+    "test:counter": "node tools/check-counter-wrap.js"
   },
   "devDependencies": {
     "@codemirror/commands": "6.11.1",

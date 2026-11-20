@@ -32,6 +32,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y qemu-user
       - name: Verify independent instruction-reference recordings
         run: npm run test:reference
+      - name: Check both counter directions against xv6 and QEMU
+        run: npm run test:counter
       - name: Check every lesson and challenge corpus
         run: npm run test:course
       - run: npx playwright install --with-deps chromium

@@ -1,18 +1,105 @@
 /* Copyright © 2026 Christopher Snow */
-.counter-wrap { margin: 1.2rem 0 .4rem; padding: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
-.counter-wrap h3 { margin: 0; font-size: 1.1rem; }
-.counter-wrap p { margin: .65rem 0; font-size: .86rem; }
-.counter-wrap .counter-model-note { color: var(--muted); font-size: .78rem; }
-.counter-wrap .counter-equation { margin-bottom: .6rem; font-family: ui-monospace, monospace; font-size: 1.7rem; font-weight: 600; }
-.counter-binary, .counter-sum-parts { display: flex; align-items: end; flex-wrap: wrap; gap: .6rem; }
-.counter-operands { font-size: 1.3rem; padding-bottom: .4rem; white-space: nowrap; }
-.counter-sum-parts > div { display: grid; gap: .25rem; text-align: center; }
-.counter-sum-parts > div > span { font-size: .8rem; }
-.counter-sum-parts code { display: block; padding: .3rem .6rem; border-radius: 5px; font-size: 1.75rem; line-height: 1.3; }
-.counter-carry { border: 1px dashed var(--muted); }
-.counter-kept { border: 2px solid var(--accent); background: var(--soft); letter-spacing: .15em; }
-.counter-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin: .85rem 0 0; }
-.counter-actions button { font-size: .8rem; }
-.counter-wrap .counter-architecture { margin-top: .85rem; padding-top: .85rem; border-top: 1px solid var(--border); }
-.counter-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-@media (max-width: 520px) { .counter-wrap { padding: .8rem; } .counter-operands { flex-basis: 100%; font-size: 1.2rem; } }
+.counter-wrap {
+  margin: 1.2rem 0 0.4rem;
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.counter-wrap h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.counter-wrap p {
+  margin: 0.65rem 0;
+  font-size: 0.86rem;
+}
+.counter-wrap .counter-model-note {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.counter-sum-parts {
+  display: flex;
+  align-items: start;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+.counter-sum-parts > div {
+  display: grid;
+  gap: 0.25rem;
+  text-align: center;
+}
+.counter-sum-parts > div > span {
+  font-size: 0.8rem;
+}
+.counter-marker-group {
+  min-width: 8.5rem;
+}
+.counter-sum-parts code {
+  display: block;
+  padding: 0.3rem 0.6rem;
+  border-radius: 5px;
+  font-size: 1.75rem;
+  line-height: 1.3;
+}
+.counter-carry {
+  border: 1px dashed var(--muted);
+}
+.counter-kept {
+  border: 2px solid var(--accent);
+  background: var(--soft);
+  letter-spacing: 0.15em;
+}
+.counter-sum-parts .counter-decimal {
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
+}
+.counter-wrap .counter-trace {
+  min-height: 1.8rem;
+  white-space: nowrap;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+.counter-trace code {
+  padding: 0.08rem 0.2rem;
+}
+.counter-wrap .counter-feedback {
+  min-height: 3.2em;
+  margin-bottom: 0;
+}
+.counter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.85rem 0 0;
+}
+.counter-actions button {
+  min-height: 44px;
+  min-width: 44px;
+  font-size: 0.9rem;
+}
+.counter-wrap .counter-architecture {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+.counter-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (max-width: 520px) {
+  .counter-wrap {
+    padding: 0.8rem;
+  }
+  .counter-marker-group {
+    min-width: 7.5rem;
+  }
+  .counter-wrap .counter-feedback {
+    min-height: 4.8em;
+  }
+}
