@@ -13,6 +13,12 @@ Copyright © 2026 Christopher Snow
 - Course generation rebuilt 58 lessons; the reference is also installed on the separately maintained Hello World page. Runtime/compiler/vendor files, learner storage formats and platform code are unchanged.
 - Full course execution and full browser checks started locally. Exact pull-request-head CI repeats generated-source consistency, all unit tests, all 64 reference execution checks, all lesson/challenge executions and the entire browser suite before merge. Those results belong to their CI run rather than this pre-commit record.
 
+## Final responsive header check
+
+Calculator and Reference retain their visible text on desktop and use their labelled 44px icons on phones. This keeps the theme control in the same navigation row. The combined focused reference and calculator-shortcut run passed 12/12 tests after the header adjustment.
+
+Full local course execution completed: 57 native examples, 196 native cases and 57 incomplete starters rejected; 58 xv6 examples, three xv6 cases and the remaining incomplete starter rejected; no failures.
+
 ## Learning evidence
 
 Reviewers worked from the stated prerequisites and exercised the built interface; no human novice study was conducted. These checks establish content/tool consistency and functional behaviour, not that every learner will understand the material. A novice transfer check should ask the learner to distinguish a label, exported symbol and entry point in a fresh program and to predict an unfamiliar instruction's effect using the reference.

@@ -274,7 +274,14 @@
   }
   #open-reference,
   #open-calculator {
-    padding: 0.5rem 0.65rem;
+    justify-content: center;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    padding: 0;
+  }
+  .header-tool-label {
+    display: none;
   }
   #instruction-reference summary span {
     display: inline;
