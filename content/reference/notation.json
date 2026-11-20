@@ -1,0 +1,29 @@
+{
+  "title": "Reading assembly notation",
+  "header": ".text\n.global reference_example\nreference_example:",
+  "intro": "The assembler turns assembly text into machine instructions. Directives give the assembler directions; labels name positions in the program. Neither runs as an instruction.",
+  "lines": [
+    {
+      "source": ".text",
+      "explanation": "Selects the code section, where the assembler places the instructions that follow."
+    },
+    {
+      "source": ".global reference_example",
+      "explanation": "Makes the name reference_example available to other assembled files when the linker joins them. .globl is another spelling of .global."
+    },
+    {
+      "source": "reference_example:",
+      "explanation": "Defines a label at this position. Here it names the first instruction's address. reference_example is a name chosen for this example, not a reserved command."
+    }
+  ],
+  "note": ".global alone does not choose where execution starts or call the code. This course's supplied linker script selects _start as the program's entry point, the address where xv6 starts your program.",
+  "preparedNote": "In lesson fragments, the lab supplies entry, capture and exit code. Edit the lesson's instructions; you do not need to add this header. Complete-program projects include their own entry code.",
+  "pseudoNote": "A pseudo-instruction is assembler shorthand for one or more machine instructions. The recorded examples show before and after the whole source line, including every instruction it expands into.",
+  "placeholders": [
+    { "source": "rd", "explanation": "A destination register: the register that receives the result." },
+    { "source": "rs, rs1, rs2", "explanation": "Source registers: the registers whose values the instruction reads." },
+    { "source": "imm", "explanation": "An immediate: a number written directly in the instruction. Each instruction's rules give the allowed range." },
+    { "source": "offset(base)", "explanation": "A memory address formed by adding the written byte offset to the address in the base register." },
+    { "source": "label", "explanation": "A name defined with a colon, such as retry:. Use the name without the colon in a branch or jump." }
+  ]
+}

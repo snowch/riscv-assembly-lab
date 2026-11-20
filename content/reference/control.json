@@ -1,0 +1,903 @@
+[
+  {
+    "id": "beq",
+    "title": "Branch if equal",
+    "kind": "instruction",
+    "summary": "Branches to a label when the two register bit patterns match.",
+    "syntax": [
+      "beq rs1, rs2, label"
+    ],
+    "rules": [
+      "Write two register names followed by a code label. A label such as matched: names the instruction location that follows it.",
+      "The branch changes which instruction runs next. It does not change its input registers or write condition flags.",
+      "When the condition is false, execution continues with the instruction immediately after the branch.",
+      "A single machine branch reaches even byte offsets from -4096 to 4094, measured from the branch. GNU may expand a branch to a farther label."
+    ],
+    "examples": [
+      {
+        "id": "beq-taken",
+        "setup": "li t0, 9\nli t1, 9",
+        "instruction": "beq t0, t1, matched",
+        "watch": [
+          "t0",
+          "t1"
+        ],
+        "explanation": "Both inputs contain the same bits, so the next instruction is at matched.",
+        "continuation": "li t2, 0\nj branch_done\nmatched:\nli t2, 1\nbranch_done:"
+      },
+      {
+        "id": "beq-not-taken",
+        "setup": "li t0, 9\nli t1, 11",
+        "instruction": "beq t0, t1, matched",
+        "watch": [
+          "t0",
+          "t1"
+        ],
+        "explanation": "The bit patterns differ. The next instruction is the fall-through line after beq.",
+        "continuation": "li t2, 0\nj branch_done\nmatched:\nli t2, 1\nbranch_done:"
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "beq t0, 7, matched",
+        "explanation": "The second input must be a register. Load the constant into a register before comparing it."
+      }
+    ]
+  },
+  {
+    "id": "bne",
+    "title": "Branch if not equal",
+    "kind": "instruction",
+    "summary": "Branches to a label when the two register bit patterns differ.",
+    "syntax": [
+      "bne rs1, rs2, label"
+    ],
+    "rules": [
+      "Write two register names followed by a code label. A label such as different: names the instruction location that follows it.",
+      "The branch changes which instruction runs next. It does not change its input registers or write condition flags.",
+      "When the condition is false, execution continues with the instruction immediately after the branch.",
+      "A single machine branch reaches even byte offsets from -4096 to 4094, measured from the branch. GNU may expand a branch to a farther label."
+    ],
+    "examples": [
+      {
+        "id": "bne-taken",
+        "setup": "li t0, 9\nli t1, 11",
+        "instruction": "bne t0, t1, different",
+        "watch": [
+          "t0",
+          "t1"
+        ],
+        "explanation": "The input bit patterns differ, so the next instruction is at different.",
+        "continuation": "li t2, 0\nj branch_done\ndifferent:\nli t2, 1\nbranch_done:"
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "bne t0, 7, different",
+        "explanation": "The second input must be a register. Load the constant into a register before comparing it."
+      }
+    ]
+  },
+  {
+    "id": "blt",
+    "title": "Branch if signed less than",
+    "kind": "instruction",
+    "summary": "Branches when the first register holds a smaller signed integer than the second.",
+    "syntax": [
+      "blt rs1, rs2, label"
+    ],
+    "rules": [
+      "Write two register names followed by a code label. A label such as below: names the instruction location that follows it.",
+      "The branch changes which instruction runs next. It does not change its input registers or write condition flags.",
+      "When the condition is false, execution continues with the instruction immediately after the branch.",
+      "A single machine branch reaches even byte offsets from -4096 to 4094, measured from the branch. GNU may expand a branch to a farther label."
+    ],
+    "examples": [
+      {
+        "id": "blt-taken",
+        "setup": "li t0, -1\nli t1, 3",
+        "instruction": "blt t0, t1, below",
+        "watch": [
+          "t0",
+          "t1"
+        ],
+        "explanation": "The first input is negative and the second is positive. Signed comparison selects below.",
+        "continuation": "li t2, 0\nj branch_done\nbelow:\nli t2, 1\nbranch_done:"
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "blt t0, 7, below",
+        "explanation": "The second input must be a register. Load the constant into a register before comparing it."
+      }
+    ]
+  },
+  {
+    "id": "bge",
+    "title": "Branch if signed greater than or equal",
+    "kind": "instruction",
+    "summary": "Branches when the first signed integer is at least the second.",
+    "syntax": [
+      "bge rs1, rs2, label"
+    ],
+    "rules": [
+      "Write two register names followed by a code label. A label such as enough: names the instruction location that follows it.",
+      "The branch changes which instruction runs next. It does not change its input registers or write condition flags.",
+      "When the condition is false, execution continues with the instruction immediately after the branch.",
+      "A single machine branch reaches even byte offsets from -4096 to 4094, measured from the branch. GNU may expand a branch to a farther label."
+    ],
+    "examples": [
+      {
+        "id": "bge-taken",
+        "setup": "li t0, 3\nli t1, -1",
+        "instruction": "bge t0, t1, enough",
+        "watch": [
+          "t0",
+          "t1"
+        ],
+        "explanation": "The first input is positive and the second is negative. Signed comparison selects enough.",
+        "continuation": "li t2, 0\nj branch_done\nenough:\nli t2, 1\nbranch_done:"
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "bge t0, 7, enough",
+        "explanation": "The second input must be a register. Load the constant into a register before comparing it."
+      }
+    ]
+  },
+  {
+    "id": "bltu",
+    "title": "Branch if unsigned less than",
+    "kind": "instruction",
+    "summary": "Branches when the first unsigned register value is smaller than the second.",
+    "syntax": [
+      "bltu rs1, rs2, label"
+    ],
+    "rules": [
+      "Write two register names followed by a code label. A label such as below: names the instruction location that follows it.",
+      "The branch changes which instruction runs next. It does not change its input registers or write condition flags.",
+      "When the condition is false, execution continues with the instruction immediately after the branch.",
+      "A single machine branch reaches even byte offsets from -4096 to 4094, measured from the branch. GNU may expand a branch to a farther label."
+    ],
+    "examples": [
+      {
+        "id": "bltu-taken",
+        "setup": "li t0, 3\nli t1, -1",
+        "instruction": "bltu t0, t1, below",
+        "watch": [
+          "t0",
+          "t1"
+        ],
+        "explanation": "The bits loaded by li -1 have the largest unsigned reading. Unsigned comparison selects below.",
+        "continuation": "li t2, 0\nj branch_done\nbelow:\nli t2, 1\nbranch_done:"
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "bltu t0, 7, below",
+        "explanation": "The second input must be a register. Load the constant into a register before comparing it."
+      }
+    ]
+  },
+  {
+    "id": "bgeu",
+    "title": "Branch if unsigned greater than or equal",
+    "kind": "instruction",
+    "summary": "Branches when the first unsigned register value is at least the second.",
+    "syntax": [
+      "bgeu rs1, rs2, label"
+    ],
+    "rules": [
+      "Write two register names followed by a code label. A label such as enough: names the instruction location that follows it.",
+      "The branch changes which instruction runs next. It does not change its input registers or write condition flags.",
+      "When the condition is false, execution continues with the instruction immediately after the branch.",
+      "A single machine branch reaches even byte offsets from -4096 to 4094, measured from the branch. GNU may expand a branch to a farther label."
+    ],
+    "examples": [
+      {
+        "id": "bgeu-taken",
+        "setup": "li t0, -1\nli t1, 3",
+        "instruction": "bgeu t0, t1, enough",
+        "watch": [
+          "t0",
+          "t1"
+        ],
+        "explanation": "The bits loaded by li -1 have the largest unsigned reading. Unsigned comparison selects enough.",
+        "continuation": "li t2, 0\nj branch_done\nenough:\nli t2, 1\nbranch_done:"
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "bgeu t0, 7, enough",
+        "explanation": "The second input must be a register. Load the constant into a register before comparing it."
+      }
+    ]
+  },
+  {
+    "id": "beqz",
+    "title": "Branch if zero",
+    "kind": "pseudo",
+    "summary": "Branches to a label when the input register is zero.",
+    "syntax": [
+      "beqz rs, label"
+    ],
+    "rules": [
+      "This is assembler shorthand for beq rs, zero, label. The zero register always reads zero.",
+      "The input register keeps its value. When it is non-zero, execution continues with the next instruction.",
+      "A label ends in a colon where it is defined. Omit the colon when naming the branch target."
+    ],
+    "examples": [
+      {
+        "id": "beqz-zero",
+        "setup": "li t0, 0",
+        "instruction": "beqz t0, empty",
+        "watch": [
+          "t0"
+        ],
+        "explanation": "The comparison uses the zero register as its second input, so execution selects empty.",
+        "continuation": "li t1, 0\nj zero_done\nempty:\nli t1, 1\nzero_done:"
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "beqz 0, empty",
+        "explanation": "Write a register name as the input, not a number."
+      }
+    ]
+  },
+  {
+    "id": "j",
+    "title": "Jump to a label",
+    "kind": "pseudo",
+    "summary": "Continues execution at a label without saving a return address.",
+    "syntax": [
+      "j label"
+    ],
+    "rules": [
+      "This is assembler shorthand for jal zero, label. The unused return address is written to zero and discarded.",
+      "A label is a name followed by a colon where it is defined. The jump names that label without the colon.",
+      "A single jal reaches even byte offsets from -1048576 to 1048574. Keep the target within that range."
+    ],
+    "examples": [
+      {
+        "id": "j-skip",
+        "setup": "li t0, 7",
+        "instruction": "j keep_reading",
+        "watch": [
+          "t0",
+          "ra"
+        ],
+        "explanation": "The jump selects keep_reading. It skips the intervening instruction and leaves ra unchanged.",
+        "continuation": "li t0, 0\nkeep_reading:"
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "j t0, done",
+        "explanation": "j takes one code label. It does not take an input register before the label."
+      }
+    ]
+  },
+  {
+    "id": "call",
+    "title": "Call a function",
+    "kind": "pseudo",
+    "summary": "Saves a return address in ra and continues at the named function.",
+    "syntax": [
+      "call label"
+    ],
+    "rules": [
+      "ra holds the address at which execution should resume after the called function returns.",
+      "The assembler and linker choose the machine instructions for this pseudo-instruction. A call can occupy more than one machine instruction.",
+      "A nested function call overwrites ra. A function that calls another function must preserve its own incoming return address if it needs it later.",
+      "By the calling convention, arguments use a0 to a7 and integer results use a0, or a0 and a1 for a two-register result."
+    ],
+    "examples": [
+      {
+        "id": "call-return-address",
+        "setup": "li a0, 5",
+        "instruction": "call double_reading",
+        "watch": [
+          "a0",
+          "ra"
+        ],
+        "explanation": "The call writes ra and selects double_reading. The function body has not yet run in this after-state.",
+        "continuation": "j call_done\ndouble_reading:\nadd a0, a0, a0\nret\ncall_done:"
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "call 7(t0)",
+        "explanation": "This call form expects a function label. It does not use a memory offset and base register."
+      }
+    ]
+  },
+  {
+    "id": "ret",
+    "title": "Return through ra",
+    "kind": "pseudo",
+    "summary": "Continues at the return address held in ra.",
+    "syntax": [
+      "ret"
+    ],
+    "rules": [
+      "This is assembler shorthand for jalr zero, 0(ra). The target address has its lowest bit cleared.",
+      "ret has no written operands. It selects where execution continues; it does not copy a result into a0.",
+      "An ordinary call supplies ra. A top-level lesson fragment has no ordinary caller, so do not finish that fragment with ret."
+    ],
+    "examples": [
+      {
+        "id": "ret-prepared-address",
+        "setup": "li a0, 7\nla ra, returned",
+        "instruction": "ret",
+        "watch": [
+          "a0",
+          "ra"
+        ],
+        "explanation": "This independent example prepares ra with the address of returned. ret selects that address and leaves a0 unchanged.",
+        "continuation": "li a0, 0\nreturned:"
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "ret a0",
+        "explanation": "ret does not take a result register. Put the result in a0 before returning."
+      }
+    ]
+  },
+  {
+    "id": "ecall",
+    "title": "Ask xv6 for a service",
+    "kind": "instruction",
+    "summary": "Transfers control to the operating system to request a service.",
+    "syntax": [
+      "ecall"
+    ],
+    "rules": [
+      "The course runs xv6 user programs. Put the xv6 system-call number in a7 and arguments in a0 to a5 before ecall.",
+      "For xv6 write, use a7 = 16, a0 = the file descriptor, a1 = the byte address, and a2 = the byte count. Descriptor 1 is standard output.",
+      "After write returns, a0 holds the number of bytes written, or -1 on failure. Other services have their own results. xv6 exit uses a7 = 2 and does not return.",
+      "System-call numbers belong to the operating system, not the RISC-V instruction set. Linux uses different numbers. ecall takes no written operands."
+    ],
+    "examples": [
+      {
+        "id": "ecall-write",
+        "setup": "li a0, 1\nla a1, lesson_data\nli a2, 2\nli a7, 16",
+        "instruction": "ecall",
+        "watch": [
+          "a0",
+          "a1",
+          "a2",
+          "a7"
+        ],
+        "explanation": "The prepared bytes are written to standard output. The after-state is captured when xv6 returns to the instruction after ecall.",
+        "data": [
+          65,
+          10
+        ]
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "ecall 16",
+        "explanation": "Load the system-call number into a7 first. ecall itself has no operand."
+      }
+    ]
+  },
+  {
+    "id": "la",
+    "title": "Load an address",
+    "kind": "pseudo",
+    "summary": "Writes the address of a named code or data location into a register.",
+    "syntax": [
+      "la rd, symbol"
+    ],
+    "rules": [
+      "An address identifies a location in memory. A symbol is the name the assembler and linker use for such a location.",
+      "la loads the location address. It does not load the bytes stored at that location.",
+      "This pseudo-instruction may expand into several machine instructions. Its expansion depends on assembler and linker settings."
+    ],
+    "examples": [
+      {
+        "id": "la-data",
+        "setup": "li t0, 0",
+        "instruction": "la t0, lesson_data",
+        "watch": [
+          "t0"
+        ],
+        "explanation": "The destination receives the address of the supplied data region. Use a load instruction to read the byte at that address.",
+        "data": [
+          23
+        ]
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "la t0, 4(t1)",
+        "explanation": "la expects a named location. For a register address plus a small byte offset, use addi."
+      }
+    ]
+  },
+  {
+    "id": "lb",
+    "title": "Load one byte with sign extension",
+    "kind": "instruction",
+    "summary": "Copies one memory byte into a register with sign extension.",
+    "syntax": [
+      "lb rd, offset(base)"
+    ],
+    "rules": [
+      "Write the destination first, then offset(base). The byte address is the base register value plus the written offset.",
+      "The offset is a whole number from -2048 to 2047. The base register keeps its value unless it is also the destination. Writing to zero discards the loaded value.",
+      "The loaded value's top bit is copied into the remaining upper register bits. This is sign extension.",
+      "In this course, multi-byte values use little-endian order: the byte at the lowest address holds the lowest eight bits."
+    ],
+    "examples": [
+      {
+        "id": "lb-data",
+        "setup": "la t0, lesson_data\nli t1, 0",
+        "instruction": "lb t1, 0(t0)",
+        "watch": [
+          "t0",
+          "t1"
+        ],
+        "explanation": "The top loaded bit is one. Inspect the upper register bits to see how the load extends it.",
+        "data": [
+          255,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "lb t1, 2048(t0)",
+        "explanation": "The written byte offset is outside -2048 to 2047. Prepare the required address in a register first."
+      }
+    ]
+  },
+  {
+    "id": "lbu",
+    "title": "Load one byte with zero extension",
+    "kind": "instruction",
+    "summary": "Copies one memory byte into a register with zero extension.",
+    "syntax": [
+      "lbu rd, offset(base)"
+    ],
+    "rules": [
+      "Write the destination first, then offset(base). The byte address is the base register value plus the written offset.",
+      "The offset is a whole number from -2048 to 2047. The base register keeps its value unless it is also the destination. Writing to zero discards the loaded value.",
+      "The remaining upper register bits are filled with zero. This is zero extension.",
+      "In this course, multi-byte values use little-endian order: the byte at the lowest address holds the lowest eight bits."
+    ],
+    "examples": [
+      {
+        "id": "lbu-data",
+        "setup": "la t0, lesson_data\nli t1, 0",
+        "instruction": "lbu t1, 0(t0)",
+        "watch": [
+          "t0",
+          "t1"
+        ],
+        "explanation": "The top loaded bit is one. Inspect the upper register bits to see how the load extends it.",
+        "data": [
+          255,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "lbu t1, 2048(t0)",
+        "explanation": "The written byte offset is outside -2048 to 2047. Prepare the required address in a register first."
+      }
+    ]
+  },
+  {
+    "id": "lh",
+    "title": "Load two bytes with sign extension",
+    "kind": "instruction",
+    "summary": "Copies 2 consecutive memory bytes into a register with sign extension.",
+    "syntax": [
+      "lh rd, offset(base)"
+    ],
+    "rules": [
+      "Write the destination first, then offset(base). The byte address is the base register value plus the written offset.",
+      "The offset is a whole number from -2048 to 2047. The base register keeps its value unless it is also the destination. Writing to zero discards the loaded value.",
+      "The loaded value's top bit is copied into the remaining upper register bits. This is sign extension.",
+      "In this course, multi-byte values use little-endian order: the byte at the lowest address holds the lowest eight bits.",
+      "Use an address divisible by 2 for this 2-byte access. Misaligned access behaviour depends on the execution environment."
+    ],
+    "examples": [
+      {
+        "id": "lh-data",
+        "setup": "la t0, lesson_data\nli t1, 0",
+        "instruction": "lh t1, 0(t0)",
+        "watch": [
+          "t0",
+          "t1"
+        ],
+        "explanation": "The top loaded bit is one. Inspect the upper register bits to see how the load extends it.",
+        "data": [
+          255,
+          255,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "lh t1, 2048(t0)",
+        "explanation": "The written byte offset is outside -2048 to 2047. Prepare the required address in a register first."
+      }
+    ]
+  },
+  {
+    "id": "lhu",
+    "title": "Load two bytes with zero extension",
+    "kind": "instruction",
+    "summary": "Copies 2 consecutive memory bytes into a register with zero extension.",
+    "syntax": [
+      "lhu rd, offset(base)"
+    ],
+    "rules": [
+      "Write the destination first, then offset(base). The byte address is the base register value plus the written offset.",
+      "The offset is a whole number from -2048 to 2047. The base register keeps its value unless it is also the destination. Writing to zero discards the loaded value.",
+      "The remaining upper register bits are filled with zero. This is zero extension.",
+      "In this course, multi-byte values use little-endian order: the byte at the lowest address holds the lowest eight bits.",
+      "Use an address divisible by 2 for this 2-byte access. Misaligned access behaviour depends on the execution environment."
+    ],
+    "examples": [
+      {
+        "id": "lhu-data",
+        "setup": "la t0, lesson_data\nli t1, 0",
+        "instruction": "lhu t1, 0(t0)",
+        "watch": [
+          "t0",
+          "t1"
+        ],
+        "explanation": "The top loaded bit is one. Inspect the upper register bits to see how the load extends it.",
+        "data": [
+          255,
+          255,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "lhu t1, 2048(t0)",
+        "explanation": "The written byte offset is outside -2048 to 2047. Prepare the required address in a register first."
+      }
+    ]
+  },
+  {
+    "id": "lw",
+    "title": "Load four bytes with sign extension",
+    "kind": "instruction",
+    "summary": "Copies 4 consecutive memory bytes into a register with sign extension.",
+    "syntax": [
+      "lw rd, offset(base)"
+    ],
+    "rules": [
+      "Write the destination first, then offset(base). The byte address is the base register value plus the written offset.",
+      "The offset is a whole number from -2048 to 2047. The base register keeps its value unless it is also the destination. Writing to zero discards the loaded value.",
+      "The loaded value's top bit is copied into the remaining upper register bits. This is sign extension.",
+      "In this course, multi-byte values use little-endian order: the byte at the lowest address holds the lowest eight bits.",
+      "Use an address divisible by 4 for this 4-byte access. Misaligned access behaviour depends on the execution environment."
+    ],
+    "examples": [
+      {
+        "id": "lw-data",
+        "setup": "la t0, lesson_data\nli t1, 0",
+        "instruction": "lw t1, 0(t0)",
+        "watch": [
+          "t0",
+          "t1"
+        ],
+        "explanation": "The top loaded bit is one. Inspect the upper register bits to see how the load extends it.",
+        "data": [
+          255,
+          255,
+          255,
+          255,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "lw t1, 2048(t0)",
+        "explanation": "The written byte offset is outside -2048 to 2047. Prepare the required address in a register first."
+      }
+    ]
+  },
+  {
+    "id": "lwu",
+    "title": "Load four bytes with zero extension",
+    "kind": "instruction",
+    "summary": "Copies 4 consecutive memory bytes into a register with zero extension.",
+    "syntax": [
+      "lwu rd, offset(base)"
+    ],
+    "rules": [
+      "Write the destination first, then offset(base). The byte address is the base register value plus the written offset.",
+      "The offset is a whole number from -2048 to 2047. The base register keeps its value unless it is also the destination. Writing to zero discards the loaded value.",
+      "The remaining upper register bits are filled with zero. This is zero extension.",
+      "In this course, multi-byte values use little-endian order: the byte at the lowest address holds the lowest eight bits.",
+      "Use an address divisible by 4 for this 4-byte access. Misaligned access behaviour depends on the execution environment."
+    ],
+    "examples": [
+      {
+        "id": "lwu-data",
+        "setup": "la t0, lesson_data\nli t1, 0",
+        "instruction": "lwu t1, 0(t0)",
+        "watch": [
+          "t0",
+          "t1"
+        ],
+        "explanation": "The top loaded bit is one. Inspect the upper register bits to see how the load extends it.",
+        "data": [
+          255,
+          255,
+          255,
+          255,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "lwu t1, 2048(t0)",
+        "explanation": "The written byte offset is outside -2048 to 2047. Prepare the required address in a register first."
+      }
+    ]
+  },
+  {
+    "id": "ld",
+    "title": "Load eight bytes",
+    "kind": "instruction",
+    "summary": "Copies 8 consecutive memory bytes into a register.",
+    "syntax": [
+      "ld rd, offset(base)"
+    ],
+    "rules": [
+      "Write the destination first, then offset(base). The byte address is the base register value plus the written offset.",
+      "The offset is a whole number from -2048 to 2047. The base register keeps its value unless it is also the destination. Writing to zero discards the loaded value.",
+      "All 64 register bits come from the eight loaded bytes.",
+      "In this course, multi-byte values use little-endian order: the byte at the lowest address holds the lowest eight bits.",
+      "Use an address divisible by 8 for this 8-byte access. Misaligned access behaviour depends on the execution environment."
+    ],
+    "examples": [
+      {
+        "id": "ld-data",
+        "setup": "la t0, lesson_data\nli t1, 0",
+        "instruction": "ld t1, 0(t0)",
+        "watch": [
+          "t0",
+          "t1"
+        ],
+        "explanation": "The load copies all eight supplied bytes into the destination. The address register keeps its value.",
+        "data": [
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255,
+          255
+        ]
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "ld t1, 2048(t0)",
+        "explanation": "The written byte offset is outside -2048 to 2047. Prepare the required address in a register first."
+      }
+    ]
+  },
+  {
+    "id": "sb",
+    "title": "Store one byte",
+    "kind": "instruction",
+    "summary": "Copies the lowest 8 register bits into one memory byte.",
+    "syntax": [
+      "sb rs, offset(base)"
+    ],
+    "rules": [
+      "Write the source register first, then offset(base). The byte address is the base register value plus the written offset.",
+      "The offset is a whole number from -2048 to 2047. Both the source and base registers keep their values.",
+      "Only the lowest 8 source bits are stored.",
+      "In this course, multi-byte values use little-endian order: the lowest eight source bits go to the lowest byte address."
+    ],
+    "examples": [
+      {
+        "id": "sb-data",
+        "setup": "la t0, lesson_data\nli t1, 0x123456789abcdef0",
+        "instruction": "sb t1, 0(t0)",
+        "watch": [
+          "t0",
+          "t1"
+        ],
+        "explanation": "Inspect the bytes in the supplied data region. The store copies source bits into memory while both input registers keep their values.",
+        "data": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "sb t1, 2048(t0)",
+        "explanation": "The written byte offset is outside -2048 to 2047. Prepare the required address in a register first."
+      }
+    ]
+  },
+  {
+    "id": "sh",
+    "title": "Store two bytes",
+    "kind": "instruction",
+    "summary": "Copies the lowest 16 register bits into 2 consecutive memory bytes.",
+    "syntax": [
+      "sh rs, offset(base)"
+    ],
+    "rules": [
+      "Write the source register first, then offset(base). The byte address is the base register value plus the written offset.",
+      "The offset is a whole number from -2048 to 2047. Both the source and base registers keep their values.",
+      "Only the lowest 16 source bits are stored.",
+      "In this course, multi-byte values use little-endian order: the lowest eight source bits go to the lowest byte address.",
+      "Use an address divisible by 2 for this 2-byte access. Misaligned access behaviour depends on the execution environment."
+    ],
+    "examples": [
+      {
+        "id": "sh-data",
+        "setup": "la t0, lesson_data\nli t1, 0x123456789abcdef0",
+        "instruction": "sh t1, 0(t0)",
+        "watch": [
+          "t0",
+          "t1"
+        ],
+        "explanation": "Inspect the bytes in the supplied data region. The store copies source bits into memory while both input registers keep their values.",
+        "data": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "sh t1, 2048(t0)",
+        "explanation": "The written byte offset is outside -2048 to 2047. Prepare the required address in a register first."
+      }
+    ]
+  },
+  {
+    "id": "sw",
+    "title": "Store four bytes",
+    "kind": "instruction",
+    "summary": "Copies the lowest 32 register bits into 4 consecutive memory bytes.",
+    "syntax": [
+      "sw rs, offset(base)"
+    ],
+    "rules": [
+      "Write the source register first, then offset(base). The byte address is the base register value plus the written offset.",
+      "The offset is a whole number from -2048 to 2047. Both the source and base registers keep their values.",
+      "Only the lowest 32 source bits are stored.",
+      "In this course, multi-byte values use little-endian order: the lowest eight source bits go to the lowest byte address.",
+      "Use an address divisible by 4 for this 4-byte access. Misaligned access behaviour depends on the execution environment."
+    ],
+    "examples": [
+      {
+        "id": "sw-data",
+        "setup": "la t0, lesson_data\nli t1, 0x123456789abcdef0",
+        "instruction": "sw t1, 0(t0)",
+        "watch": [
+          "t0",
+          "t1"
+        ],
+        "explanation": "Inspect the bytes in the supplied data region. The store copies source bits into memory while both input registers keep their values.",
+        "data": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "sw t1, 2048(t0)",
+        "explanation": "The written byte offset is outside -2048 to 2047. Prepare the required address in a register first."
+      }
+    ]
+  },
+  {
+    "id": "sd",
+    "title": "Store eight bytes",
+    "kind": "instruction",
+    "summary": "Copies the lowest 64 register bits into 8 consecutive memory bytes.",
+    "syntax": [
+      "sd rs, offset(base)"
+    ],
+    "rules": [
+      "Write the source register first, then offset(base). The byte address is the base register value plus the written offset.",
+      "The offset is a whole number from -2048 to 2047. Both the source and base registers keep their values.",
+      "All 64 source bits are stored in eight consecutive bytes.",
+      "In this course, multi-byte values use little-endian order: the lowest eight source bits go to the lowest byte address.",
+      "Use an address divisible by 8 for this 8-byte access. Misaligned access behaviour depends on the execution environment."
+    ],
+    "examples": [
+      {
+        "id": "sd-data",
+        "setup": "la t0, lesson_data\nli t1, 0x123456789abcdef0",
+        "instruction": "sd t1, 0(t0)",
+        "watch": [
+          "t0",
+          "t1"
+        ],
+        "explanation": "Inspect the bytes in the supplied data region. The store copies source bits into memory while both input registers keep their values.",
+        "data": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "mistakes": [
+      {
+        "source": "sd t1, 2048(t0)",
+        "explanation": "The written byte offset is outside -2048 to 2047. Prepare the required address in a register first."
+      }
+    ]
+  }
+]

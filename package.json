@@ -10,7 +10,8 @@
     "check:assets": "node tools/check-assets.js",
     "build:course": "node tools/build-course.js",
     "test:course": "node tools/check-course.js",
-    "build:editor": "node tools/build-editor.js"
+    "build:editor": "node tools/build-editor.js",
+    "test:reference": "node tools/reference-recordings.js --check"
   },
   "devDependencies": {
     "@codemirror/commands": "6.11.1",
