@@ -51,6 +51,15 @@ export function renderCompletion() {
   document.querySelectorAll("[data-completion]").forEach((el) => {
     el.hidden = !ids.has(el.dataset.completion);
   });
+  const row = document.getElementById("course-row-progress");
+  if (row) {
+    const known = [...document.querySelectorAll("[data-completion]")];
+    row.textContent =
+      known.filter((n) => ids.has(n.dataset.completion)).length +
+      " / " +
+      known.length +
+      " complete";
+  }
   const progress = document.getElementById("course-progress");
   if (progress)
     progress.textContent = `${document.querySelectorAll("[data-completion]").length} lessons · ${ids.size} marked complete in this browser.`;
@@ -61,6 +70,24 @@ if (
 ) {
   setupTheme();
   renderCompletion();
+  const art = document.querySelector(".home-hero-art"),
+    choices = document.getElementById("course-contents"),
+    hero = document.querySelector(".home-hero");
+  if (art && choices && hero) {
+    const query = matchMedia("(max-width:1000px)"),
+      arrange = () => {
+        if (query.matches) {
+          choices.after(art);
+          art.classList.add("after-choices");
+        } else {
+          hero.append(art);
+          art.classList.remove("after-choices");
+        }
+      };
+    arrange();
+    query.addEventListener("change", arrange);
+  }
+
   const revealModule = () => {
     const target = document.getElementById(location.hash.slice(1));
     if (!target?.matches(".course-module")) return;

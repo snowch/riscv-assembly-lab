@@ -189,21 +189,21 @@ test("completion and independent drafts survive navigation without forcing progr
 }) => {
   await go(page, "addition");
   const contents = page.locator("#course-navigation");
-  await expect(contents).toHaveJSProperty("open", false);
-  await contents.locator(":scope > summary").focus();
+  await expect(contents).toBeHidden();
+  await page.locator("#course-toggle").focus();
   await page.keyboard.press("Enter");
-  await expect(contents).toHaveJSProperty("open", true);
+  await expect(contents).toBeVisible();
   await expect(page.locator('a[aria-current="page"]')).toBeVisible();
   await page.keyboard.press("Enter");
-  await expect(contents).toHaveJSProperty("open", false);
+  await expect(contents).toBeHidden();
   const originalViewport = page.viewportSize();
   await page.setViewportSize({
     width: originalViewport.width > 950 ? 800 : 1100,
     height: originalViewport.height,
   });
-  await expect(contents).toHaveJSProperty("open", false);
+  await expect(contents).toBeHidden();
   await page.setViewportSize(originalViewport);
-  await expect(contents).toHaveJSProperty("open", false);
+  await expect(contents).toBeHidden();
   await expect(page.locator("#reading")).not.toBeVisible();
   await expect(page.locator("#bit-view")).not.toBeVisible();
   await fillSource(page, "li t0,8\nli t1,9\nadd t2,t0,t1");
@@ -330,6 +330,7 @@ test("compiler warnings and download failures remain visible, tab drafts survive
   await returnToExample(page);
   await expect(page.locator("#source")).toHaveValue(code);
   await page.locator("#run").click();
+  await page.locator("#runner-intro [data-continue]").click();
   await expect(page.locator("#state-badge")).toHaveText("Finished", {
     timeout: 45000,
   });

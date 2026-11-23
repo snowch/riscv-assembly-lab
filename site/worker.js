@@ -13,19 +13,22 @@ async function asset(path, text = false) {
   return text ? response.text() : new Uint8Array(await response.arrayBuffer());
 }
 onmessage = async ({ data }) => {
+  let building = false;
   try {
     send("phase", { phase: "loading", message: "Loading tools and xv6…" });
+    const prepared = data.prepared;
     const [as, ld, script, kernel, disk, runtime, builder, filesystem] =
       await Promise.all([
-        asset("./vendor/binutils/as-new.wasm"),
-        asset("./vendor/binutils/ld-new.wasm"),
+        prepared?.as ?? asset("./vendor/binutils/as-new.wasm"),
+        prepared?.ld ?? asset("./vendor/binutils/ld-new.wasm"),
         asset("./user.ld", true),
-        asset("./images/kernel"),
-        asset("./images/fs.img"),
+        prepared?.kernel ?? asset("./images/kernel"),
+        prepared?.disk ?? asset("./images/fs.img"),
         import("./vendor/runtime/riscv_emu_rust_wasm.js"),
         import("./build.js"),
         import("./filesystem.js"),
       ]);
+    building = true;
     send("phase", { phase: "building", message: "Assembling and linking…" });
     const built = await builder.buildProgram(
       data.source,
@@ -35,7 +38,8 @@ onmessage = async ({ data }) => {
     );
     send("built", { diagnostics: built.diagnostics, bytes: built.elf.length });
     await runtime.default({
-      module_or_path: "./vendor/runtime/riscv_emu_rust_wasm_bg.wasm",
+      module_or_path:
+        prepared?.runtime ?? "./vendor/runtime/riscv_emu_rust_wasm_bg.wasm",
     });
     const vm = runtime.WasmRiscv.new();
     vm.setup_program(kernel);
@@ -118,6 +122,9 @@ onmessage = async ({ data }) => {
     }
     tick();
   } catch (error) {
-    send("error", { message: error.message || String(error) });
+    send("error", {
+      message: error.message || String(error),
+      runtimeLoad: !building,
+    });
   }
 };

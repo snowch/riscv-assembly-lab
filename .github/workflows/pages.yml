@@ -44,12 +44,17 @@ jobs:
           name: browser-previews
           path: .artifacts/
           include-hidden-files: true
+      - name: Keep verified assets for older open lessons
+        if: github.event_name != 'pull_request'
+        run: node tools/retain-for-publish.mjs
+        env:
+          PUBLISHED_COURSE_URL: https://snowch.github.io/riscv-assembly-lab/
       - uses: actions/configure-pages@v5
         if: github.event_name != 'pull_request'
       - uses: actions/upload-pages-artifact@v3
         if: github.event_name != 'pull_request'
         with:
-          path: site
+          path: .build/site
   deploy:
     if: github.event_name != 'pull_request'
     needs: check

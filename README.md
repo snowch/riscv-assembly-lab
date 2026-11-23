@@ -38,7 +38,7 @@ GNU `as` and `ld`, compiled to WebAssembly, produce real ELF64 executables. The 
 - Phone/desktop layouts, light/dark/system themes, course navigation and source downloads.
 - Complete assembly downloads; C functions and their supplied assembly/linker script download together as ZIP.
 
-There is no compiler server, account, CDN dependency, SharedArrayBuffer or special hosting-header requirement. Everything builds and executes in a disposable browser worker. The first arithmetic examples use three focused lines. The same editor supports longer assembly and C programs.
+There is no compiler server, account, CDN dependency, SharedArrayBuffer or special hosting-header requirement. A release-scoped tool host prepares the assembler, linker, compiler and emulator once. Each execution uses a disposable browser worker and a fresh xv6 machine. Header Code runner controls preparation, memory release and the 5/15/30/60-minute idle preference (30 minutes by default). Calculator and Reference remain in the header. The first arithmetic examples use three focused lines. The same editor supports longer assembly and C programs.
 
 ## Course and authoring
 
@@ -92,3 +92,9 @@ Optional floating-point material interprets binary32 representations with intege
 ## Source and licences
 
 [Distributed provenance and licences](site/NOTICE.md) records exact revisions, complete GNU/TinyCC sources, the patched CPU source, guest sources and all notices. `asset-manifest.json` pins distributed assets with SHA-256 checksums. GNU binutils is GPL-3.0-or-later; TinyCC is LGPL-2.1-or-later; CPU/xv6 and interface integration retain their stated MIT licences. Lesson prose/exercises adapted from Assembly Lab remain © 2026 Christopher Snow, all rights reserved, under [the content licence](content/LICENSE).
+
+## Course status and offline use
+
+App status checks small release metadata automatically. Online navigation uses published pages; an already open document keeps one coherent release. Save offline copy explicitly downloads and verifies the complete course, including tools, built-in Reference and Calculator. Wait for Downloaded and ready to use offline before disconnecting. A later Update offline copy retains completed files and the earlier working copy; Restart to update saves all controlled windows before activating the verified update. Reload latest course refreshes an online window without consenting to a full offline download. Failed saving or an active/paused run blocks restart. Drafts, predictions, projects, genuine earlier results and completion survive successful reload; reload never runs code automatically.
+
+See [course style](docs/course-style.md), [runner lifecycle](docs/code-runner-design.md) and [offline/update design](docs/offline-update-design.md). All runtime assets are self-hosted. Optional external reference websites need internet access. Browser storage can be evicted; it is not a substitute for exported work.

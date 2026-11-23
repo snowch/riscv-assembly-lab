@@ -63,3 +63,7 @@ This calculator performs separate mathematical scratch work using exact integers
 ## Independent playground
 
 The standalone playground and its project manager are original additions using this site's existing editor, GNU/TinyCC tools, RISC-V emulator and xv6 guest under the licences recorded above. No AArch64 Playground source, styles, artwork or teaching examples were imported. Canonical examples come from this course with its existing content attribution. Complete assembly projects define their own entry and exit; their source is not wrapped by the lesson reporter. Debugger observations retain their sampled moment, and a last pause is not represented as an exit state.
+
+## Shared interface assets
+
+IBM Plex Sans and Mono are bundled under the SIL Open Font License; see `fonts/ibmplexsans-OFL.txt` and `fonts/ibmplexmono-OFL.txt`. Material Symbols Rounded are by Google, Apache-2.0; see `fonts/material-symbols-Apache-2.0.txt`. These assets are served by this course and included in the verified offline copy.

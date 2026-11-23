@@ -10,25 +10,25 @@ test("breadcrumbs provide a compact accessible course menu and reveal the linked
       await page.goto("/lessons/addition/");
       await page.locator("#theme").selectOption(theme);
       const menu = page.locator("#course-navigation"),
-        toggle = menu.locator(":scope > summary");
+        toggle = page.locator("#course-toggle");
       await expect(page.locator(".lesson-breadcrumbs")).toContainText(
         "First instructions",
       );
-      await expect(menu).toHaveJSProperty("open", false);
+      await expect(menu).toBeHidden();
       const heading = await page.locator("h1").boundingBox();
       await toggle.focus();
       await page.keyboard.press("Enter");
-      await expect(menu).toHaveJSProperty("open", true);
+      await expect(menu).toBeVisible();
       await expect(menu.locator('a[aria-current="page"]')).toBeVisible();
       const openHeading = await page.locator("h1").boundingBox();
-      expect(openHeading.y).toBe(heading.y);
+      expect(openHeading.y).toBeGreaterThan(heading.y);
       expect(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,
         ),
       ).toBe(true);
       await page.keyboard.press("Escape");
-      await expect(menu).toHaveJSProperty("open", false);
+      await expect(menu).toBeHidden();
       await expect(toggle).toBeFocused();
       await expect(page.locator(".lesson-guide")).toContainText(
         "li (load immediate)",
