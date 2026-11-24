@@ -399,7 +399,7 @@ async function courseWindows(release) {
   const paths = new Set(release.files.filter(f => f.path.endsWith('.html')).map(f => new URL(f.path, BASE).pathname));
   return (await self.clients.matchAll({ type: 'window', includeUncontrolled: true })).filter(client => {
     const url = new URL(client.url);
-    return url.origin === BASE.origin && paths.has(url.pathname === BASE.pathname ? url.pathname + 'index.html' : url.pathname);
+    return url.origin === BASE.origin && paths.has(url.pathname.endsWith('/') ? url.pathname + 'index.html' : url.pathname);
   });
 }
 function ask(client, token) {

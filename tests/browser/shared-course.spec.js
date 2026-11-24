@@ -172,3 +172,45 @@ test("header tools, explicit runner preparation, saved work and complete fresh-t
     }
   expect(errors).toEqual([]);
 });
+
+test("standalone Hello World reuses prepared tools, runs edited source and restores its observed output", async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(120000);
+  await context.addInitScript(() =>
+    localStorage.setItem("riscv-assembly-lab:runner-intro:1", "1"),
+  );
+  await page.goto(base + "/lessons/hello-world/");
+  await expect(page.locator("#run")).toBeEnabled();
+  await expect(page.locator("#app-status-open")).toBeVisible();
+  await expect(page.locator("#code-runner-open")).toBeVisible();
+  const source = (await page.locator("#source").inputValue()).replace(
+    "Hello, RISC-V!",
+    "Hello, learner!",
+  );
+  await page.locator(".hello-editor .cm-content").fill(source);
+  await page.locator("#run").click();
+  await expect(page.locator("#state-badge")).toHaveText("Finished", {
+    timeout: 60000,
+  });
+  await expect(page.locator("#console")).toContainText("Hello, learner!");
+  await page.evaluate(async () => {
+    const base = new URL(
+        document.querySelector("meta[name=gpu-base]").content,
+        location.href,
+      ),
+      release = document.querySelector("meta[name=gpu-release]").content;
+    await (
+      await import(
+        new URL("releases/" + release + "/experiment-state.mjs", base)
+      )
+    ).saveReadingState();
+  });
+  await page.reload();
+  await expect(page.locator("#source")).toHaveValue(source);
+  await expect(page.locator("#console")).toContainText("Hello, learner!");
+  await expect(page.locator("#run-status")).toContainText(
+    "Earlier result restored",
+  );
+});
