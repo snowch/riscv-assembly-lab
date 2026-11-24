@@ -93,7 +93,7 @@ function navigation(current) {
         .filter((l) => l.module === group.id)
         .map(
           (l) =>
-            `<li><a href="../${l.id}/" ${l.id === current.id ? 'aria-current="page"' : ""}>${escape(l.title)}</a><span data-completion="${l.id}" aria-label="Completed" hidden>${icon("check")}</span></li>`,
+            `<li><a href="../${l.id}/" ${l.id === current.id ? 'aria-current="page"' : ""}>${escape(l.title)}</a><span data-completion="${l.id}" role="img" aria-label="Completed" hidden>${icon("check")}</span></li>`,
         )
         .join("")}</ol></section>`,
   ).join("")}</div></nav></section>`;

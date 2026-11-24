@@ -103,6 +103,16 @@ test("breadcrumbs provide a compact accessible course menu and reveal the linked
           name: "Runtime, source and licensing record",
         }),
       ).toBeVisible();
+      await page.locator("#lesson-complete").check();
+      await toggle.click();
+      await expect(menu).toBeVisible();
+      const completed = menu.locator('[data-completion="addition"]');
+      await expect(completed).toBeVisible();
+      await expect(completed).toHaveRole("img");
+      await expect(completed).toHaveAccessibleName("Completed");
+      await expect(completed.locator("svg")).toHaveAttribute("aria-hidden", "true");
+      await page.locator("#lesson-complete").uncheck();
+      await expect(completed).toBeHidden();
       await page.locator(".lesson-breadcrumbs > ol > li > a").click();
       await expect(page).toHaveURL(/\/#fundamentals$/);
       await expect(page.locator("#course-contents")).toHaveJSProperty(
