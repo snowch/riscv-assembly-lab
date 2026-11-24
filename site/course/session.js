@@ -1,19 +1,47 @@
 // Copyright © 2026 Christopher Snow
+import {
+  acquireRunner,
+  releaseRunner,
+  freeRunner,
+  runnerPhase,
+} from "../runner-controls.mjs";
 export class Session {
   constructor(onEvent) {
     this.onEvent = onEvent;
     this.worker = null;
     this.timer = null;
     this.cancelled = false;
+    this.epoch = 0;
+    addEventListener("runner-free", () => {
+      if (this.worker || this.preparing) this.stop(true, false);
+    });
   }
-  start(payload) {
+  async start(payload) {
     this.stop(false);
     this.cancelled = false;
+    this.preparing = true;
+    const epoch = ++this.epoch;
+    let prepared;
+    try {
+      prepared = await acquireRunner();
+      if (epoch !== this.epoch)
+        throw new DOMException("Run cancelled", "AbortError");
+    } catch (error) {
+      this.preparing = false;
+      if (epoch === this.epoch)
+        this.onEvent({
+          type: error.name === "AbortError" ? "stopped" : "error",
+          message: error.message,
+          runtimeLoad: !!error.runtimeLoad,
+        });
+      throw error;
+    }
+    this.preparing = false;
     return new Promise((resolve, reject) => {
       this.resolve = resolve;
       this.reject = reject;
       const fail = (message) => {
-        this.onEvent({ type: "error", message });
+        this.onEvent({ type: "error", message, runtimeLoad: true });
         this.stop(false);
         reject(new Error(message));
       };
@@ -32,7 +60,16 @@ export class Session {
         "Loading timed out. Try again when your connection is available.",
       );
       this.worker.onmessage = ({ data }) => {
+        if (epoch !== this.epoch) return;
         if (data.type === "phase") {
+          runnerPhase(
+            {
+              loading: "Starting",
+              building: "Building",
+              running: "Running",
+              paused: "Paused",
+            }[data.phase] || "Working",
+          );
           if (data.phase === "building")
             this.deadline(
               15000,
@@ -60,7 +97,7 @@ export class Session {
         event.preventDefault();
         fail(event.message || "The execution worker stopped unexpectedly.");
       };
-      this.worker.postMessage(payload);
+      this.worker.postMessage({ ...payload, prepared });
     });
   }
   setBreakpoints(selection) {
@@ -79,13 +116,23 @@ export class Session {
     this.worker?.postMessage({ action: "continue" });
     this.deadline?.(35000, "Execution timed out.");
   }
-  stop(notify = true) {
+  stop(notify = true, release = true) {
+    const preparing = this.preparing;
+    this.epoch++;
+    this.preparing = false;
+    const reject = this.reject;
+    this.resolve = null;
+    this.reject = null;
     clearTimeout(this.timer);
     this.worker?.terminate();
     this.worker = null;
+    if (release) {
+      if (preparing) freeRunner().catch(() => {});
+      else releaseRunner();
+    }
     if (notify) {
       this.cancelled = true;
-      this.reject?.(new Error("Stopped"));
+      reject?.(new Error("Stopped"));
       this.onEvent({ type: "stopped" });
     }
   }

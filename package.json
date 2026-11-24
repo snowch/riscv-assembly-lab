@@ -4,15 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "serve": "python3 -m http.server 4220 --directory site",
-    "test": "node --test tests/*.test.js",
-    "test:browser": "playwright test",
+    "serve": "npm run build && python3 -m http.server 4220 --directory .build/site",
+    "test": "node --test tests/*.test.js && node tests/background-protocol.cjs",
+    "test:browser": "npm run build && playwright test",
     "check:assets": "node tools/check-assets.js",
     "build:course": "node tools/build-course.js",
     "test:course": "node tools/check-course.js",
     "build:editor": "node tools/build-editor.js",
     "test:reference": "node tools/reference-recordings.js --check",
-    "test:counter": "node tools/check-counter-wrap.js"
+    "test:counter": "node tools/check-counter-wrap.js",
+    "build": "npm run build:course && node tools/build-site.mjs"
   },
   "devDependencies": {
     "@codemirror/commands": "6.11.1",

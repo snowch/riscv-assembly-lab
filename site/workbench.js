@@ -1,4 +1,11 @@
 // Copyright © 2026 Christopher Snow
+import {
+  acquireRunner,
+  releaseRunner,
+  freeRunner,
+  runnerPhase,
+  runtimeRecovery,
+} from "./runner-controls.mjs";
 import { createSourceEditor } from "./course/editor.js";
 // Shared editor, draft, build, cancellation and theme controls.
 export async function mountWorkbench(options = {}) {
@@ -19,17 +26,23 @@ export async function mountWorkbench(options = {}) {
     themeKey = "riscv-assembly-lab:theme";
   let starter = "",
     worker = null,
+    preparing = false,
+    epoch = 0,
     timer = null,
     builtSource = null,
     output = "",
     serial = "",
-    undoRestore = null;
+    undoRestore = null,
+    previousReading;
   function status(message, state = "Ready", error = false) {
     $("run-status").textContent = message;
     $("state-badge").textContent = state;
     $("run-status").classList.toggle("error", error);
   }
   function terminate() {
+    epoch++;
+    preparing = false;
+    releaseRunner();
     worker?.terminate();
     worker = null;
     clearTimeout(timer);
@@ -50,9 +63,10 @@ export async function mountWorkbench(options = {}) {
       if (undoRestore !== null) localStorage.setItem(undoKey, undoRestore);
       localStorage.setItem(draftKey, source.value);
       if (clearUndo) localStorage.removeItem(undoKey);
-      $("save-state").textContent = undoRestore === null
-        ? "Draft saved in this browser"
-        : "Draft saved. Undo restore recovers the previous source.";
+      $("save-state").textContent =
+        undoRestore === null
+          ? "Draft saved in this browser"
+          : "Draft saved. Undo restore recovers the previous source.";
     } catch {
       $("save-state").textContent = "Draft is tab-only · download to keep it";
     }
@@ -105,11 +119,31 @@ export async function mountWorkbench(options = {}) {
         : "Build complete";
     $("diagnostics").open = error || !!message;
   }
-  run.addEventListener("click", () => {
+  run.addEventListener("click", async () => {
     if (run.disabled) return;
     terminate();
     run.disabled = true;
     stop.disabled = false;
+    previousReading = window.riscvWorkbench?.readingSnapshot();
+    preparing = true;
+    status("Preparing to build and run…", "Starting");
+    const generation = ++epoch;
+    let prepared;
+    try {
+      prepared = await acquireRunner();
+    } catch (error) {
+      terminate();
+      status(
+        error.name === "AbortError"
+          ? "Run cancelled. Your source is kept."
+          : error.message,
+        "Stopped",
+        error.name !== "AbortError",
+      );
+      return;
+    }
+    if (generation !== epoch) return;
+    preparing = false;
     builtSource = source.value;
     output = "";
     serial = "";
@@ -135,6 +169,11 @@ export async function mountWorkbench(options = {}) {
     );
     worker.onmessage = ({ data }) => {
       if (data.type === "phase") {
+        runnerPhase(
+          { loading: "Starting", building: "Building", running: "Running" }[
+            data.phase
+          ] || "Working",
+        );
         status(
           data.message,
           { loading: "Loading", building: "Building", running: "Running" }[
@@ -174,6 +213,11 @@ export async function mountWorkbench(options = {}) {
             "(The program finished without console output.)";
       } else if (data.type === "error") {
         terminate();
+        if (data.runtimeLoad) {
+          window.riscvWorkbench?.restoreReading(previousReading);
+          runtimeRecovery.open();
+          return;
+        }
         options.onRunError?.(data.message);
         diagnostics(data.message, true);
         status("Could not finish. Check the diagnostics below.", "Error", true);
@@ -182,6 +226,8 @@ export async function mountWorkbench(options = {}) {
     worker.onerror = (event) => {
       event.preventDefault();
       terminate();
+      window.riscvWorkbench?.restoreReading(previousReading);
+      runtimeRecovery.open();
       options.onRunError?.(event.message);
       diagnostics(event.message, true);
       status(
@@ -192,11 +238,12 @@ export async function mountWorkbench(options = {}) {
     };
     worker.postMessage(
       options.prepareBuild
-        ? options.prepareBuild(builtSource)
-        : { source: builtSource },
+        ? { ...options.prepareBuild(builtSource), prepared }
+        : { source: builtSource, prepared },
     );
   });
   stop.addEventListener("click", () => {
+    if (preparing) freeRunner().catch(() => {});
     terminate();
     options.onRunError?.("Stopped");
     status(
@@ -263,22 +310,66 @@ export async function mountWorkbench(options = {}) {
       draft = localStorage.getItem(draftKey);
       undoRestore = localStorage.getItem(undoKey);
       $("save-state").textContent =
-        undoRestore !== null ? "Draft saved. Undo restore recovers the previous source."
-          : draft === null ? "Draft saves in this browser" : "Saved draft restored";
+        undoRestore !== null
+          ? "Draft saved. Undo restore recovers the previous source."
+          : draft === null
+            ? "Draft saves in this browser"
+            : "Saved draft restored";
     } catch {
       $("save-state").textContent = "Draft is tab-only · download to keep it";
     }
     source.value = draft ?? starter;
-    $("restore").textContent = undoRestore === null ? "Restore starter" : "Undo restore";
+    $("restore").textContent =
+      undoRestore === null ? "Restore starter" : "Undo restore";
     options.onSourceChange?.(source.value);
     source.readOnly = false;
     run.disabled = false;
     $("restore").disabled = false;
     $("download").disabled = false;
     status(
-      "Ready to build. The first run downloads about 8 MB of tools and guest images.",
+      "Ready to build. Choose Build & Run to prepare the tools and execute your program.",
     );
   } catch (error) {
     status(error.message, "Error", true);
   }
+  window.riscvWorkbench = {
+    isBusy: () => !!worker || preparing,
+    readingSnapshot: () => ({
+      source: source.value,
+      undoRestore,
+      builtSource,
+      output,
+      serial,
+      status: $("run-status").textContent,
+      state: $("state-badge").textContent,
+      diagnostics: $("diagnostic-lines").textContent,
+    }),
+    restoreReading(record) {
+      if (!record) return;
+      source.value = record.source;
+      undoRestore = record.undoRestore;
+      builtSource = record.builtSource;
+      output = record.output;
+      serial = record.serial;
+      $("console").textContent = output;
+      $("serial").textContent = serial;
+      diagnostics(record.diagnostics);
+      status(
+        "Earlier result restored. Run again to use your current source.",
+        record.state,
+      );
+      edited();
+    },
+    refreshReading() {
+      $("restore").textContent =
+        undoRestore === null ? "Restore starter" : "Undo restore";
+    },
+  };
+  addEventListener("runner-free", () => {
+    if (worker || preparing) {
+      terminate();
+      status("Stopped. Your source is kept.", "Stopped");
+    }
+  });
+  dispatchEvent(new Event("riscv-workbench-ready"));
 }

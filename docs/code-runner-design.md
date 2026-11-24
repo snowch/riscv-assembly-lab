@@ -1,0 +1,17 @@
+# RISC-V code runner adapter
+
+The header follows the [shared runner contract](https://github.com/snowch/cuda-python-lab/blob/main/docs/code-runner-design.md). Preparing tools executes no learner code. The first editor startup opens an immediate native modal before loading; Escape cancels without requesting WASM. Explicit header preparation explains resource use in settings and acknowledges the introduction, so the next editor run does not repeat it.
+
+One release-scoped SharedWorker keeps assembler, linker, disassembler, C compiler, emulator modules and pristine kernel/disk bytes prepared. Browsers without SharedWorker use a per-window worker. Each execution gets a disposable worker with fresh tool instances, filesystem and actual xv6 machine. No registers, guest allocation or learner machine state leak between cases. Stop terminates the execution worker. Free memory also drops the tool host and cancels preparation. An inactive host is released after 30 minutes; 5/15/30/60-minute preferences persist separately from learner work. Busy or paused execution is not an idle interval.
+
+A light header connection reads status without downloading WASM. A browser may retire the SharedWorker between document navigations. A release-keyed IndexedDB cache of derived binaries and compiled modules allows preparation to recover without mixing releases; cache failure is optional and falls back to compilation from the prepared bytes. Free memory releases workers, not saved course files or browser-managed code caches.
+
+Compiled WebAssembly modules must not be posted across a SharedWorker agent-cluster boundary: some browsers deliver a message error instead of the module. The host sends ordinary bytes and a release cache key. The execution worker reads compiled modules through IndexedDB when supported, or compiles those exact bytes. Message errors and loader failures have explicit recovery rather than leaving a pending run forever. This was verified through actual assembly, edited programs and fresh offline execution.
+
+Only one run owns the shared tools at a time. Another window receives a clear busy result. Manual memory release can stop a run in another attached course window; idle release never interrupts one. Watchdogs and epoch checks prevent a stopped or superseded run from completing another job.
+
+No invented CPU percentages or total memory readings are shown. Prepared tools retain memory; compilation and execution consume device CPU. Browser scheduling and background suspension affect timing. Header preparation is not a successful lesson run.
+
+Existing source and project keys remain unchanged. Explicit reload/update snapshots store source, prediction, context, observed output/registers, case records, completion controls, optional disclosures and scroll separately from runtime state. Busy/paused execution, composition or failed saving vetoes restart. Restored output is labelled as an earlier result. Loader errors retain the last genuine result and show a persistent recovery modal; compiler diagnostics remain beside the source. Free memory preserves the displayed result.
+
+Verify first-use cancellation, header Start → Ready → editor Run, assembly/C/debugging/cases, warm preparation, navigation, fresh state, explicit/idle release, error recovery, blocked-storage reload, two-window restart and fresh-tab offline execution. Functional verification is separate from learning effectiveness.

@@ -37,7 +37,7 @@ for (const theme of ["light", "dark"]) {
       .locator("#counter-wrap")
       .evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(actual).toBe(
-      theme === "light" ? "rgb(255, 255, 255)" : "rgb(23, 41, 37)",
+      theme === "light" ? "rgb(255, 255, 255)" : "rgb(22, 47, 41)",
     );
     const source = await page.locator("#source").inputValue();
     await fillSource(page, source + "\n# saved counter experiment");

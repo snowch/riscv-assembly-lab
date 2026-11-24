@@ -29,7 +29,7 @@ for (const theme of ["light", "dark"])
     );
     await expect(page.locator(".transfer-guide pre").first()).toHaveCSS(
       "font-size",
-      "16px",
+      "17px",
     );
     const source =
       (await page.locator("#source").inputValue()) + "\n# saved transfer draft";

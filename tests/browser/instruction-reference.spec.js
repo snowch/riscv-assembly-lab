@@ -162,7 +162,7 @@ test("reference works across routes and actual themes with readable keyboard con
         });
       expect(problems.issues).toEqual([]);
       expect(problems.theme).toBe(
-        theme === "light" ? "rgb(245, 249, 248)" : "rgb(16, 30, 28)",
+        theme === "light" ? "rgb(245, 250, 248)" : "rgb(16, 36, 33)",
       );
       if (route === "/playground/")
         await page.screenshot({

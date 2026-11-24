@@ -1,5 +1,5 @@
 // Copyright © 2026 Christopher Snow
-// A fresh worker owns the compiler and one real xv6 machine. Stop retires it.
+// Each job owns a fresh xv6 machine; the runner supplies prepared tool modules.
 importScripts("../vendor/binutils/riscv64-linux-gnu-as.js");
 const createAssembler = Module;
 importScripts("../vendor/binutils/riscv64-linux-gnu-ld.js");
@@ -308,35 +308,57 @@ onmessage = async ({ data }) => {
     watches = Array.isArray(data.watches) ? data.watches.slice(0, 8) : [];
     startAtBreakpoint = !!data.startAtBreakpoint;
     send("phase", { phase: "loading", message: "Loading tools and xv6…" });
-    const [
-      as,
-      ld,
-      objdump,
-      compiler,
-      script,
-      kernel,
-      disk,
-      runtime,
-      builder,
-      filesystem,
-      model,
-      debugging,
-    ] = await Promise.all([
-      asset("../vendor/binutils/as-new.wasm"),
-      asset("../vendor/binutils/ld-new.wasm"),
-      asset("../vendor/binutils/objdump.wasm"),
-      lesson.language === "c"
-        ? asset("../vendor/compiler/tcc.wasm")
-        : Promise.resolve(null),
-      asset("./user.ld", true),
-      asset("../images/kernel"),
-      asset("../images/fs.img"),
+    const assets = data.prepared;
+    if (!assets?.as) throw new Error("Prepared runner files are missing.");
+    try {
+      const opening = indexedDB.open("riscv-assembly-tool-modules-v1", 1);
+      const db = await new Promise((yes, no) => {
+        opening.onsuccess = () => yes(opening.result);
+        opening.onerror = () => no(opening.error);
+      });
+      try {
+        const saved = await new Promise((yes, no) => {
+          const request = db
+            .transaction("modules")
+            .objectStore("modules")
+            .get(assets.cacheKey);
+          request.onsuccess = () => yes(request.result);
+          request.onerror = () => no(request.error);
+        });
+        if (saved?.modules) assets.modules = saved.modules;
+      } finally {
+        db.close();
+      }
+    } catch {}
+    if (!assets.modules)
+      assets.modules = Object.fromEntries(
+        await Promise.all(
+          ["as", "ld", "objdump", "compiler", "runtime"].map(async (name) => [
+            name,
+            await WebAssembly.compile(assets[name]),
+          ]),
+        ),
+      );
+
+    const { as, ld, objdump, compiler, script, kernel, disk } = assets;
+    const [runtime, builder, filesystem, model, debugging] = await Promise.all([
       import("../vendor/runtime/riscv_emu_rust_wasm.js"),
       import("./builder.js"),
       import("../filesystem.js"),
       import("./model.js"),
       import("./debugging.js"),
     ]);
+    function cached(factory, module) {
+      return (options) =>
+        factory({
+          ...options,
+          instantiateWasm(imports, receive) {
+            const instance = new WebAssembly.Instance(module, imports);
+            receive(instance, module);
+            return instance.exports;
+          },
+        });
+    }
     lesson.registerNames = model.REGISTERS;
     inspection = debugging;
     send("phase", {
@@ -351,7 +373,11 @@ onmessage = async ({ data }) => {
       lesson,
       data.fixture ?? {},
       { as, ld, objdump, compiler, script },
-      { as: createAssembler, ld: createLinker, objdump: createObjdump },
+      {
+        as: cached(createAssembler, assets.modules.as),
+        ld: cached(createLinker, assets.modules.ld),
+        objdump: cached(createObjdump, assets.modules.objdump),
+      },
     );
     built.breakpoints = built.allInstructions.map((i) => BigInt(i.address));
     selectedBreakpoints = inspection.resolveBreakpoints(
@@ -373,7 +399,7 @@ onmessage = async ({ data }) => {
       hasDataSymbol: built.hasDataSymbol,
     });
     await runtime.default({
-      module_or_path: "../vendor/runtime/riscv_emu_rust_wasm_bg.wasm",
+      module_or_path: assets.modules.runtime,
     });
     vm = runtime.WasmRiscv.new();
     vm.setup_program(kernel);

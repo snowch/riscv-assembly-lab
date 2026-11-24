@@ -51,10 +51,10 @@ await writeFile(
 const theme =
   '<label class="theme-label">Theme <select id="theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>';
 function header(prefix) {
-  return `<a class="skip" href="#main">Skip to content</a><header><a class="brand" href="${prefix}"><span class="logo" aria-hidden="true">≋</span> RISC-V Assembly Lab</a><nav aria-label="Site"><button id="open-calculator" aria-label="Calculator" title="Calculator" type="button" aria-haspopup="dialog" aria-controls="calculator-dialog" aria-expanded="false" disabled>${icon("calculator")}<span class="header-tool-label">Calculator</span></button><button id="open-reference" aria-label="Reference" title="Reference" type="button" aria-haspopup="dialog" aria-controls="instruction-reference" aria-expanded="false" disabled>${icon("book")}<span class="header-tool-label">Reference</span></button><a href="https://github.com/snowch/riscv-assembly-lab" aria-label="Star on GitHub">☆ <span>Star<span class="github-long"> on GitHub</span></span></a>${theme}</nav></header>`;
+  return `<a class="skip" href="#main">Skip to content</a><header><a class="brand" href="${prefix}"><span class="logo" aria-hidden="true">≋</span><span class="brand-name">RISC-V Assembly Lab<small class="brand-subtitle">Run assembly and C</small></span></a><nav aria-label="Site"><button id="code-runner-open" type="button" aria-haspopup="dialog">Code runner<span id="runner-summary">Stopped</span></button><!-- app-status-control --><button id="open-calculator" aria-label="Calculator" title="Calculator" type="button" aria-haspopup="dialog" aria-controls="calculator-dialog" aria-expanded="false" disabled>${icon("calculator")}<span class="header-tool-label">Calculator</span></button><button id="open-reference" aria-label="Reference" title="Reference" type="button" aria-haspopup="dialog" aria-controls="instruction-reference" aria-expanded="false" disabled>${icon("book")}<span class="header-tool-label">Reference</span></button>${theme}</nav></header>`;
 }
 function footer(prefix) {
-  return `<footer><p>Copyright © 2026 Christopher Snow</p><div><a href="${prefix}NOTICE.md">Sources and licences</a><a href="https://snowch.github.io/assembly-lab/">Arm Assembly Lab</a><a href="https://github.com/snowch/riscv-assembly-lab/issues">Report a problem</a></div></footer>`;
+  return `<footer><p>Copyright © 2026 Christopher Snow</p><div><a href="https://github.com/snowch/riscv-assembly-lab">Source</a><a href="${prefix}NOTICE.md">Sources and licences</a><a href="https://snowch.github.io/assembly-lab/">Arm Assembly Lab</a><a href="https://github.com/snowch/riscv-assembly-lab/issues">Report a problem</a></div></footer>`;
 }
 function sourceReferences(lesson) {
   const refs = [...new Set([...lesson.references, "assembler"])].map((key) => ({
@@ -80,25 +80,23 @@ function document(
     styles = [],
   } = {},
 ) {
-  return `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#087e72"><meta name="description" content="Learn RISC-V by writing and running real assembly and C in your browser."><title>${escape(title)} · RISC-V Assembly Lab</title><link rel="icon" href="${prefix}icon.svg" type="image/svg+xml"><link rel="stylesheet" href="${prefix}style.css"><link rel="stylesheet" href="${prefix}course/course.css"><link rel="stylesheet" href="${prefix}course/debugger.css"><link rel="stylesheet" href="${prefix}course/workbench.css">${styles.map((path) => `<link rel="stylesheet" href="${escape(path)}">`).join("")}<link rel="stylesheet" href="${prefix}playground/playground.css"><link rel="stylesheet" href="${prefix}course/unified-workspace.css"><link rel="stylesheet" href="${prefix}course/calculator.css"><link rel="stylesheet" href="${prefix}course/instruction-reference.css"><script type="module" src="${prefix}course/instruction-reference.js"></script><script type="module" src="${prefix}course/calculator.js"></script><script type="module" src="${script}"></script></head><body class="course-page">${header(prefix)}${body}${footer(prefix)}${data}</body></html>\n`
+  return `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#087e72"><meta name="description" content="Learn RISC-V by writing and running real assembly and C in your browser."><title>${escape(title)} · RISC-V Assembly Lab</title><link rel="icon" href="${prefix}icon.svg" type="image/svg+xml"><link rel="stylesheet" href="${prefix}style.css"><link rel="stylesheet" href="${prefix}course/course.css"><link rel="stylesheet" href="${prefix}course/debugger.css"><link rel="stylesheet" href="${prefix}course/workbench.css">${styles.map((path) => `<link rel="stylesheet" href="${escape(path)}">`).join("")}<link rel="stylesheet" href="${prefix}playground/playground.css"><link rel="stylesheet" href="${prefix}course/unified-workspace.css"><link rel="stylesheet" href="${prefix}course/calculator.css"><link rel="stylesheet" href="${prefix}course/instruction-reference.css"><link rel="stylesheet" href="${prefix}course-style.css"><link rel="stylesheet" href="${prefix}app-status.css"><link rel="stylesheet" href="${prefix}runtime-recovery.css"><script type="module" src="${prefix}runner-controls.mjs"></script><script type="module" src="${prefix}course/instruction-reference.js"></script><script type="module" src="${prefix}course/calculator.js"></script><script type="module" src="${script}"></script></head><body class="course-page">${header(prefix)}${body}${footer(prefix)}${data}</body></html>\n`
     .split("\n")
     .map((line) => line.trimEnd())
     .join("\n");
 }
 function navigation(current) {
   const module = MODULES.find((m) => m.id === current.module);
-  return `<nav class="lesson-breadcrumbs" aria-label="Breadcrumb"><ol><li><details id="course-navigation"><summary>Course</summary><nav class="course-menu" aria-label="Course lessons"><a class="course-overview" href="../../">Course overview</a>${MODULES.map(
-    (module) =>
-      `<details ${current.module === module.id ? "open" : ""}><summary>${module.label} · ${escape(module.title)}</summary><ol>${lessons
-        .filter((l) => l.module === module.id)
+  return `<section class="course-navigation"><div class="course-row"><button id="course-toggle" type="button" aria-expanded="false" aria-controls="course-navigation">Course lessons <span aria-hidden="true">⌄</span></button><span id="course-row-progress"></span><nav class="lesson-breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="../../#${module.id}">${escape(module.title)}</a></li><li><span aria-current="page">${escape(current.title)}</span></li></ol></nav></div><nav id="course-navigation" class="course-menu" aria-label="Course lessons" hidden><a class="course-overview" href="../../">Course overview</a><div class="course-outline-grid">${MODULES.map(
+    (group) =>
+      `<section><h2>${escape(group.title)}</h2><ol>${lessons
+        .filter((l) => l.module === group.id)
         .map(
           (l) =>
             `<li><a href="../${l.id}/" ${l.id === current.id ? 'aria-current="page"' : ""}>${escape(l.title)}</a><span data-completion="${l.id}" aria-label="Completed" hidden>✓</span></li>`,
         )
-        .join("")}</ol></details>`,
-  ).join(
-    "",
-  )}</nav></details></li><li><a href="../../#${module.id}">${escape(module.title)}</a></li><li><span aria-current="page">${escape(current.title)}</span></li></ol></nav>`;
+        .join("")}</ol></section>`,
+  ).join("")}</div></nav></section>`;
 }
 function operandDiagram(lesson) {
   if (lesson.id !== "addition") return "";

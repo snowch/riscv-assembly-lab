@@ -64,7 +64,7 @@
   padding: 0.08rem 0.2rem;
 }
 .counter-wrap .counter-feedback {
-  min-height: 3.2em;
+  min-height: 3.3em;
   margin-bottom: 0;
 }
 .counter-actions {
@@ -100,7 +100,7 @@
     min-width: 7.5rem;
   }
   .counter-wrap .counter-feedback {
-    min-height: 4.8em;
+    min-height: 4.95em;
   }
 }
 

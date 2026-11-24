@@ -1,20 +1,25 @@
 // Copyright © 2026 Christopher Snow
 export function setupCourseNavigation() {
-  const menu = document.getElementById("course-navigation");
-  if (!menu) return;
+  const panel = document.getElementById("course-navigation"),
+    button = document.getElementById("course-toggle");
+  if (!panel || !button) return;
   const close = () => {
-    menu.open = false;
+    panel.hidden = true;
+    button.setAttribute("aria-expanded", "false");
   };
-  document.addEventListener("pointerdown", (event) => {
-    if (!menu.contains(event.target)) close();
-  });
+  button.onclick = () => {
+    panel.hidden = !panel.hidden;
+    button.setAttribute("aria-expanded", String(!panel.hidden));
+  };
   document.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape" || !menu.open) return;
-    event.preventDefault();
-    close();
-    menu.querySelector("summary").focus({ preventScroll: true });
-  });
-  menu.addEventListener("focusout", (event) => {
-    if (event.relatedTarget && !menu.contains(event.relatedTarget)) close();
+    if (
+      event.key === "Escape" &&
+      !panel.hidden &&
+      !document.querySelector("dialog:modal")
+    ) {
+      event.preventDefault();
+      close();
+      button.focus();
+    }
   });
 }
