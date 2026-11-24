@@ -1,7 +1,9 @@
 import { fillSource, selectedSource } from "./editor-helpers.js";
 import { test, expect } from "@playwright/test";
 
-test("Hello World can undo restoring the starter after reload", async ({ page }) => {
+test("Hello World can undo restoring the starter after reload", async ({
+  page,
+}) => {
   await page.goto("/lessons/hello-world/");
   await expect(page.locator("#run")).toBeEnabled();
   const starter = await page.locator("#source").inputValue();
@@ -10,7 +12,9 @@ test("Hello World can undo restoring the starter after reload", async ({ page })
   await page.locator("#restore").press("Enter");
   await expect(page.locator("#source")).toHaveValue(starter);
   await page.reload();
-  await page.getByRole("button", { name: "Undo restore", exact: true }).press("Enter");
+  await page
+    .getByRole("button", { name: "Undo restore", exact: true })
+    .press("Enter");
   await expect(page.locator("#source")).toHaveValue(edited);
   await page.reload();
   await expect(page.locator("#source")).toHaveValue(edited);
@@ -118,10 +122,12 @@ test("CPU traps are reported and unavailable storage keeps editing usable", asyn
   await expect(page.locator("#save-state")).toContainText("tab-only");
   await fillSource(page, ".text\n.global _start\n_start: .word 0\n");
   await page.locator("#run").click();
+  await page.locator("#runner-intro [data-continue]").click();
   await expect(page.locator("#state-badge")).toHaveText("Error", {
     timeout: 45000,
   });
   await expect(page.locator("#diagnostic-lines")).toContainText("CPU stopped.");
+  await expect(page.locator("#runtime-recovery-dialog")).toBeHidden();
   await page.locator("#restore").click();
   await page.locator("#run").click();
   await expect(page.locator("#state-badge")).toHaveText("Finished", {
@@ -129,21 +135,49 @@ test("CPU traps are reported and unavailable storage keeps editing usable", asyn
   });
 });
 
-test("asset failure can be cancelled and retried without losing the source", async ({
+test("asset failure preserves the earlier genuine result and edited source, then retries", async ({
   page,
 }) => {
   await page.goto("/lessons/hello-world/");
   await expect(page.locator("#run")).toBeEnabled();
-  await page.route("**/as-new.wasm", (route) =>
-    route.fulfill({ status: 503, body: "Unavailable" }),
-  );
-  await page.locator("#run").click();
-  await expect(page.locator("#state-badge")).toHaveText("Error");
-  await expect(page.locator("#diagnostic-lines")).toContainText("HTTP 503");
-  await page.unroute("**/as-new.wasm");
   await page.locator("#run").click();
   await expect(page.locator("#state-badge")).toHaveText("Finished", {
     timeout: 45000,
   });
   await expect(page.locator("#console")).toHaveText("Hello, RISC-V!\n");
+  const edited =
+    (await page.locator("#source").inputValue()).replace(
+      "Hello, RISC-V!",
+      "Recovered edit!",
+    ) + "\n# retain this edited source through loader failure\n";
+  await fillSource(page, edited);
+  let faulted = false;
+  // The complete-program linker script is loaded in the execution worker.
+  // SharedWorker tool downloads are tested with a real failing host elsewhere.
+  await page.route("**/user.ld", (route) => {
+    faulted = true;
+    return route.fulfill({ status: 503, body: "Unavailable" });
+  });
+  await page.locator("#run").click();
+  await expect(page.locator("#runtime-recovery-dialog")).toBeVisible({
+    timeout: 45000,
+  });
+  expect(faulted).toBe(true);
+  await expect(page.locator("#source")).toHaveValue(edited);
+  await expect(page.locator("#console")).toHaveText("Hello, RISC-V!\n");
+  await expect(page.locator("#state-badge")).toHaveText("Finished");
+  await expect(page.locator("#run-status")).toContainText(
+    "Earlier result restored",
+  );
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#runtime-recovery-dialog")).toBeHidden();
+  await expect(page.locator("#run")).toBeFocused();
+  await page.unroute("**/user.ld");
+  await page.locator("#run").click();
+  await expect(page.locator("#run")).toBeEnabled({ timeout: 45000 });
+  await expect(page.locator("#state-badge")).toHaveText("Finished", {
+    timeout: 45000,
+  });
+  await expect(page.locator("#console")).toHaveText("Recovered edit!\n");
+  await expect(page.locator("#source")).toHaveValue(edited);
 });

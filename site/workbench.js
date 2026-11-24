@@ -126,6 +126,7 @@ export async function mountWorkbench(options = {}) {
     stop.disabled = false;
     previousReading = window.riscvWorkbench?.readingSnapshot();
     preparing = true;
+    status("Preparing to build and run…", "Starting");
     const generation = ++epoch;
     let prepared;
     try {
@@ -134,7 +135,7 @@ export async function mountWorkbench(options = {}) {
       terminate();
       status(
         error.name === "AbortError"
-          ? "Run cancelled. Your earlier result is kept."
+          ? "Run cancelled. Your source is kept."
           : error.message,
         "Stopped",
         error.name !== "AbortError",
@@ -367,7 +368,7 @@ export async function mountWorkbench(options = {}) {
   addEventListener("runner-free", () => {
     if (worker || preparing) {
       terminate();
-      status("Stopped. Your source and earlier result are kept.", "Stopped");
+      status("Stopped. Your source is kept.", "Stopped");
     }
   });
   dispatchEvent(new Event("riscv-workbench-ready"));
