@@ -1,5 +1,31 @@
 // Copyright © 2026 Christopher Snow
 import { test, expect } from "@playwright/test";
+import { openTools } from "./editor-helpers.js";
+
+test("opening the lesson resource guide keeps the paused execution and draft", async ({
+  page,
+}) => {
+  await page.goto("/lessons/addition/");
+  await expect(page.locator("#run")).toBeEnabled();
+  await page.locator("#prediction").fill("12");
+  const source = await page.locator("#source").inputValue();
+  await page.locator("#step").click();
+  await expect(page.locator("#state-badge")).toHaveText("Paused", {
+    timeout: 45000,
+  });
+  const position = await page.locator("#step-location").textContent();
+  await openTools(page, "program");
+  await page.locator("#open-complete-guide").click();
+  const guide = page.locator(".lesson-resources #complete-program-guide");
+  await expect(guide).toHaveJSProperty("open", true);
+  await expect(guide.locator("summary")).toBeFocused();
+  await expect(page.locator("#state-badge")).toHaveText("Paused");
+  await expect(page.locator("#step-location")).toHaveText(position);
+  await expect(page.locator("#source")).toHaveValue(source);
+  await expect(page.locator("#prediction")).toHaveValue("12");
+  await expect(page.locator("#lesson-complete")).not.toBeChecked();
+  await page.locator("#stop").click();
+});
 
 test("breadcrumbs provide a compact accessible course menu and reveal the linked module", async ({
   page,
@@ -38,7 +64,39 @@ test("breadcrumbs provide a compact accessible course menu and reveal the linked
       );
       await expect(page.locator(".operand-flow")).not.toContainText("12");
       const resources = page.getByRole("region", { name: "Lesson resources" });
-      await expect(resources.locator("summary")).toHaveCount(3);
+      await expect(resources.locator("summary")).toHaveCount(5);
+      const reference = resources.locator("#lesson-references");
+      await expect(reference.locator("summary > .ui-icon")).toBeVisible();
+      await expect(reference.locator(".resource-description")).toContainText(
+        "Base integer instructions",
+      );
+      for (const summary of await resources.locator("summary").all()) {
+        await expect(summary.locator(".resource-chevron svg")).toBeVisible();
+        expect(
+          await summary
+            .locator(".resource-chevron svg")
+            .evaluate((node) => node.getBoundingClientRect().width),
+        ).toBe(20);
+      }
+      const completion = await page.locator(".lesson-completion").boundingBox();
+      for (const id of ["complete-program-guide", "playground-help"]) {
+        const guide = resources.locator("#" + id);
+        await guide.locator("summary").focus();
+        await page.keyboard.press("Space");
+        await expect(guide).toHaveJSProperty("open", true);
+        await page.keyboard.press("Space");
+        await expect(guide).toHaveJSProperty("open", false);
+      }
+      expect(
+        await resources.evaluate((node) =>
+          Boolean(
+            node.compareDocumentPosition(
+              document.querySelector(".lesson-completion"),
+            ) & Node.DOCUMENT_POSITION_FOLLOWING,
+          ),
+        ),
+      ).toBe(true);
+      expect(completion.height).toBeGreaterThan(44);
       await resources.getByText("References", { exact: true }).click();
       await expect(
         resources.getByRole("link", {
