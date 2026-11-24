@@ -221,6 +221,11 @@ test("first save before any run supports a cold unvisited lesson with the host u
 }) => {
   test.setTimeout(240000);
   const wasm = [];
+  const failed = [];
+  context.on("response", (response) => {
+    if (response.status() >= 400)
+      failed.push([response.status(), response.url()]);
+  });
   page.on("request", (r) => {
     if (r.url().endsWith(".wasm")) wasm.push(r.url());
   });
@@ -252,6 +257,7 @@ test("first save before any run supports a cold unvisited lesson with the host u
     await plane.keyboard.press("Escape");
     await plane.locator("#open-calculator").click();
     await expect(plane.locator("#calculator-dialog")).toBeVisible();
+    expect(failed).toEqual([]);
     await plane.close();
   } finally {
     await new Promise((resolve) => server.listen(port, "127.0.0.1", resolve));

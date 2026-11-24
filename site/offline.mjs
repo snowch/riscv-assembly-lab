@@ -1060,9 +1060,9 @@ async function performDownload(save, resume) {
               downloadTotal: plan.downloadTotal,
               icons: [
                 {
-                  src: new URL("assets/icon-192.png", base).href,
-                  sizes: "192x192",
-                  type: "image/png",
+                  src: new URL("icon.svg", base).href,
+                  sizes: "any",
+                  type: "image/svg+xml",
                 },
               ],
             },
