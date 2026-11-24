@@ -214,3 +214,47 @@ test("standalone Hello World reuses prepared tools, runs edited source and resto
     "Earlier result restored",
   );
 });
+
+test("first save before any run supports a cold unvisited lesson with the host unreachable", async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(240000);
+  const wasm = [];
+  page.on("request", (r) => {
+    if (r.url().endsWith(".wasm")) wasm.push(r.url());
+  });
+  await page.goto(base + "/");
+  await expect(page.locator("#app-status-open")).toBeVisible();
+  expect(wasm).toEqual([]);
+  await page.locator("#app-status-open").click();
+  await page.locator("#download-update").click();
+  await expect(page.locator("#version-status")).toContainText(
+    "Downloaded and ready",
+    { timeout: 120000 },
+  );
+  const port = server.address().port;
+  server.closeAllConnections();
+  await new Promise((resolve) => server.close(resolve));
+  try {
+    await context.setOffline(true);
+    const plane = await context.newPage();
+    await plane.goto(base + "/lessons/addition/");
+    await expect(plane.locator("#run")).toBeEnabled();
+    await plane.locator("#run").click();
+    await expect(plane.locator("#runner-intro")).toBeVisible();
+    await plane.locator("#runner-intro [data-continue]").click();
+    await expect(plane.locator("#t2-decimal")).toHaveText("12", {
+      timeout: 90000,
+    });
+    await plane.locator("#open-reference").click();
+    await expect(plane.locator("#instruction-reference")).toBeVisible();
+    await plane.keyboard.press("Escape");
+    await plane.locator("#open-calculator").click();
+    await expect(plane.locator("#calculator-dialog")).toBeVisible();
+    await plane.close();
+  } finally {
+    await new Promise((resolve) => server.listen(port, "127.0.0.1", resolve));
+    await context.setOffline(false);
+  }
+});

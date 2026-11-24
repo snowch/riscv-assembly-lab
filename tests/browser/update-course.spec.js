@@ -147,14 +147,22 @@ test("two-window update preserves real results and independent drafts, vetoes fa
   await expect(page.locator("#lesson-complete")).toBeChecked();
   await expect(other.locator("#source")).toHaveValue(otherCode);
   await expect(other.locator("#prediction")).toHaveValue("Other prediction");
-  await context.setOffline(true);
-  await page.reload();
-  await expect(page.locator("#run")).toBeEnabled();
-  await page.locator("#run").click();
-  await expect(page.locator("#t2-decimal")).toHaveText("42", {
-    timeout: 60000,
-  });
-  await other.close();
+  const port = server.address().port;
+  server.closeAllConnections();
+  await new Promise((resolve) => server.close(resolve));
+  try {
+    await context.setOffline(true);
+    await page.reload();
+    await expect(page.locator("#run")).toBeEnabled();
+    await page.locator("#run").click();
+    await expect(page.locator("#t2-decimal")).toHaveText("42", {
+      timeout: 60000,
+    });
+    await other.close();
+  } finally {
+    await new Promise((resolve) => server.listen(port, "127.0.0.1", resolve));
+    await context.setOffline(false);
+  }
 });
 test("missing runtime has persistent recovery, retains source and restores keyboard focus", async ({
   page,

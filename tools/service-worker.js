@@ -395,11 +395,14 @@ self.addEventListener('backgroundfetchclick',event=>event.waitUntil((async()=>{
   else await self.clients.openWindow(new URL('?download=1',BASE).href);
 })()));
 
+// Directory links and explicit index.html identify the same saved document.
+function directoryIndex(path) { return !path ? 'index.html' : path.endsWith('/') ? path + 'index.html' : path; }
+
 async function courseWindows(release) {
   const paths = new Set(release.files.filter(f => f.path.endsWith('.html')).map(f => new URL(f.path, BASE).pathname));
   return (await self.clients.matchAll({ type: 'window', includeUncontrolled: true })).filter(client => {
     const url = new URL(client.url);
-    return url.origin === BASE.origin && paths.has(url.pathname.endsWith('/') ? url.pathname + 'index.html' : url.pathname);
+    return url.origin === BASE.origin && paths.has(directoryIndex(url.pathname));
   });
 }
 function ask(client, token) {
@@ -559,7 +562,7 @@ async function offlineNavigationResponse(request,state={}) {
   try{
     saved||=(await caches.keys()).some(name=>name.startsWith(PREFIX)&&name!==META&&!name.startsWith(PREFIX+'release-'));
     const release=await manifest(state.active||state.visited);
-    const path=new URL(request.url).pathname.slice(BASE.pathname.length).replace(/^releases\/[a-f0-9]{64}\//,'')||'index.html';
+    const path=directoryIndex(new URL(request.url).pathname.slice(BASE.pathname.length).replace(/^releases\/[a-f0-9]{64}\//,''));
     unknownPage=Boolean(saved&&release&&!release.files.some(file=>file.path===path));
   }catch{/* Unavailable metadata must not prevent recovery. */}
   const title=pendingReady?'Your saved update is ready':unknownPage?'This page isn’t in the saved course':saved?'This offline copy needs repair':'This lesson isn’t saved offline';
@@ -570,7 +573,7 @@ async function offlineNavigationResponse(request,state={}) {
   const fontFace='';
   return new Response(`<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="icon" href="data:,"><title>${title} · RISC-V Assembly Lab</title>
 <script>
-try{const saved=localStorage.getItem('riscv-assembly-lab-theme');document.documentElement.dataset.theme=['light','dark'].includes(saved)?saved:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}catch{}
+try{const saved=localStorage.getItem('riscv-assembly-lab:theme');document.documentElement.dataset.theme=['light','dark'].includes(saved)?saved:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}catch{}
 // This page has no editable work, but must participate safely when another
 // course window restarts a saved update. It cannot depend on cached scripts.
 let restartToken,restartTimer;
@@ -593,13 +596,13 @@ ${fontFace}
 :root[data-theme=dark]{color-scheme:dark;--bg:#142326;--ink:#e4efeb;--muted:#a7bfbd;--line:#3b5356;--accent:#a3ddc2}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--bg:#142326;--ink:#e4efeb;--muted:#a7bfbd;--line:#3b5356;--accent:#a3ddc2}}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.65 Plex,system-ui,sans-serif}header{border-bottom:1px solid var(--line);padding:20px max(20px,calc((100% - 720px)/2))}.brand{color:var(--ink);font-size:24px;font-weight:700;text-decoration:none}header small{display:block;color:var(--muted);font-size:14px}main{max-width:760px;padding:clamp(24px,6vw,48px) 20px;margin:auto}h1{font-size:clamp(30px,5vw,40px);line-height:1.2;margin:0 0 24px;max-width:24ch}p{max-width:64ch}nav{display:flex;flex-wrap:wrap;gap:12px;margin:32px 0}nav a{display:inline-block;min-height:48px;padding:10px 18px;border:1px solid var(--accent);border-radius:6px;color:var(--accent);text-underline-offset:4px}.primary{background:var(--accent);color:var(--bg);font-weight:650;text-decoration:none}:focus-visible{outline:3px solid var(--accent);outline-offset:4px}.instruction{border-top:1px solid var(--line);padding-top:24px}
-</style></head><body><header><a class="brand" href="${escape(BASE.href)}">RISC-V Assembly Lab</a><small>C++20</small></header><main><h1>${title}</h1><p>${explanation}</p><nav aria-label="Continue reading">${previous?backLink+retryLink:retryLink+backLink}</nav><p class="instruction">${instruction}</p></main></body></html>`,{status:503,headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'}});
+</style></head><body><header><a class="brand" href="${escape(BASE.href)}">RISC-V Assembly Lab</a><small>Run assembly and C</small></header><main><h1>${title}</h1><p>${explanation}</p><nav aria-label="Continue reading">${previous?backLink+retryLink:retryLink+backLink}</nav><p class="instruction">${instruction}</p></main></body></html>`,{status:503,headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'}});
 }
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== BASE.origin || !url.pathname.startsWith(BASE.pathname)) return;
-  let path = url.pathname.slice(BASE.pathname.length) || 'index.html';
+  let path = directoryIndex(url.pathname.slice(BASE.pathname.length));
   // Metadata is network-only, including requests from legacy cached documents.
   if (path === 'release.json' || path.endsWith('/release.json')) {
     event.respondWith(fetch(new Request(event.request, { cache: 'no-store' }))); return;
