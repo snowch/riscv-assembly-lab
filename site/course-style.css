@@ -190,6 +190,32 @@ button,
 .resource-row {
   border-color: var(--border);
 }
+.resource-chevron {
+  width: 20px;
+  height: 20px;
+  border: 0;
+  transform: none;
+}
+.ui-icon.ui-icon-compact {
+  width: 20px;
+  height: 20px;
+}
+.resource-row > summary .resource-chevron,
+.resource-link .resource-chevron {
+  transform: none;
+}
+.resource-row[open] > summary .resource-chevron {
+  transform: rotate(90deg);
+}
+.course-chevron {
+  display: inline-flex;
+}
+#course-toggle[aria-expanded="true"] .course-chevron {
+  transform: rotate(180deg);
+}
+.lesson-resources .playground-help {
+  margin: 0;
+}
 dialog {
   background: var(--surface);
   color: var(--ink);

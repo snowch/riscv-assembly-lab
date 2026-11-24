@@ -10,4 +10,6 @@ The homepage keeps its existing original image beside the introduction on wide s
 
 Keep optional source inspection, technical tools and references optional; preserve Calculator and Reference at every width. Labels remain visible with enough room for their icons and text rather than retaining the old 44-pixel icon-only width. This was a real phone overflow found after an offline save, not a reason to hide the labels again.
 
+Resource rows use the official 24px Material symbol with a separate title and optional scope subtitle, plus the official 20px chevron. The course outline uses the same family for its disclosure and completion marks. References name their existing documentation scopes. The complete-program and playground guides belong with the other optional resources before completion and previous/next navigation, including when those guides are mounted by the project manager. They must not reappear after the navigation cards. Keep the existing guide IDs and actions so links from the workbench still open the same content without changing a paused execution.
+
 Functional tests cover learner actions, actual execution, restored results, both themes, keyboard interactions and phone/tablet/desktop widths. They do not establish learning effectiveness or physical Android performance.

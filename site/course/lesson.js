@@ -5,6 +5,7 @@ import { setupCourseNavigation } from "./navigation.js";
 import { createPlaygroundLayout } from "../playground/layout.js";
 import { mountProjects } from "../playground/app.js";
 import projectConfig from "./project-tools-config.js";
+import { resourceSummary } from "./html.js";
 import { mountCounterWrap } from "./counter-wrap.js";
 setupTheme();
 renderCompletion();
@@ -20,6 +21,20 @@ host.innerHTML = projectConfig.markup;
 for (const link of host.querySelectorAll('a[href^="../"]'))
   link.setAttribute("href", "../" + link.getAttribute("href"));
 document.getElementById("workbench").closest("main").append(host);
+// Keep optional guides with the other resources, before completion/navigation.
+const resources = document.querySelector(".lesson-resources");
+for (const [id, symbol] of [
+  ["complete-program-guide", "code"],
+  ["playground-help", "guide"],
+]) {
+  const guide = host.querySelector("#" + id);
+  guide.classList.add("resource-row");
+  guide.querySelector("summary").outerHTML = resourceSummary(
+    guide.querySelector("summary").textContent,
+    symbol,
+  );
+  resources.insertBefore(guide, resources.querySelector("#lesson-references"));
+}
 const layout = createPlaygroundLayout(projectConfig.copy.workspace);
 let manager;
 const controller = createWorkbench(lesson, {

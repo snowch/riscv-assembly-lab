@@ -87,13 +87,13 @@ function document(
 }
 function navigation(current) {
   const module = MODULES.find((m) => m.id === current.module);
-  return `<section class="course-navigation"><div class="course-row"><button id="course-toggle" type="button" aria-expanded="false" aria-controls="course-navigation">Course lessons <span aria-hidden="true">⌄</span></button><span id="course-row-progress"></span><nav class="lesson-breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="../../#${module.id}">${escape(module.title)}</a></li><li><span aria-current="page">${escape(current.title)}</span></li></ol></nav></div><nav id="course-navigation" class="course-menu" aria-label="Course lessons" hidden><a class="course-overview" href="../../">Course overview</a><div class="course-outline-grid">${MODULES.map(
+  return `<section class="course-navigation"><div class="course-row"><button id="course-toggle" type="button" aria-expanded="false" aria-controls="course-navigation">Course lessons <span class="course-chevron" aria-hidden="true">${icon("expand_more")}</span></button><span id="course-row-progress"></span><nav class="lesson-breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="../../#${module.id}">${escape(module.title)}</a></li><li><span aria-current="page">${escape(current.title)}</span></li></ol></nav></div><nav id="course-navigation" class="course-menu" aria-label="Course lessons" hidden><a class="course-overview" href="../../">Course overview</a><div class="course-outline-grid">${MODULES.map(
     (group) =>
       `<section><h2>${escape(group.title)}</h2><ol>${lessons
         .filter((l) => l.module === group.id)
         .map(
           (l) =>
-            `<li><a href="../${l.id}/" ${l.id === current.id ? 'aria-current="page"' : ""}>${escape(l.title)}</a><span data-completion="${l.id}" aria-label="Completed" hidden>✓</span></li>`,
+            `<li><a href="../${l.id}/" ${l.id === current.id ? 'aria-current="page"' : ""}>${escape(l.title)}</a><span data-completion="${l.id}" role="img" aria-label="Completed" hidden>${icon("check")}</span></li>`,
         )
         .join("")}</ol></section>`,
   ).join("")}</div></nav></section>`;
@@ -189,7 +189,7 @@ for (let index = 0; index < lessons.length; index++) {
  <details id="challenge" class="challenge-section"><summary>Optional exercise <span>Practise on fresh inputs</span></summary><div id="exercise-preview" class="exercise-body"><p id="exercise-task">${inline(lesson.challenge.task)}</p><p>Load exercise opens your exercise draft or its starter. Return to example brings back your separate example draft.</p><button id="start-challenge">Load exercise</button></div></details>
  ${lesson.c ? `<details id="lesson-c-intent" class="explanation"><summary>Compare the C intent</summary><p>The C expresses the starter’s intent. The assembly was written for this lesson.</p><div class="paired-listing"><div><h3>C intent</h3><pre>${escape(lesson.c)}</pre></div><div><h3>Starter assembly</h3><pre id="c-intent-assembly">${escape(lesson.starter)}</pre></div></div></details>` : ""}
  ${programResourcesMarkup(lesson)}
- <details class="explanation resource-row">${resourceSummary("References", "book")}<ul>${sourceReferences(lesson)}<li><a href="../../NOTICE.md">Runtime, source and licensing record</a></li></ul></details><a class="resource-link" href="../../using-the-workbench/">${icon("guide")}<span class="resource-label">Using the workbench</span><span class="resource-chevron" aria-hidden="true"></span></a></section>
+ <details id="lesson-references" class="explanation resource-row">${resourceSummary("References", "book", escape([...new Set([...lesson.references, "assembler"])].map((key) => REFERENCES[key][0]).join(" · ")))}<ul>${sourceReferences(lesson)}<li><a href="../../NOTICE.md">Runtime, source and licensing record</a></li></ul></details><a class="resource-link" href="../../using-the-workbench/">${icon("guide")}<span class="resource-label">Using the workbench</span><span class="resource-chevron" aria-hidden="true">${icon("chevron_right")}</span></a></section>
  <div class="lesson-completion"><label><input type="checkbox" id="lesson-complete"> Mark lesson complete</label><p>Saved in this browser when storage is available.</p></div><nav class="lesson-navigation" aria-label="Lesson navigation">${previous ? `<a href="../${previous.id}/"><span>← Previous lesson</span>${escape(previous.title)}</a>` : '<a href="../../"><span>Course overview</span>Choose a lesson</a>'}${next ? `<a href="../${next.id}/"><span>Next lesson →</span>${escape(next.title)}</a>` : '<a href="../../"><span>Course overview</span>Choose another topic</a>'}</nav>
  </main></div>`;
   const dir = new URL(`lessons/${lesson.id}/`, root);
