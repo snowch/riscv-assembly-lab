@@ -1136,7 +1136,7 @@
       "qemuIntro": "Build your edited program and choose Download ELF. With QEMU’s RISC-V system emulator installed, run this command from the folder containing `trip.elf`.",
       "qemuCommand": "qemu-system-riscv64 -machine virt -bios none -nographic -kernel trip.elf",
       "qemuCheck": "Check that QEMU prints the same line as the browser. QEMU’s virtual reset code hands off to the image at `0x80000000`. The program then waits in `park`. To quit QEMU, press Ctrl+A and then x.",
-      "board": "The Raspberry Pi Pico 2 uses 32-bit RISC-V and has its own startup and USB serial path. Build the board version, then carry over your edited readings and compare its output with the emulator results."
+      "board": "Download the ready-to-run UF2 firmware and copy it to the Pico 2 in BOOTSEL mode. The starter firmware prints `Trip total: 42 km` over USB serial. If you want to try your own readings, edit the 32-bit RISC-V source and build a new UF2 using the guide."
     },
     "references": [
       "assembler",
