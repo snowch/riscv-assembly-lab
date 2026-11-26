@@ -67,3 +67,7 @@ The standalone playground and its project manager are original additions using t
 ## Shared interface assets
 
 IBM Plex Sans and Mono are bundled under the SIL Open Font License; see `fonts/ibmplexsans-OFL.txt` and `fonts/ibmplexmono-OFL.txt`. Material Symbols Rounded are by Google, Apache-2.0; see `fonts/material-symbols-Apache-2.0.txt`. These assets are served by this course and included in the verified offline copy.
+
+## Raspberry Pi Pico 2 firmware
+
+The [trip computer UF2](pico2/trip_computer.uf2) is built from the [Pico 2 assembly source](pico2/trip.S) with Pico SDK 2.3.1, TinyUSB, and the Raspberry Pi GNU RISC-V toolchain. The [board guide](pico2/) provides the build instructions. See the [firmware sources and licences](pico2/THIRD-PARTY-NOTICES.txt) for upstream revisions and notices.

@@ -2430,6 +2430,13 @@ export default {
       "li",
       "bgeu"
     ],
+    "complete-assembly-program": [
+      "call",
+      "li",
+      "ecall",
+      "la",
+      "ret"
+    ],
     "trip-computer": [
       "la",
       "li",
@@ -2445,6 +2452,26 @@ export default {
       "call",
       "mul",
       "ret"
+    ],
+    "boot-trip-computer": [
+      "la",
+      "call",
+      "li",
+      "beq",
+      "lwu",
+      "add",
+      "addi",
+      "j",
+      "sd",
+      "sb",
+      "remu",
+      "divu",
+      "bne",
+      "mv",
+      "ld",
+      "ret",
+      "lbu",
+      "andi"
     ],
     "twos-complement": [
       "li",

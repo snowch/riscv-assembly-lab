@@ -136,14 +136,20 @@ function validate() {
     for (const name of [
       ...lesson.observe,
       lesson.result,
-      lesson.prediction?.register,
+      ...(lesson.prediction ? [lesson.prediction.register] : []),
     ])
       if (registerIndex(name) < 0)
         throw new Error(lesson.id + ": unknown register " + name);
     for (const ref of lesson.references)
       if (!REFERENCES[ref])
         throw new Error(lesson.id + ": unknown reference " + ref);
+    if (lesson.kind === "program") {
+      if (!lesson.expectedOutput || !lesson.independentTask?.length)
+        throw new Error(lesson.id + ": missing program output or independent task");
+      continue;
+    }
     if (
+      !lesson.prediction ||
       !lesson.challenge?.cases?.length ||
       lesson.challenge.cases.length < 3 ||
       !lesson.challenge.reference ||
@@ -181,12 +187,21 @@ for (let index = 0; index < lessons.length; index++) {
   const body = `<div class="course-layout"><main id="main">${navigation(lesson)}<div class="intro"><h1>${escape(lesson.title)}</h1><p>${inline(lesson.summary)}</p>${lesson.id === "addition" ? '<p class="optional-guide">Optional guide: <a href="../../using-the-workbench/">Using the workbench</a></p>' : ""}</div>
  ${lesson.id === "riscv-and-arm" ? transferGuideMarkup(transferGuide) : ""}
  <section class="lesson-guide" aria-label="Before you run">${paragraphs(lesson.before.slice(0, 2))}${operandDiagram(lesson)}${paragraphs(lesson.before.slice(2))}</section>
- <section id="prediction-block" class="prediction-block" aria-labelledby="prediction-heading"><h2 id="prediction-heading">Predict the result</h2><p>For your first comparison, run the starting code unchanged. If the editor holds a draft, choose Restore starter. Undo restore brings back your draft.</p><p>${inline(lesson.prediction.prompt)}</p><div class="prediction-entry"><label for="prediction">Your prediction <span>(optional, ${escape(lesson.ui.signed || lesson.prediction.reading === "hex" ? (lesson.prediction.reading ?? "signed") : "decimal")} reading)</span></label><input id="prediction" inputmode="text" autocomplete="off"><button id="prediction-hint-button" type="button" aria-expanded="false" aria-controls="prediction-hint">Hint</button></div><p id="prediction-hint" hidden>${inline(lesson.prediction.hint)}</p><p id="prediction-feedback" role="status">Choose Build &amp; Run to see the CPU’s result and check your prediction.</p></section>
+ ${lesson.prediction ? `<section id="prediction-block" class="prediction-block" aria-labelledby="prediction-heading"><h2 id="prediction-heading">Predict the result</h2><p>For your first comparison, run the starting code unchanged. If the editor holds a draft, choose Restore starter. Undo restore brings back your draft.</p><p>${inline(lesson.prediction.prompt)}</p><div class="prediction-entry"><label for="prediction">Your prediction <span>(optional, ${escape(lesson.ui.signed || lesson.prediction.reading === "hex" ? (lesson.prediction.reading ?? "signed") : "decimal")} reading)</span></label><input id="prediction" inputmode="text" autocomplete="off"><button id="prediction-hint-button" type="button" aria-expanded="false" aria-controls="prediction-hint">Hint</button></div><p id="prediction-hint" hidden>${inline(lesson.prediction.hint)}</p><p id="prediction-feedback" role="status">Choose Build &amp; Run to see the CPU’s result and check your prediction.</p></section>` : ""}
  <noscript><p>Building and stepping require JavaScript and WebAssembly. <a href="./${lesson.language === "c" ? "lesson.c" : "lesson.s"}">Read the starting code</a>.</p></noscript>
  ${workbenchMarkup(lesson, { identity: toolCopy.identity, feedback: toolCopy.lessonFeedback })}
  <section class="lesson-explanation" aria-labelledby="explanation-heading"><h2 id="explanation-heading">What the instructions do</h2>${paragraphs(lesson.explanation)}${lesson.id === "addition-wraps" ? counterWrapMarkup(counterWrapCopy) : ""}</section>
  <section id="experiment" class="next-step"><div><h2>Change it and run again</h2><p>${inline(lesson.experiment.task)}</p><details><summary>A hint</summary><p>${inline(lesson.experiment.hint)}</p></details></div></section>
- <details id="challenge" class="challenge-section"><summary>Optional exercise <span>Practise on fresh inputs</span></summary><div id="exercise-preview" class="exercise-body"><p id="exercise-task">${inline(lesson.challenge.task)}</p><p>Load exercise opens your exercise draft or its starter. Return to example brings back your separate example draft.</p><button id="start-challenge">Load exercise</button></div></details>
+ ${lesson.challenge ? `<details id="challenge" class="challenge-section"><summary>Optional exercise <span>Practise on fresh inputs</span></summary><div id="exercise-preview" class="exercise-body"><p id="exercise-task">${inline(lesson.challenge.task)}</p><p>Load exercise opens your exercise draft or its starter. Return to example brings back your separate example draft.</p><button id="start-challenge">Load exercise</button></div></details>` : `<section id="independent-task" class="next-step"><div><h2>Write your own program</h2><ol>${lesson.independentTask.map((step) => `<li>${inline(step)}</li>`).join("")}</ol></div></section>`}
+ ${lesson.bootTransfer ? `<section id="boot-transfer" class="lesson-explanation">
+ <h2>Boot in QEMU</h2>
+ <p>${inline(lesson.bootTransfer.qemuIntro)}</p>
+ <pre><code>${escape(lesson.bootTransfer.qemuCommand)}</code></pre>
+ <p>${inline(lesson.bootTransfer.qemuCheck)} <a href="../../course/bare-metal.ld" download>Download the linker script</a>.</p>
+ <h2>Run it on a Raspberry Pi Pico 2</h2>
+ <p>${inline(lesson.bootTransfer.board)}</p>
+ <p><a href="../../pico2/trip_computer.uf2" download>Download Pico 2 firmware</a> · <a href="../../pico2/">Build, flash and test on a phone</a> · <a href="../../pico2/THIRD-PARTY-NOTICES.txt">Firmware licences</a></p>
+ </section>` : ""}
  ${lesson.c ? `<details id="lesson-c-intent" class="explanation"><summary>Compare the C intent</summary><p>The C expresses the starter’s intent. The assembly was written for this lesson.</p><div class="paired-listing"><div><h3>C intent</h3><pre>${escape(lesson.c)}</pre></div><div><h3>Starter assembly</h3><pre id="c-intent-assembly">${escape(lesson.starter)}</pre></div></div></details>` : ""}
  ${programResourcesMarkup(lesson)}
  <details id="lesson-references" class="explanation resource-row">${resourceSummary("References", "book", escape([...new Set([...lesson.references, "assembler"])].map((key) => REFERENCES[key][0]).join(" · ")))}<ul>${sourceReferences(lesson)}<li><a href="../../NOTICE.md">Runtime, source and licensing record</a></li></ul></details><a class="resource-link" href="../../using-the-workbench/">${icon("guide")}<span class="resource-label">Using the workbench</span><span class="resource-chevron" aria-hidden="true">${icon("chevron_right")}</span></a></section>
@@ -222,7 +237,7 @@ const courseContents = `<p id="course-progress" role="status"></p><details id="c
       )
       .join("")}</ol></details>`,
 ).join("")}</div></details>`;
-const home = `<main id="main" class="course-home"><section class="intro home-hero"><div class="home-hero-copy"><h1>Learn <span class="architecture-name">RISC-V</span> assembly by running it.</h1><p>Start with three instructions. Build towards functions, C and a working trip calculation in xv6.</p><h2>Before you start</h2><p>You should know basic C, including variables, if statements, loops, functions and arrays. You can read small binary numbers using place values. No assembly, hexadecimal, two’s complement or pointers are assumed. <a href="https://snowch.github.io/bit-lab/">Bit Lab</a> offers an optional binary refresher.</p><a class="primary home-start" href="./lessons/${lessons[0].id}/">Start the course →</a> <a class="secondary-link" href="./lessons/hello-world/">Try Hello World</a></div><div class="home-hero-art"><img src="./assets/riscv-hero.webp" alt="" width="1536" height="1024" fetchpriority="high" decoding="async"></div></section>${courseContents}<section class="course-introduction"><p><a href="./playground/">${escape(playgroundCopy.links.homeLabel)}</a> · ${escape(playgroundCopy.links.homeDescription)}</p><p>Optional guide: <a href="./using-the-workbench/">Using the workbench</a>.</p><h2>Registers hold bits. Instructions decide what they mean.</h2><p>Predict a result, run or step the code, inspect registers and bytes, then change the example. Each optional exercise checks your code on fresh inputs. Tools → Program shows the supplied entry and reporting code.</p><p>The target is 64-bit RISC-V with the RV64GC instruction set and the standard integer calling convention. Programs run as real xv6 user processes. RISC-V has no Arm condition flags; the arithmetic and branch lessons teach its own mechanisms.</p><p>An assembler turns assembly text into machine-code bytes. A linker joins those pieces and resolves their addresses to make an executable file. The GNU assembler and linker do that locally here. The C lessons add the pinned TinyCC compiler. Source drafts and completion marks stay in this browser; guest files are disposable. <a href="./NOTICE.md">Sources and runtime details</a>.</p></section></main>`;
+const home = `<main id="main" class="course-home"><section class="intro home-hero"><div class="home-hero-copy"><h1>Learn <span class="architecture-name">RISC-V</span> assembly by running it.</h1><p>Start with three instructions. Build towards functions, C, complete xv6 programs and a trip computer that boots on bare metal.</p><h2>Before you start</h2><p>You should know basic C, including variables, if statements, loops, functions and arrays. You can read small binary numbers using place values. No assembly, hexadecimal, two’s complement or pointers are assumed. <a href="https://snowch.github.io/bit-lab/">Bit Lab</a> offers an optional binary refresher.</p><a class="primary home-start" href="./lessons/${lessons[0].id}/">Start the course →</a> <a class="secondary-link" href="./lessons/hello-world/">Try Hello World</a></div><div class="home-hero-art"><img src="./assets/riscv-hero.webp" alt="" width="1536" height="1024" fetchpriority="high" decoding="async"></div></section>${courseContents}<section class="course-introduction"><p><a href="./playground/">${escape(playgroundCopy.links.homeLabel)}</a> · ${escape(playgroundCopy.links.homeDescription)}</p><p>Optional guide: <a href="./using-the-workbench/">Using the workbench</a>.</p><h2>Registers hold bits. Instructions decide what they mean.</h2><p>Predict a result, run or step the code, inspect registers and bytes, then change the example. Each optional exercise checks your code on fresh inputs. Tools → Program shows the supplied entry and reporting code.</p><p>The target is 64-bit RISC-V with the RV64GC instruction set and the standard integer calling convention. Programs run as real xv6 user processes. RISC-V has no Arm condition flags; the arithmetic and branch lessons teach its own mechanisms.</p><p>An assembler turns assembly text into machine-code bytes. A linker joins those pieces and resolves their addresses to make an executable file. The GNU assembler and linker do that locally here. The C lessons add the pinned TinyCC compiler. Source drafts and completion marks stay in this browser; guest files are disposable. <a href="./NOTICE.md">Sources and runtime details</a>.</p></section></main>`;
 await writeFile(
   new URL("index.html", root),
   document("Course", home, { prefix: "./", script: "./course/home.js" }),
@@ -256,6 +271,27 @@ await writeFile(
   }),
 );
 
+const picoGuide = JSON.parse(
+  await readFile(new URL("../content/guides/pico2.json", import.meta.url), "utf8"),
+);
+const picoGuideBody = `<main id="main" class="workbench-guide"><p><a class="guide-back" href="../lessons/boot-trip-computer/#boot-transfer">← Boot a bare-metal trip computer</a></p><article><div class="intro"><h1>${escape(picoGuide.title)}</h1><p>${inline(picoGuide.intro)}</p></div><nav class="guide-contents" aria-label="On this page">${picoGuide.sections.map(({ id, title }) => `<a href="#${escape(id)}">${escape(title)}</a>`).join("")}</nav>
+${picoGuide.sections.map((section) => `<section id="${escape(section.id)}"><h2>${escape(section.title)}</h2>
+${paragraphs(section.paragraphs)}
+${section.downloads ? `<p>${section.downloads.map(({ href, label }) => `<a href="${escape(href)}" download>${escape(label)}</a>`).join(" · ")}</p>` : ""}
+${section.commands ? `<pre tabindex="0"><code>${escape(section.commands.join("\n"))}</code></pre>` : ""}
+${section.steps ? `<ol>${section.steps.map((step) => `<li>${inline(step)}</li>`).join("")}</ol>` : ""}
+${paragraphs(section.after)}
+${section.links ? `<ul>${section.links.map(({ href, label }) => `<li><a href="${escape(href)}">${escape(label)}</a></li>`).join("")}</ul>` : ""}</section>`).join("\n")}
+</article></main>`;
+await writeFile(
+  new URL("pico2/index.html", root),
+  document(picoGuide.title, picoGuideBody, {
+    prefix: "../",
+    script: "../course/home.js",
+    styles: ["../course/guide.css"],
+  }),
+);
+
 // The independent app is generated from the same workbench markup as lessons.
 const { fromLesson, newProject, projectContext } =
   await import("../site/playground/projects.js");
@@ -267,6 +303,7 @@ const examples = [
   "stack-frames",
   "c-return-values",
   "system-calls",
+  "boot-trip-computer",
 ].map((id) => {
   const lesson = lessons.find((l) => l.id === id);
   const project = fromLesson(lesson, lesson.starter);

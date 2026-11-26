@@ -143,12 +143,14 @@ export function mountProjects(
         summary.dataBytes.replace("{count}", String(project.data.length));
     $("source-help").hidden = true;
     $("entry-copy").textContent =
-      type.entryHelp ??
-      (project.kind === "program"
-        ? "Your complete assembly program defines its entry, initialisation, data and exit."
-        : project.kind === "c"
-          ? "The supplied caller passes the starting arguments to your function and reports its result."
-          : "The lab supplies entry, reporting and exit code.");
+      project.target === "bare-metal"
+        ? "Your image sets up the stack and writes directly to the UART."
+        : (type.entryHelp ??
+          (project.kind === "program"
+            ? "Your complete assembly program defines its entry, initialisation, data and exit."
+            : project.kind === "c"
+              ? "The supplied caller passes the starting arguments to your function and reports its result."
+              : "The lab supplies entry, reporting and exit code."));
     $("complete-description").textContent =
       type.completeSourceDescription ??
       (project.kind === "program"
@@ -163,7 +165,11 @@ export function mountProjects(
       copy.setup.highlightHelp;
     $("source-help").textContent = type.sourceHelp;
     document.querySelector(".editor-panel .tag").textContent =
-      project.kind === "c" ? "TinyCC · RV64" : "RV64GC · xv6";
+      project.kind === "c"
+        ? "TinyCC · RV64"
+        : project.target === "bare-metal"
+          ? "RV64GC · Bare metal"
+          : "RV64GC · xv6";
     $("project-inputs").value = Object.entries(project.inputs)
       .map(([name, value]) => `${name} = ${value}`)
       .join("\n");

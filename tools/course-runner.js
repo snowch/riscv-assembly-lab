@@ -24,8 +24,29 @@ await init({
 });
 const kernel = await load("images/kernel"),
   disk = await load("images/fs.img");
+const bareMetalLinker = await readFile(new URL("course/bare-metal.ld", base), "utf8");
 export const build = (source, lesson, fixture = {}, platform = "xv6") =>
-  buildLesson(source, lesson, fixture, assets, factories, platform);
+  buildLesson(
+    source,
+    lesson,
+    fixture,
+    lesson.target === "bare-metal" ? { ...assets, script: bareMetalLinker } : assets,
+    factories,
+    platform,
+  );
+export function bootBareMetal(built) {
+  const vm = WasmRiscv.new();
+  try {
+    vm.setup_program(built.elf);
+    if (!vm.run_until_breakpoints(new BigUint64Array([BigInt(built.park)]), 100000))
+      throw new Error("The bare-metal program did not reach park.");
+    const bytes = [];
+    for (let byte; (byte = vm.get_output()) !== 0;) bytes.push(byte);
+    return new TextDecoder().decode(Uint8Array.from(bytes)).replaceAll("\r", "");
+  } finally {
+    vm.free();
+  }
+}
 export function machine(elf) {
   const vm = WasmRiscv.new();
   vm.setup_program(kernel);

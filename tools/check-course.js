@@ -7,7 +7,7 @@ import { existsSync } from "node:fs";
 import { loadLessons } from "./course-data.js";
 import { buildLesson } from "../site/course/builder.js";
 import { readState, checkState } from "../site/course/model.js";
-import { assets, factories, execute } from "./course-runner.js";
+import { assets, factories, execute, build, bootBareMetal } from "./course-runner.js";
 const lessons = await loadLessons(),
   directory = await mkdtemp(join(tmpdir(), "riscv-course-"));
 const nativeOnly = process.argv.includes("--native-only"),
@@ -23,6 +23,7 @@ const totals = {
   nativeExamples: 0,
   nativeCases: 0,
   incompleteReferencesRejected: 0,
+  bareMetalExamples: 0,
   xv6Examples: 0,
   xv6Cases: 0,
   xv6IncompleteRejected: 0,
@@ -78,6 +79,38 @@ try {
     console.log(version.stdout.split("\n")[0]);
   }
   for (const lesson of lessons) {
+    if (lesson.target === "bare-metal") {
+      if (!nativeOnly) {
+        try {
+          const output = bootBareMetal(await build(lesson.starter, lesson));
+          if (output !== lesson.expectedOutput)
+            throw new Error("Unexpected UART output: " + output);
+          totals.bareMetalExamples++;
+          console.log(`${lesson.id}: checked`);
+        } catch (error) {
+          fail(lesson, "bare-metal worked example", error);
+        }
+      }
+      continue;
+    }
+    if (lesson.kind === "program") {
+      if (!nativeOnly) {
+        try {
+          const { output } = await run(lesson.starter, lesson, {}, "xv6");
+          const text = output.replaceAll("\r", "").split("\n");
+          if (
+            !text.includes(lesson.expectedOutput.trimEnd()) ||
+            output.includes("usertrap():")
+          )
+            throw new Error("Unexpected console output: " + output.slice(-400));
+          totals.xv6Examples++;
+          console.log(`${lesson.id}: checked`);
+        } catch (error) {
+          fail(lesson, "xv6 complete program", error);
+        }
+      }
+      continue;
+    }
     if (!xv6Only && lesson.id !== "system-calls") {
       try {
         const result = await run(lesson.starter, lesson);

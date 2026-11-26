@@ -40,7 +40,11 @@
     "site/vendor/compiler/tcc.wasm": "047bba88a9c036598d8d3e7e76750736e8304dc9b8f0604f4e33ecc3b5217b0d",
     "site/vendor/runtime/THIRD_PARTY_NOTICES.txt": "a4922e0710b39d5361624edfb858a0a2350e3efea657af50de731431c5845d96",
     "site/vendor/editor/codemirror.js": "0cb8729015830239dd4f4bf34073035e7619c1fcd4c03642cd43eb57cb773eb7",
-    "site/vendor/editor/LICENSES.txt": "1c55f8637aca40a705ae0cdffc78844ca5cfeefd567a198058af2dc60f4beaf4"
+    "site/vendor/editor/LICENSES.txt": "1c55f8637aca40a705ae0cdffc78844ca5cfeefd567a198058af2dc60f4beaf4",
+    "site/pico2/trip_computer.uf2": "89ee0e79a3352795acdcea18d559658474490c1be04aca022840cb24b908554a",
+    "site/pico2/CMakeLists.txt": "a4d4d2657104ee84a94104b5ea7a3d0de0e25ed8f8d6bc7b2e514ae2391f7ae3",
+    "site/pico2/trip.S": "0da2d19ef1a976aba39a10a504d28787b06072b0a3b6d04546fb5e63a329b93e",
+    "site/pico2/THIRD-PARTY-NOTICES.txt": "0f51751733255960c5b3555e7ff37a860d89550f5e547fa583fdff0ffd63f5c7"
   },
   "compiler": {
     "upstream": "lupyuen/tcc-riscv32-wasm",
@@ -68,5 +72,12 @@
       "w3c-keyname": "2.2.8"
     },
     "build": "npm run build:editor"
+  },
+  "pico2Firmware": {
+    "sdk": "raspberrypi/pico-sdk@079c6f39023649b154152db30f1d781e884879bc",
+    "tinyusb": "hathach/tinyusb@86ad6e56c1700e85f1c5678607a762cfe3aa2f47",
+    "toolchain": "raspberrypi/pico-sdk-tools@v2.3.1-0",
+    "board": "pico2",
+    "platform": "rp2350-riscv"
   }
 }

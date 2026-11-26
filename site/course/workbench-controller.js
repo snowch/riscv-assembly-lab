@@ -140,7 +140,7 @@ export function createWorkbench(
           : "Restore loaded source";
   }
   function updateExercise() {
-    if (!lessonPage) return;
+    if (!$("exercise-work")) return;
     const active = curriculum && activity === "challenge";
     $("exercise-work").hidden = !active;
     $("challenge-controls").hidden = !active;
@@ -193,8 +193,10 @@ export function createWorkbench(
     );
   }
   function stale() {
-    $("snapshot-note").hidden =
-      builtFingerprint === null || fingerprint() === builtFingerprint;
+    const sourceChanged =
+      builtFingerprint !== null && fingerprint() !== builtFingerprint;
+    $("snapshot-note").hidden = !sourceChanged;
+    $("download-elf").disabled = sourceChanged || !builtInfo?.elf;
   }
   function publishView(program = makeProgram(source.value, lesson, fixture())) {
     onView({
@@ -216,6 +218,27 @@ export function createWorkbench(
   }
   function completeSource() {
     const program = makeProgram(source.value, lesson, fixture());
+    const bareMetal = lesson.target === "bare-metal";
+    $("download-elf").hidden = !bareMetal;
+    const outputLabel = bareMetal ? "UART output" : "Program output";
+    $("program-output-label").textContent = outputLabel;
+    $("console").setAttribute("aria-label", outputLabel);
+    $("program-output-help").textContent = bareMetal
+      ? "Bytes sent by your program"
+      : "Your code’s console text";
+    $("serial-log-label").textContent = bareMetal
+      ? "Raw UART log"
+      : "xv6 serial log";
+    $("serial-log-help").textContent = bareMetal
+      ? "Includes carriage returns"
+      : "Boot, program and shell";
+    $("complete-source-help").textContent =
+      lesson.kind === "program"
+        ? "The complete source matches the editor. It defines its own entry and initialisation."
+        : "This includes the supplied entry, capture and exit code.";
+    $("elf-layout-help").textContent = bareMetal
+      ? "The ELF describes where to load the image. The startup code sets the stack pointer."
+      : "xv6 loads the ELF regions and sets the initial stack before entering the program.";
     $("complete-source").textContent = program.source;
     if ($("complete-c-source"))
       $("complete-c-source").textContent = source.value;
@@ -618,7 +641,7 @@ export function createWorkbench(
     }
   }
   function predictionUnavailable() {
-    if (curriculum && activity === "explore")
+    if (curriculum && lesson.prediction && activity === "explore")
       $("prediction-feedback").textContent = feedback.predictionUnavailable;
   }
   session = new Session((event) => {
@@ -645,6 +668,7 @@ export function createWorkbench(
         ? "Messages available"
         : `Built · ${event.bytes.toLocaleString()} bytes`;
       updateLayout(event.segments);
+      stale();
       if (lesson.language === "c") {
         $("compiled-source").textContent = builtSource;
         $("compiled-assembly").textContent = event.disassembly
@@ -749,8 +773,10 @@ export function createWorkbench(
               "Start stepping or Start debugging to observe this program’s registers.",
           );
         status(
-          messages.programFinished ??
-            "Program finished. Inspect Output, or start stepping to capture register observations.",
+          lesson.target === "bare-metal"
+            ? "Reached park. Inspect the bytes your program sent to the UART."
+            : (messages.programFinished ??
+              "Program finished. Inspect Output, or start stepping to capture register observations."),
           "Finished",
         );
       } else {
@@ -977,7 +1003,7 @@ export function createWorkbench(
       $("run").click();
     }
   });
-  if (curriculum) {
+  if (curriculum && lesson.challenge) {
     function switchActivity(next) {
       if (batch) return;
       if (activity === next) return;
@@ -1140,7 +1166,7 @@ export function createWorkbench(
     saveDraft();
     completeSource();
   });
-  if (curriculum) {
+  if (curriculum && lesson.challenge) {
     $("next-hint").addEventListener("click", () => {
       if (hintIndex >= lesson.challenge.hints.length) return;
       const li = document.createElement("li");
@@ -1159,6 +1185,8 @@ export function createWorkbench(
       completeSource();
       source.focus();
     });
+  }
+  if (curriculum && lesson.prediction) {
     $("prediction-hint-button").addEventListener("click", () => {
       const show = $("prediction-hint").hidden;
       $("prediction-hint").hidden = !show;
@@ -1216,6 +1244,13 @@ export function createWorkbench(
       lesson.sourceName ?? (lesson.language === "c" ? "lesson.c" : "lesson.s"),
     ),
   );
+  $("download-elf").addEventListener("click", () => {
+    if (builtInfo?.elf && fingerprint() === builtFingerprint)
+      download(
+        new Blob([builtInfo.elf], { type: "application/octet-stream" }),
+        "trip.elf",
+      );
+  });
   $("download-complete").addEventListener("click", async () => {
     const snapshot = source.value;
     const program = makeProgram(snapshot, lesson, fixture()).source;
@@ -1280,7 +1315,8 @@ export function createWorkbench(
     if (!lessonPage) return;
     document.body.classList.toggle("project-active", !curriculum);
     $("return-lesson").hidden = curriculum;
-    $("prediction-block").hidden = !curriculum || activity !== "explore";
+    if ($("prediction-block"))
+      $("prediction-block").hidden = !curriculum || activity !== "explore";
     updateExercise();
     $("workspace-kind").textContent = curriculum
       ? toolCopy.identity.lessonKind
@@ -1359,7 +1395,11 @@ export function createWorkbench(
     $("reading").value =
       next.prediction?.reading === "unsigned" ? "unsigned" : "signed";
     document.querySelector(".editor-panel .tag").textContent =
-      next.language === "c" ? "TinyCC · RV64" : "RV64GC · xv6";
+      next.language === "c"
+        ? "TinyCC · RV64"
+        : next.target === "bare-metal"
+          ? "RV64GC · Bare metal"
+          : "RV64GC · xv6";
   }
   function readingSnapshot() {
     return {
@@ -1514,7 +1554,7 @@ export function createWorkbench(
         caseIndex = saved.caseIndex;
         restoreUndo();
         source.value = saved.source;
-        $("prediction").value = saved.prediction;
+        if ($("prediction")) $("prediction").value = saved.prediction;
         $("editor-context").textContent =
           activity === "challenge" ? "Exercise" : "Example";
         $("return-example").hidden = activity !== "challenge";

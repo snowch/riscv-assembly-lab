@@ -1,0 +1,100 @@
+{
+  "title": "Run the trip computer on a Raspberry Pi Pico 2",
+  "intro": "Boot the trip computer on a Raspberry Pi Pico 2, compare its USB serial output, then build your own RISC-V UF2.",
+  "sections": [
+    {
+      "id": "download",
+      "title": "Download the compiled firmware",
+      "paragraphs": [
+        "This UF2 targets the Raspberry Pi Pico 2 in RISC-V mode. Connect the board with a USB data cable that has Micro-USB at the board end. For a USB-C phone, use a USB-C to Micro-USB data cable or a USB-C OTG adapter with a USB-A to Micro-USB data cable."
+      ],
+      "downloads": [
+        {
+          "href": "./trip_computer.uf2",
+          "label": "Download trip_computer.uf2"
+        }
+      ],
+      "links": [
+        {
+          "href": "./THIRD-PARTY-NOTICES.txt",
+          "label": "Firmware sources and licences"
+        }
+      ]
+    },
+    {
+      "id": "flash",
+      "title": "Load it and check the output",
+      "steps": [
+        "Hold BOOTSEL while connecting the Pico 2 over USB. Release the button when the `RP2350` drive appears.",
+        "Copy `trip_computer.uf2` to that drive. This replaces the firmware on the board. The drive disappears as the Pico 2 restarts.",
+        "Open the new USB serial port in a terminal. Its name may look like `/dev/ttyACM0` on Linux, `/dev/cu.usbmodem…` on macOS, or `COM` followed by a number on Windows. Check for `Trip total: 42 km` about once a second."
+      ]
+    },
+    {
+      "id": "phone",
+      "title": "Test it from a phone",
+      "paragraphs": [
+        "On an Android phone with USB host support, connect the Pico 2 with a data cable or an OTG adapter and data cable. If your file manager mounts the `RP2350` drive, copy the UF2 there. After the board restarts, open Serial USB Terminal, grant USB access and connect to the Pico 2. If you connect and see no output, turn on DTR in the terminal’s control lines.",
+        "A USB-C iPhone may be able to copy the UF2 if Files mounts the `RP2350` drive. Use a computer for the serial check unless you have an iPhone app that supports the board’s USB serial interface."
+      ],
+      "links": [
+        {
+          "href": "https://play.google.com/store/apps/details?id=de.kai_morich.serial_usb_terminal",
+          "label": "Serial USB Terminal for Android"
+        },
+        {
+          "href": "https://support.apple.com/guide/iphone/iph95baac91f/ios",
+          "label": "External drives in iPhone Files"
+        }
+      ]
+    },
+    {
+      "id": "build",
+      "title": "Build the RV32 image",
+      "paragraphs": [
+        "You need a Raspberry Pi Pico 2 and a Micro USB data cable to run the image on hardware. For the build, use a computer with CMake, a build tool such as Make or Ninja, Pico SDK 2.3.1 with its TinyUSB submodule, and the Raspberry Pi RISC-V toolchain. Install the matching picotool so CMake can package the ELF as UF2.",
+        "Download both files into one directory and open a terminal there. Point the two paths below at the top-level SDK and toolchain directories. If CMake cannot find your picotool installation, add `-Dpicotool_DIR=/path/to/picotool` pointing to the directory containing `picotoolConfig.cmake`."
+      ],
+      "downloads": [
+        {
+          "href": "./trip.S",
+          "label": "Download trip.S"
+        },
+        {
+          "href": "./CMakeLists.txt",
+          "label": "Download CMakeLists.txt"
+        }
+      ],
+      "commands": [
+        "cmake -S . -B build -DPICO_SDK_PATH=/path/to/pico-sdk -DPICO_TOOLCHAIN_PATH=/path/to/riscv-toolchain",
+        "cmake --build build"
+      ],
+      "after": [
+        "Look for `build/trip_computer.uf2`. If picotool is on your PATH, use `picotool info -a build/trip_computer.uf2` to check that the file advertises RP2350, a RISC-V image, and USB stdin/stdout."
+      ]
+    },
+    {
+      "id": "port",
+      "title": "Trace what changed on the board",
+      "paragraphs": [
+        "On the Pico 2, the SDK startup sets the stack pointer and calls `main`. Find where `main` calls `trip_total` and passes the two ends of the array. On RV32, `lw` loads all 32 bits of a distance, and `sw` and `lw` save and restore the 32-bit return address. Keep your test sum within the unsigned 32-bit range.",
+        "The assembly still converts the total to digits. It sends the text through `stdio_put_string`, using the SDK’s USB serial driver. Find where the report repeats so a terminal opened after boot can still receive it.",
+        "Copy your QEMU test distances into `trip.S` and carry over your rule to count only readings of 10 km or more. With 9, 10 and 11, predict the new total, rebuild and copy the new UF2. Check for `Trip total: 21 km`."
+      ],
+      "links": [
+        {
+          "href": "https://github.com/raspberrypi/pico-sdk/tree/2.3.1",
+          "label": "Pico SDK 2.3.1"
+        },
+        {
+          "href": "https://github.com/raspberrypi/pico-sdk-tools/releases/tag/v2.3.1-0",
+          "label": "Raspberry Pi RISC-V toolchain and picotool"
+        },
+        {
+          "href": "https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html",
+          "label": "Raspberry Pi Pico 2 documentation"
+        }
+      ]
+    }
+  ]
+}

@@ -270,9 +270,19 @@
     "title": "Keep an access inside its permitted range"
   },
   {
+    "id": "complete-assembly-program",
+    "module": "xv6",
+    "title": "Write and run a complete assembly program"
+  },
+  {
     "id": "trip-computer",
     "module": "xv6",
     "title": "Build a checked trip calculation"
+  },
+  {
+    "id": "boot-trip-computer",
+    "module": "bare-metal",
+    "title": "Boot a bare-metal trip computer"
   },
   {
     "id": "twos-complement",
