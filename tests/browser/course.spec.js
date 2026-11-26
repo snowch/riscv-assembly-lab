@@ -382,15 +382,16 @@ test("the trip-computer lesson links QEMU instructions, the Pico guide and its U
   await expect(transfer.getByRole("heading", { name: "Boot in QEMU" })).toBeVisible();
   await expect(transfer.locator("pre")).toContainText("-bios none -nographic -kernel trip.elf");
 
+  await expect(transfer.locator('a[href$=".uf2"]')).toHaveCount(0);
+  await transfer.getByRole("link", { name: "Open the Pico 2 guide" }).click();
   const saving = page.waitForEvent("download");
-  await transfer.getByRole("link", { name: "Download Pico 2 firmware" }).click();
+  await page.getByRole("link", { name: "Download trip_computer.uf2" }).click();
   const firmware = await saving;
   expect(firmware.suggestedFilename()).toBe("trip_computer.uf2");
   expect(await readFile(await firmware.path())).toEqual(
     await readFile(new URL("../../site/pico2/trip_computer.uf2", import.meta.url)),
   );
 
-  await transfer.getByRole("link", { name: "Build, flash and test on a phone" }).click();
   await expect(page.getByRole("heading", { name: "Test it from a phone" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Download trip.S" })).toHaveAttribute("download", "");
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(

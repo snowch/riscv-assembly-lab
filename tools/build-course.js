@@ -200,7 +200,7 @@ for (let index = 0; index < lessons.length; index++) {
  <p>${inline(lesson.bootTransfer.qemuCheck)} <a href="../../course/bare-metal.ld" download>Download the linker script</a>.</p>
  <h2>Run it on a Raspberry Pi Pico 2</h2>
  <p>${inline(lesson.bootTransfer.board)}</p>
- <p><a href="../../pico2/trip_computer.uf2" download>Download Pico 2 firmware</a> · <a href="../../pico2/">Build, flash and test on a phone</a> · <a href="../../pico2/THIRD-PARTY-NOTICES.txt">Firmware licences</a></p>
+ <p><a href="../../pico2/">Open the Pico 2 guide</a></p>
  </section>` : ""}
  ${lesson.c ? `<details id="lesson-c-intent" class="explanation"><summary>Compare the C intent</summary><p>The C expresses the starter’s intent. The assembly was written for this lesson.</p><div class="paired-listing"><div><h3>C intent</h3><pre>${escape(lesson.c)}</pre></div><div><h3>Starter assembly</h3><pre id="c-intent-assembly">${escape(lesson.starter)}</pre></div></div></details>` : ""}
  ${programResourcesMarkup(lesson)}

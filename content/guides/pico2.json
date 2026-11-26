@@ -50,7 +50,7 @@
     },
     {
       "id": "build",
-      "title": "Build the RV32 image",
+      "title": "Rebuild the firmware with your own readings",
       "paragraphs": [
         "You need a Raspberry Pi Pico 2 and a Micro USB data cable to run the image on hardware. For the build, use a computer with CMake, a build tool such as Make or Ninja, Pico SDK 2.3.1 with its TinyUSB submodule, and the Raspberry Pi RISC-V toolchain. Install the matching picotool so CMake can package the ELF as UF2.",
         "Download both files into one directory and open a terminal there. Point the two paths below at the top-level SDK and toolchain directories. If CMake cannot find your picotool installation, add `-Dpicotool_DIR=/path/to/picotool` pointing to the directory containing `picotoolConfig.cmake`."
