@@ -44,7 +44,9 @@
     "site/pico2/trip_computer.uf2": "89ee0e79a3352795acdcea18d559658474490c1be04aca022840cb24b908554a",
     "site/pico2/CMakeLists.txt": "a4d4d2657104ee84a94104b5ea7a3d0de0e25ed8f8d6bc7b2e514ae2391f7ae3",
     "site/pico2/trip.S": "0da2d19ef1a976aba39a10a504d28787b06072b0a3b6d04546fb5e63a329b93e",
-    "site/pico2/THIRD-PARTY-NOTICES.txt": "0f51751733255960c5b3555e7ff37a860d89550f5e547fa583fdff0ffd63f5c7"
+    "site/pico2/THIRD-PARTY-NOTICES.txt": "0f51751733255960c5b3555e7ff37a860d89550f5e547fa583fdff0ffd63f5c7",
+    "site/pico2/runtime.o": "b11907f27816c1f646237d938d34618ed4ab9293895ffe1ac7c0721d74dabcc6",
+    "site/pico2/runtime.ld": "f3e3438fa4998fce46996b6ce989ffe99a1f39bac2cd8eba68d04dad3d7611b2"
   },
   "compiler": {
     "upstream": "lupyuen/tcc-riscv32-wasm",

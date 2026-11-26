@@ -1,6 +1,6 @@
 {
   "title": "Run the trip computer on a Raspberry Pi Pico 2",
-  "intro": "Boot the trip computer on a Raspberry Pi Pico 2, compare its USB serial output, then build your own RISC-V UF2.",
+  "intro": "Boot the trip computer on a Raspberry Pi Pico 2, then edit the assembly and build your own RISC-V firmware in the browser.",
   "sections": [
     {
       "id": "download",
@@ -49,8 +49,16 @@
       ]
     },
     {
+      "id": "experiment",
+      "title": "Change a reading and build in your browser",
+      "paragraphs": [
+        "Find `.word 12, 7, 23` near the end of the assembly. Change 7 to 17 and predict the new trip total.",
+        "Choose Build UF2, download the result and copy it to the Pico 2 in BOOTSEL mode. Compare the USB serial line with your prediction. Next, add a fourth reading or try an array of zeros."
+      ]
+    },
+    {
       "id": "build",
-      "title": "Rebuild the firmware with your own readings",
+      "title": "Build with the Pico SDK on a computer",
       "paragraphs": [
         "You need a Raspberry Pi Pico 2 and a Micro USB data cable to run the image on hardware. For the build, use a computer with CMake, a build tool such as Make or Ninja, Pico SDK 2.3.1 with its TinyUSB submodule, and the Raspberry Pi RISC-V toolchain. Install the matching picotool so CMake can package the ELF as UF2.",
         "Download both files into one directory and open a terminal there. Point the two paths below at the top-level SDK and toolchain directories. If CMake cannot find your picotool installation, add `-Dpicotool_DIR=/path/to/picotool` pointing to the directory containing `picotoolConfig.cmake`."
@@ -79,7 +87,7 @@
       "paragraphs": [
         "On the Pico 2, the SDK startup sets the stack pointer and calls `main`. Find where `main` calls `trip_total` and passes the two ends of the array. On RV32, `lw` loads all 32 bits of a distance, and `sw` and `lw` save and restore the 32-bit return address. Keep your test sum within the unsigned 32-bit range.",
         "The assembly still converts the total to digits. It sends the text through `stdio_put_string`, using the SDK’s USB serial driver. Find where the report repeats so a terminal opened after boot can still receive it.",
-        "Copy your QEMU test distances into `trip.S` and carry over your rule to count only readings of 10 km or more. With 9, 10 and 11, predict the new total, rebuild and copy the new UF2. Check for `Trip total: 21 km`."
+        "Copy your QEMU test distances into the editor and carry over your rule to count only readings of 10 km or more. With 9, 10 and 11, predict the new total, rebuild and copy the new UF2. Check for `Trip total: 21 km`."
       ],
       "links": [
         {

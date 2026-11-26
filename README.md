@@ -24,7 +24,7 @@ The complete-program guide introduces a real data object, helper call and explic
 
 ## What runs
 
-The [bare-metal trip computer](https://snowch.github.io/riscv-assembly-lab/lessons/boot-trip-computer/) boots its own RV64 ELF in the browser’s WebAssembly emulator and prints through a memory-mapped UART. The lesson downloads the built ELF for QEMU’s RISC-V `virt` machine and links to a compiled UF2 and a [Raspberry Pi Pico 2 guide](https://snowch.github.io/riscv-assembly-lab/pico2/). The board port runs the calculation and decimal formatting in RV32 assembly and uses the Pico SDK for boot and USB serial.
+The [bare-metal trip computer](https://snowch.github.io/riscv-assembly-lab/lessons/boot-trip-computer/) boots its own RV64 ELF in the browser’s WebAssembly emulator and prints through a memory-mapped UART. The lesson downloads the built ELF for QEMU’s RISC-V `virt` machine and links to a compiled UF2 and a [Raspberry Pi Pico 2 guide](https://snowch.github.io/riscv-assembly-lab/pico2/). The board port runs the calculation and decimal formatting in RV32 assembly and uses the Pico SDK for boot and USB serial. The guide assembles and links edited code locally with WebAssembly and packages the linked ELF as a downloadable UF2.
 
 GNU `as` and `ld`, compiled to WebAssembly, produce real ELF64 executables. For xv6 lessons, the CPU boots a real kernel and executes each program in a fresh filesystem copy. The target is RV64GC / LP64D. C lessons use the pinned RV64 TinyCC compiler locally, then link and execute its actual object. Compiler output is disassembled by real GNU `objdump`; no invented C source-line mapping is shown.
 
