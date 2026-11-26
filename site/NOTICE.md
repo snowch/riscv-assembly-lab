@@ -71,3 +71,5 @@ IBM Plex Sans and Mono are bundled under the SIL Open Font License; see `fonts/i
 ## Raspberry Pi Pico 2 firmware
 
 The [trip computer UF2](pico2/trip_computer.uf2) is built from the [Pico 2 assembly source](pico2/trip.S) with Pico SDK 2.3.1, TinyUSB, and the Raspberry Pi GNU RISC-V toolchain. The [board guide](pico2/) provides the build instructions. See the [firmware sources and licences](pico2/THIRD-PARTY-NOTICES.txt) for upstream revisions and notices.
+
+The browser builder links against a [relocatable SDK runtime](pico2/runtime.o) and a [flattened SDK linker script](pico2/runtime.ld) from the same build. To regenerate them, follow the board guide’s SDK build steps with the Unix Makefiles generator, then run `python3 tools/prepare-pico2-runtime.py /path/to/build` and update the two hashes in `asset-manifest.json`. The browser packs the linked ELF using the [UF2 format](https://github.com/microsoft/uf2) and follows [picotool’s RP2350 flash layout](https://github.com/raspberrypi/picotool/tree/2.3.1/elf2uf2).

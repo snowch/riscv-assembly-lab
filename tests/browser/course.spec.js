@@ -398,3 +398,38 @@ test("the trip-computer lesson links QEMU instructions, the Pico guide and its U
     await page.evaluate(() => document.documentElement.clientWidth),
   );
 });
+
+test("the Pico 2 guide builds a UF2 from edited assembly in the browser", async ({ page }) => {
+  await page.goto("/pico2/");
+  const source = page.getByLabel("Trip computer assembly");
+  const build = page.getByRole("button", { name: "Build UF2" });
+  const output = page.getByRole("link", { name: "Download your UF2" });
+  const starter = await source.inputValue();
+
+  await source.fill("not_a_riscv_instruction");
+  await build.click();
+  await expect(page.locator("#pico-diagnostics")).toContainText(/unrecognized opcode/i);
+  await expect(output).toBeHidden();
+  await page.getByRole("button", { name: "Restore starter" }).click();
+  await expect(source).toHaveValue(starter);
+
+  await source.fill(starter.replace(".word 12, 7, 23", ".word 19, 80, 1, 4"));
+  await build.click();
+  await expect(output).toBeVisible();
+  const saving = page.waitForEvent("download");
+  await output.click();
+  const file = await saving;
+  expect(file.suggestedFilename()).toBe("trip_computer.uf2");
+  const bytes = await readFile(await file.path());
+  expect(bytes.readUInt32LE(512 + 28)).toBe(0xe48bff5a);
+  const readings = Buffer.alloc(16);
+  [19, 80, 1, 4].forEach((value, i) => readings.writeUInt32LE(value, i * 4));
+  const flash = Buffer.concat(
+    Array.from({ length: bytes.length / 512 - 1 }, (_, i) =>
+      bytes.subarray((i + 1) * 512 + 32, (i + 1) * 512 + 288),
+    ),
+  );
+  expect(flash.includes(readings)).toBe(true);
+  await source.fill(starter);
+  await expect(output).toBeHidden();
+});

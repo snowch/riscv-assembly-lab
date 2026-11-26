@@ -12,6 +12,7 @@ export async function buildProgram(
     throw new Error(`${filename}:1: Error: Enter an assembly program first.`);
   if (new TextEncoder().encode(source).length > MAX_SOURCE_BYTES)
     throw new Error("This prototype accepts at most 64 KiB of source.");
+  const pico2 = assets.target === "pico2";
   let diagnostics = "";
   const report = (line) => {
     if (diagnostics.length < 32000) diagnostics += line + "\n";
@@ -22,8 +23,8 @@ export async function buildProgram(
   let status;
   try {
     status = assembler.callMain([
-      "-march=rv64gc",
-      "-mabi=lp64d",
+      pico2 ? "-march=rv32imac" : "-march=rv64gc",
+      pico2 ? "-mabi=ilp32" : "-mabi=lp64d",
       "-mno-relax",
       ...(assets.debug ? ["-g"] : []),
       filename,
@@ -41,8 +42,9 @@ export async function buildProgram(
   for (const [name, bytes] of objects) linker.FS.writeFile(name, bytes);
   try {
     status = linker.callMain([
-      "--no-relax",
-      "--require-defined=_start",
+      ...(pico2
+        ? ["-melf32lriscv", "--gc-sections", "-z", "max-page-size=4096", "--no-warn-rwx-segments", "--require-defined=main"]
+        : ["--no-relax", "--require-defined=_start"]),
       "-T",
       "user.ld",
       "hello.o",

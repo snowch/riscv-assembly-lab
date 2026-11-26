@@ -274,9 +274,16 @@ await writeFile(
 const picoGuide = JSON.parse(
   await readFile(new URL("../content/guides/pico2.json", import.meta.url), "utf8"),
 );
+const picoSource = await readFile(new URL("pico2/trip.S", root), "utf8");
+const picoBuilder = `<label for="pico-source">Trip computer assembly</label>
+<textarea id="pico-source" rows="17" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" disabled>${escape(picoSource)}</textarea>
+<div class="pico-actions"><button class="primary" id="pico-build" disabled>Build UF2</button><button id="pico-restore" disabled>Restore starter</button><a id="pico-download" download="trip_computer.uf2" hidden>Download your UF2</a></div>
+<p id="pico-status" role="status"></p><pre id="pico-diagnostics" hidden></pre>
+<noscript><p>Enable JavaScript to build firmware in the browser.</p></noscript>`;
 const picoGuideBody = `<main id="main" class="workbench-guide"><p><a class="guide-back" href="../lessons/boot-trip-computer/#boot-transfer">← Boot a bare-metal trip computer</a></p><article><div class="intro"><h1>${escape(picoGuide.title)}</h1><p>${inline(picoGuide.intro)}</p></div><nav class="guide-contents" aria-label="On this page">${picoGuide.sections.map(({ id, title }) => `<a href="#${escape(id)}">${escape(title)}</a>`).join("")}</nav>
 ${picoGuide.sections.map((section) => `<section id="${escape(section.id)}"><h2>${escape(section.title)}</h2>
 ${paragraphs(section.paragraphs)}
+${section.id === "experiment" ? picoBuilder : ""}
 ${section.downloads ? `<p>${section.downloads.map(({ href, label }) => `<a href="${escape(href)}" download>${escape(label)}</a>`).join(" · ")}</p>` : ""}
 ${section.commands ? `<pre tabindex="0"><code>${escape(section.commands.join("\n"))}</code></pre>` : ""}
 ${section.steps ? `<ol>${section.steps.map((step) => `<li>${inline(step)}</li>`).join("")}</ol>` : ""}
@@ -287,8 +294,8 @@ await writeFile(
   new URL("pico2/index.html", root),
   document(picoGuide.title, picoGuideBody, {
     prefix: "../",
-    script: "../course/home.js",
-    styles: ["../course/guide.css"],
+    script: "./build-page.js",
+    styles: ["../course/guide.css", "./build.css"],
   }),
 );
 
