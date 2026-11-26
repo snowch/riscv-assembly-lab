@@ -36,6 +36,35 @@ test.afterAll(async () => {
   server.closeAllConnections();
   await new Promise((r) => server.close(r));
 });
+test("built header preserves System preference and follows the rendered device theme", async ({
+  page,
+}) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto(base + "/lessons/addition/");
+  await expect(page.locator("#header-theme-toggle")).toBeEnabled();
+  await setTheme(page, "dark");
+  const dark = await page
+    .locator("body")
+    .evaluate((node) => getComputedStyle(node).backgroundColor);
+  await setTheme(page, "light");
+  const light = await page
+    .locator("body")
+    .evaluate((node) => getComputedStyle(node).backgroundColor);
+  expect(dark).not.toBe(light);
+  await setTheme(page, "system");
+  await expect(page.locator("body")).toHaveCSS("background-color", dark);
+  await expect(page.locator("#header-theme-toggle")).toHaveAccessibleName(
+    "Switch to light theme",
+  );
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(page.locator("body")).toHaveCSS("background-color", light);
+  await expect(page.locator("#header-theme-toggle")).toHaveAccessibleName(
+    "Switch to dark theme",
+  );
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "system");
+  await expect(page.locator("body")).toHaveCSS("background-color", light);
+});
 test("header tools, explicit runner preparation, saved work and complete fresh-tab offline execution", async ({
   page,
   context,
