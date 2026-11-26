@@ -1,3 +1,4 @@
+import { setTheme } from "./theme-control.js";
 // Copyright © 2026 Christopher Snow
 import { test, expect } from "@playwright/test";
 import { fillSource, openTools } from "./editor-helpers.js";
@@ -32,7 +33,7 @@ for (const theme of ["light", "dark"]) {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto("/lessons/addition-wraps/");
     await expect(page.locator("#run")).toBeEnabled();
-    await page.locator("#theme").selectOption(theme);
+    await setTheme(page, theme);
     const actual = await page
       .locator("#counter-wrap")
       .evaluate((el) => getComputedStyle(el).backgroundColor);
@@ -196,7 +197,7 @@ for (const theme of ["light", "dark"])
     );
     await page.goto("/lessons/addition-wraps/");
     await page.setViewportSize({ width: 320, height: 900 });
-    await page.locator("#theme").selectOption(theme);
+    await setTheme(page, theme);
     await expect(decimal(page)).toHaveText("0");
     await page.evaluate(() => {
       Storage.prototype.setItem = () => {

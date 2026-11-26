@@ -1,3 +1,4 @@
+import { setTheme } from "./theme-control.js";
 // Copyright © 2026 Christopher Snow
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
@@ -20,7 +21,7 @@ for (const theme of ["light", "dark"])
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto("/lessons/riscv-and-arm/");
-    await page.locator("#theme").selectOption(theme);
+    await setTheme(page, theme);
     await expect(
       page.getByRole("heading", { name: guide.title, exact: true }),
     ).toBeVisible();

@@ -1,3 +1,4 @@
+import { setTheme } from "./theme-control.js";
 // Copyright © 2026 Christopher Snow
 import { test, expect } from "@playwright/test";
 import { loadLessons } from "../../tools/course-data.js";
@@ -26,7 +27,7 @@ test("the optional guide is readable and uses the actual addition source without
     for (const theme of ["light", "dark"]) {
       await page.setViewportSize({ width, height: 1000 });
       await page.goto("/using-the-workbench/");
-      await page.locator("#theme").selectOption(theme);
+      await setTheme(page, theme);
       await expect(page.locator("h1")).toHaveText("Using the workbench");
       await expect(
         page.locator('pre[aria-label="Addition example"]'),

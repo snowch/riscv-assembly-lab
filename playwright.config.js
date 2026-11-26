@@ -22,7 +22,7 @@ export default defineConfig({
     },
   },
   webServer: {
-    command: "python3 -m http.server 4220 --directory site",
+    command: "python3 -m http.server 4220 --directory .build/site",
     url: "http://127.0.0.1:4220",
     reuseExistingServer: !process.env.CI,
   },

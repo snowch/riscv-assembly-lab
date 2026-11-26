@@ -1,3 +1,4 @@
+import { setTheme } from "./theme-control.js";
 // Copyright © 2026 Christopher Snow
 import { test, expect } from "@playwright/test";
 import { fillSource, loadExercise } from "./editor-helpers.js";
@@ -174,7 +175,7 @@ test("all advanced views share the editor; original and edited memory results co
   await finished(page);
   await expect(page.locator("#t2-decimal")).toHaveText("8");
   await tools(page, "memory");
-  await page.locator("#theme").selectOption("dark");
+  await setTheme(page, "dark");
   await page.screenshot({
     path: `.artifacts/${info.project.name}-unified-tools.png`,
     fullPage: true,
