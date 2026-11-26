@@ -1,3 +1,4 @@
+import { setTheme } from "./theme-control.js";
 import { fillSource, selectedSource } from "./editor-helpers.js";
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
@@ -54,7 +55,7 @@ test("focused lesson executes three editable lines and exposes the complete prog
   await expect(page.locator("#t2-decimal")).toHaveText("-4", {
     timeout: 45000,
   });
-  await page.locator("#theme").selectOption("dark");
+  await setTheme(page, "dark");
   await page.screenshot({
     path: `.artifacts/${info.project.name}-addition-dark.png`,
     fullPage: true,

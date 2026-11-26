@@ -1,3 +1,4 @@
+import { setTheme } from "./theme-control.js";
 // Copyright © 2026 Christopher Snow
 import { test, expect } from "@playwright/test";
 import { openTools } from "./editor-helpers.js";
@@ -34,7 +35,7 @@ test("breadcrumbs provide a compact accessible course menu and reveal the linked
     for (const theme of ["light", "dark"]) {
       await page.setViewportSize({ width, height: 1000 });
       await page.goto("/lessons/addition/");
-      await page.locator("#theme").selectOption(theme);
+      await setTheme(page, theme);
       const menu = page.locator("#course-navigation"),
         toggle = page.locator("#course-toggle");
       await expect(page.locator(".lesson-breadcrumbs")).toContainText(

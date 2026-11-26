@@ -1,3 +1,4 @@
+import { setTheme } from "./theme-control.js";
 // Copyright © 2026 Christopher Snow
 import { test, expect } from "@playwright/test";
 import { fillSource, openTools } from "./editor-helpers.js";
@@ -305,7 +306,7 @@ test("Tools keyboard tabs and fullscreen retain selection in both themes", async
 }) => {
   await go(page);
   for (const theme of ["light", "dark"]) {
-    await page.locator("#theme").selectOption(theme);
+    await setTheme(page, theme);
     await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
     await openTools(page, "debugger");
     await page.locator("#tab-debugger").focus();

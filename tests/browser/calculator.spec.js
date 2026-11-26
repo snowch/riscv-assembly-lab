@@ -1,3 +1,4 @@
+import { setTheme } from "./theme-control.js";
 // Copyright © 2026 Christopher Snow
 import { test, expect } from "@playwright/test";
 
@@ -56,7 +57,7 @@ test("calculator handles exact prefixes, width boundaries, aligned carries and r
   await expect(page.locator("#calc-a")).toHaveValue("0x100000000");
   await expect(page.locator("#calc-b")).toHaveValue("1");
   await page.locator("#close-calculator").click();
-  await page.locator("#theme").selectOption("dark");
+  await setTheme(page, "dark");
   await page.locator("#open-calculator").click();
   expect(
     await page.evaluate(

@@ -1,3 +1,4 @@
+import { setTheme } from "./theme-control.js";
 // Copyright © 2026 Christopher Snow
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
@@ -125,7 +126,7 @@ test("reference works across routes and actual themes with readable keyboard con
   ]) {
     await page.goto(route);
     for (const theme of ["light", "dark"]) {
-      await page.locator("#theme").selectOption(theme);
+      await setTheme(page, theme);
       await page.locator("#open-reference").click();
       const entry = await find(page, "add");
       await expect(entry.locator(".reference-example").first()).toBeVisible();

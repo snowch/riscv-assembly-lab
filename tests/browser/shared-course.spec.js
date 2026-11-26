@@ -1,3 +1,4 @@
+import { setTheme } from "./theme-control.js";
 // Copyright © 2026 Christopher Snow
 import { test, expect } from "@playwright/test";
 import http from "node:http";
@@ -136,7 +137,7 @@ test("header tools, explicit runner preparation, saved work and complete fresh-t
   for (const width of [390, 820, 1440])
     for (const theme of ["light", "dark"]) {
       await page.setViewportSize({ width, height: 1000 });
-      await page.locator("#theme").selectOption(theme);
+      await setTheme(page, theme);
       if (
         await page.evaluate(
           () => document.documentElement.scrollWidth > innerWidth,

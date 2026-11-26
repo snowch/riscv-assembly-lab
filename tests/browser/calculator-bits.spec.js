@@ -1,3 +1,4 @@
+import { setTheme } from "./theme-control.js";
 // Copyright © 2026 Christopher Snow
 import { test, expect } from "@playwright/test";
 
@@ -126,7 +127,7 @@ for (const width of [32, 64]) {
       new RegExp(`beyond bit ${width - 1}`),
     );
     await page.locator("#close-calculator").click();
-    await page.locator("#theme").selectOption("dark");
+    await setTheme(page, "dark");
     await page.locator("#open-calculator").click();
     await expect(page.locator("#calc-carries")).toBeChecked();
     const label = await page

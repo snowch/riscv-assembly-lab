@@ -1,3 +1,4 @@
+import { setTheme } from "./theme-control.js";
 // Copyright © 2026 Christopher Snow
 import {
   fillSource,
@@ -33,7 +34,7 @@ test("every published lesson has readable, connected course views in both themes
     ).toHaveAttribute("target", "_blank");
     await expect(page.locator("#complete-source")).not.toBeVisible();
     for (const theme of ["light", "dark"]) {
-      await page.locator("#theme").selectOption(theme);
+      await setTheme(page, theme);
       const problems = await page.evaluate(() => {
         const issues = [];
         if (
@@ -357,7 +358,10 @@ test("the bare-metal lesson boots edited assembly and exports the current ELF", 
   await expect(page.locator("#sp-decimal")).toHaveText("0");
   await page.locator("#stop").click();
 
-  await fillSource(page, starter.replace(".word 12, 7, 23", ".word 19, 80, 1, 4"));
+  await fillSource(
+    page,
+    starter.replace(".word 12, 7, 23", ".word 19, 80, 1, 4"),
+  );
   await expect(download).toBeDisabled();
   await page.locator("#run").click();
   await expect(page.locator("#run-status")).toContainText("Reached park", {
@@ -379,8 +383,12 @@ test("the trip-computer lesson links QEMU instructions, the Pico guide and its U
 }) => {
   await go(page, "boot-trip-computer");
   const transfer = page.locator("#boot-transfer");
-  await expect(transfer.getByRole("heading", { name: "Boot in QEMU" })).toBeVisible();
-  await expect(transfer.locator("pre")).toContainText("-bios none -nographic -kernel trip.elf");
+  await expect(
+    transfer.getByRole("heading", { name: "Boot in QEMU" }),
+  ).toBeVisible();
+  await expect(transfer.locator("pre")).toContainText(
+    "-bios none -nographic -kernel trip.elf",
+  );
 
   await expect(transfer.locator('a[href$=".uf2"]')).toHaveCount(0);
   await transfer.getByRole("link", { name: "Open the Pico 2 guide" }).click();
@@ -389,12 +397,20 @@ test("the trip-computer lesson links QEMU instructions, the Pico guide and its U
   const firmware = await saving;
   expect(firmware.suggestedFilename()).toBe("trip_computer.uf2");
   expect(await readFile(await firmware.path())).toEqual(
-    await readFile(new URL("../../site/pico2/trip_computer.uf2", import.meta.url)),
+    await readFile(
+      new URL("../../site/pico2/trip_computer.uf2", import.meta.url),
+    ),
   );
 
-  await expect(page.getByRole("heading", { name: "Test it from a phone" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Download trip.S" })).toHaveAttribute("download", "");
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+  await expect(
+    page.getByRole("heading", { name: "Test it from a phone" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Download trip.S" }),
+  ).toHaveAttribute("download", "");
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(
     await page.evaluate(() => document.documentElement.clientWidth),
   );
 });

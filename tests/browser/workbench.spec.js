@@ -1,3 +1,4 @@
+import { setTheme } from "./theme-control.js";
 import { fillSource, selectedSource } from "./editor-helpers.js";
 import { test, expect } from "@playwright/test";
 
@@ -70,7 +71,7 @@ test("loop can be stopped, edits remain tied to their build, and layout fits", a
 }, info) => {
   await page.goto("/lessons/hello-world/");
   await expect(page.locator("#run")).toBeEnabled();
-  await page.locator("#theme").selectOption("dark");
+  await setTheme(page, "dark");
   await fillSource(page, ".text\n.global _start\n_start: j _start");
   await page.locator("#run").click();
   await expect(page.locator("#run-status")).toHaveText(
@@ -100,7 +101,7 @@ test("loop can be stopped, edits remain tied to their build, and layout fits", a
     path: `.artifacts/${info.project.name}-dark.png`,
     fullPage: true,
   });
-  await page.locator("#theme").selectOption("light");
+  await setTheme(page, "light");
   await page.screenshot({
     path: `.artifacts/${info.project.name}-light.png`,
     fullPage: true,
