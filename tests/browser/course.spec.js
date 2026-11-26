@@ -340,3 +340,60 @@ test("compiler warnings and download failures remain visible, tab drafts survive
   await page.locator("#download-complete").click();
   await expect(page.locator("#run-status")).toContainText("Could not download");
 });
+
+test("the bare-metal lesson boots edited assembly and exports the current ELF", async ({
+  page,
+}) => {
+  await go(page, "boot-trip-computer");
+  const starter = await page.locator("#source").inputValue();
+  const download = page.locator("#download-elf");
+  await expect(download).toBeDisabled();
+
+  await page.locator("#step").click();
+  await expect(page.locator("#state-badge")).toHaveText("Paused", {
+    timeout: 45000,
+  });
+  await expect(page.locator("#current-instruction")).toContainText("80000000");
+  await expect(page.locator("#sp-decimal")).toHaveText("0");
+  await page.locator("#stop").click();
+
+  await fillSource(page, starter.replace(".word 12, 7, 23", ".word 19, 80, 1, 4"));
+  await expect(download).toBeDisabled();
+  await page.locator("#run").click();
+  await expect(page.locator("#run-status")).toContainText("Reached park", {
+    timeout: 45000,
+  });
+  await openTools(page, "output");
+  await expect(page.locator("#console")).toHaveText("Trip total: 104 km");
+
+  const saving = page.waitForEvent("download");
+  await download.click();
+  const file = await saving;
+  expect(file.suggestedFilename()).toBe("trip.elf");
+  const elf = await readFile(await file.path());
+  expect(elf.readBigUInt64LE(24)).toBe(0x80000000n);
+});
+
+test("the trip-computer lesson links QEMU instructions, the Pico guide and its UF2", async ({
+  page,
+}) => {
+  await go(page, "boot-trip-computer");
+  const transfer = page.locator("#boot-transfer");
+  await expect(transfer.getByRole("heading", { name: "Boot in QEMU" })).toBeVisible();
+  await expect(transfer.locator("pre")).toContainText("-bios none -nographic -kernel trip.elf");
+
+  const saving = page.waitForEvent("download");
+  await transfer.getByRole("link", { name: "Download Pico 2 firmware" }).click();
+  const firmware = await saving;
+  expect(firmware.suggestedFilename()).toBe("trip_computer.uf2");
+  expect(await readFile(await firmware.path())).toEqual(
+    await readFile(new URL("../../site/pico2/trip_computer.uf2", import.meta.url)),
+  );
+
+  await transfer.getByRole("link", { name: "Build, flash and test on a phone" }).click();
+  await expect(page.getByRole("heading", { name: "Test it from a phone" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Download trip.S" })).toHaveAttribute("download", "");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+    await page.evaluate(() => document.documentElement.clientWidth),
+  );
+});

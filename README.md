@@ -2,7 +2,7 @@
 
 [Open the course](https://snowch.github.io/riscv-assembly-lab/) · [Start with addition](https://snowch.github.io/riscv-assembly-lab/lessons/addition/) · [Hello World](https://snowch.github.io/riscv-assembly-lab/lessons/hello-world/) · [Playground](https://snowch.github.io/riscv-assembly-lab/playground/)
 
-A complete core course in reading, writing and running RISC-V assembly, adapted with the author's permission from [Assembly Lab](https://snowch.github.io/assembly-lab/). The 58 short lessons cover first instructions, register readings, range checks, masks, branches, loops, memory, arrays, multiplication, functions, debugging, C and real xv6 programs, followed by three further readings.
+A complete core course in reading, writing and running RISC-V assembly, adapted with the author's permission from [Assembly Lab](https://snowch.github.io/assembly-lab/). The 60 short lessons cover first instructions, register readings, range checks, masks, branches, loops, memory, arrays, multiplication, functions, debugging, C, real xv6 programs and bare-metal boot, followed by three further readings.
 
 The learner edits the relevant code. Supplied entry, capture and exit code stays behind **View complete program**. Predictions are checked against executed results; each programming challenge runs the same submitted code on fresh cases. No source interpreter or scripted result substitutes for machine execution.
 
@@ -24,7 +24,9 @@ The complete-program guide introduces a real data object, helper call and explic
 
 ## What runs
 
-GNU `as` and `ld`, compiled to WebAssembly, produce real ELF64 executables. The CPU boots a real xv6 kernel and executes each program in a fresh filesystem copy. The target is RV64GC / LP64D. C lessons use the pinned RV64 TinyCC compiler locally, then link and execute its actual object. Compiler output is disassembled by real GNU `objdump`; no invented C source-line mapping is shown.
+The [bare-metal trip computer](https://snowch.github.io/riscv-assembly-lab/lessons/boot-trip-computer/) boots its own RV64 ELF in the browser’s WebAssembly emulator and prints through a memory-mapped UART. The lesson downloads the built ELF for QEMU’s RISC-V `virt` machine and links to a compiled UF2 and a [Raspberry Pi Pico 2 guide](https://snowch.github.io/riscv-assembly-lab/pico2/). The board port runs the calculation and decimal formatting in RV32 assembly and uses the Pico SDK for boot and USB serial.
+
+GNU `as` and `ld`, compiled to WebAssembly, produce real ELF64 executables. For xv6 lessons, the CPU boots a real kernel and executes each program in a fresh filesystem copy. The target is RV64GC / LP64D. C lessons use the pinned RV64 TinyCC compiler locally, then link and execute its actual object. Compiler output is disassembled by real GNU `objdump`; no invented C source-line mapping is shown.
 
 - A locally bundled CodeMirror editor for assembly and C, with syntax highlighting, indentation, bracket matching, find and undo.
 - One execution toolbar, a resizable code area, fullscreen workspace and tabbed register, memory, output, diagnostic and debugger views.
@@ -42,11 +44,11 @@ There is no compiler server, account, CDN dependency, SharedArrayBuffer or speci
 
 ## Course and authoring
 
-`content/*.json` holds the canonical prose, code, predictions, fixtures, hints and exercises. `tools/build-course.js` validates it and generates the static course overview and every lesson page. Module lists, routes and published counts are generated from actual data. The original Hello World remains an optional complete-program example, rather than recurring setup in every lesson.
+`content/*.json` holds the canonical prose, code, predictions, fixtures, hints and exercises. `tools/build-course.js` validates it and generates the static course overview and every lesson page. Module lists, routes and published counts are generated from actual data. The core complete-program lesson has learners write their own xv6 entry, message data, helper and exit. The original Hello World remains available as an optional preview.
 
 The optional [Using the workbench](https://snowch.github.io/riscv-assembly-lab/using-the-workbench/) guide is generated from `content/guides/workbench.json` and displays addition's canonical starter. It is linked from the home page, first lesson and editor help, and stays outside lesson progression and completion.
 
-The course reuses Assembly Lab’s predict/run/inspect/change method, short-unit pacing, trip-computer examples and local qualifications. RISC-V has no NZCV flags: carry, overflow checks, comparisons, 32-bit W extension, division edges and the calling convention are adapted to its architecture. The ending follows xv6 system calls, ELF entry, protection and a bounded trip-computer capstone; it does not republish Arm-specific Raspberry Pi procedures as RISC-V instructions.
+The course reuses Assembly Lab’s predict/run/inspect/change method, short-unit pacing, trip-computer examples and local qualifications. RISC-V has no NZCV flags: carry, overflow checks, comparisons, 32-bit W extension, division edges and the calling convention are adapted to its architecture. After xv6 system calls, ELF entry, protection and a bounded trip calculation, the course boots a standalone trip computer in WebAssembly and QEMU.
 
 `docs/course-authoring.md` records the checked-fact contract. Separate drafting and independent technical/learner reviews are recorded under `docs/`. The source course’s content copyright is preserved; it is not silently relicensed as MIT.
 
@@ -83,7 +85,7 @@ The inherited CPU ignored the PTE U bit and incorrectly let user programs read s
 
 ## Scope
 
-Programs are xv6 user processes. Its `write = 16` and `exit = 2` are not Linux or RARS syscall numbers. The guest retains the 16 MiB debugger compatibility workaround. Default supplied assembly disables compressed encodings for simpler instruction paths; this choice is visible in full source.
+The standard lessons and Playground projects run as xv6 user processes. Its `write = 16` and `exit = 2` are not Linux or RARS syscall numbers. The guest retains the 16 MiB debugger compatibility workaround. Default supplied assembly disables compressed encodings for simpler instruction paths; this choice is visible in full source.
 
 Source is limited to 64 KiB; C prepared source to 7500 bytes and its object to 8192 bytes. Executables are at most 256 KiB, console output 64 KiB, builds 15 seconds and active runs 30 seconds; asset loading has a separate cancellable two-minute limit. Stepping is functional emulation, not hardware timing. A state report or passed finite test set is not a proof for every possible program. Guest filesystem changes are discarded. Console input and physical-board execution are not supplied by this course.
 

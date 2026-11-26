@@ -83,7 +83,13 @@ export const MODULES = [
     "xv6",
     "13",
     "Working programs in xv6",
-    "Connect ELF entry, system calls, memory protection and a complete trip calculation.",
+    "Use ELF entry and system calls to write a complete program, then integrate earlier skills in a trip calculation.",
+  ],
+  [
+    "bare-metal",
+    "14",
+    "Bare-metal boot",
+    "Boot the trip computer in WebAssembly and QEMU, then build the Raspberry Pi Pico 2 port.",
   ],
   [
     "appendices",
@@ -144,6 +150,10 @@ export const REFERENCES = {
   floating: [
     "IEEE floating-point representations",
     "https://docs.oracle.com/cd/E19059-01/stud.10/819-0499/ncg_math.html",
+  ],
+  "qemu-virt": [
+    "QEMU’s RISC-V virt machine",
+    "https://www.qemu.org/docs/master/system/riscv/virt.html",
   ],
   arm: ["Arm Assembly Lab", "https://snowch.github.io/assembly-lab/"],
 };

@@ -2,13 +2,20 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { build, execute } from "../tools/course-runner.js";
+import { loadLessons } from "../tools/course-data.js";
+import { build, bootBareMetal, execute } from "../tools/course-runner.js";
 import {
   makeProgram,
   readState,
   diagnosticLocation,
 } from "../site/course/model.js";
-import { newProject, projectContext } from "../site/playground/projects.js";
+import {
+  fromLesson,
+  importProject,
+  newProject,
+  projectContext,
+  serialiseProject,
+} from "../site/playground/projects.js";
 
 test("complete assembly projects execute their own entry and exit without instrumentation", async () => {
   const source = await readFile(
@@ -51,4 +58,23 @@ test("full-program debugger pauses at the real entry before executing user instr
   } finally {
     paused.vm.free();
   }
+});
+
+test("a saved bare-metal project boots edited source directly and prints its total", async () => {
+  const lesson = (await loadLessons()).find(
+    ({ id }) => id === "boot-trip-computer",
+  );
+  const source = lesson.starter.replace(".word 12, 7, 23", ".word 19, 80, 1, 4");
+  const saved = importProject(serialiseProject(fromLesson(lesson, source)));
+  const built = await build(saved.source, projectContext(saved));
+  assert.equal(saved.target, "bare-metal");
+  assert.equal(built.entry, 0x80000000);
+  assert.ok(built.park > built.entry);
+  assert.equal(built.program, source);
+  assert.equal(bootBareMetal(built), "Trip total: 104 km\n");
+
+  await assert.rejects(
+    build(source.replaceAll("park", "idle"), lesson),
+    /Define park/,
+  );
 });

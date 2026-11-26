@@ -382,6 +382,8 @@
 .project-active #prediction-block,
 .project-active .lesson-explanation,
 .project-active #experiment,
+.project-active #independent-task,
+.project-active #boot-transfer,
 .project-active #challenge,
 .project-active .lesson-completion {
   display: none;
@@ -482,4 +484,8 @@
 }
 .unified-workbench .exercise-work p {
   margin: 0.35rem 0;
+}
+
+#boot-transfer pre {
+  overflow-x: auto;
 }

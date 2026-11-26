@@ -93,6 +93,11 @@ export function normaliseProject(value, { freshId = false } = {}) {
     throw new Error(
       "Complete programs set their own registers and data in their source.",
     );
+  if (
+    value.target !== undefined &&
+    (value.target !== "bare-metal" || value.kind !== "program")
+  )
+    throw new Error("The bare-metal target requires a complete assembly program.");
   const project = {
     format: PROJECT_FORMAT,
     version: 1,
@@ -103,6 +108,7 @@ export function normaliseProject(value, { freshId = false } = {}) {
         : id(),
     name: value.name.trim(),
     kind: value.kind,
+    ...(value.target ? { target: value.target } : {}),
     source: value.source,
     inputs,
     data: [...(value.data ?? [])],
@@ -189,7 +195,8 @@ export function fromLesson(lesson, source, fixture = {}, activity = "example") {
     format: PROJECT_FORMAT,
     version: 1,
     name: lesson.title + (activity === "exercise" ? " · exercise" : ""),
-    kind: lesson.language === "c" ? "c" : "asm",
+    kind: lesson.kind ?? (lesson.language === "c" ? "c" : "asm"),
+    target: lesson.target,
     source,
     inputs: { ...lesson.inputs, ...fixture.inputs },
     data: fixture.data ?? lesson.data ?? [],

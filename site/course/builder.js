@@ -31,10 +31,18 @@ export async function buildLesson(
   );
   const elf = readElf(built.elf);
   const symbol = (name) => elf.symbols.get(name)?.value;
+  const park = lesson.target === "bare-metal" ? symbol("park") : undefined;
   const text = elf.sections
     .filter((s) => s.flags & 4)
     .map((s) => ({ start: s.address, end: s.address + s.size }));
+  if (
+    lesson.target === "bare-metal" &&
+    (park === symbol("_start") ||
+      !text.some(({ start, end }) => park >= start && park < end))
+  )
+    throw new Error("Define park on an instruction after startup, where the hart can wait.");
   return {
+    park,
     ...built,
     diagnostics: [...compilerDiagnostics, built.diagnostics]
       .filter(Boolean)
@@ -47,8 +55,7 @@ export async function buildLesson(
         : lesson.language === "c"
           ? symbol("lesson")
           : symbol("_lab_lesson_begin"),
-    // Complete programs exit themselves. Address zero is outside this linker
-    // script's user text and is never presented as a reporting checkpoint.
+    // Complete programs have no supplied register-reporting checkpoint.
     end: lesson.kind === "program" ? 0 : symbol("_lab_lesson_end"),
     data:
       symbol("lesson_data") ??

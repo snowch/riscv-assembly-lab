@@ -31,8 +31,9 @@ test("the reference includes every mnemonic in the course assembly examples and 
     if (lesson.language === "c") continue;
     for (const source of [
       lesson.starter,
-      lesson.challenge.starter,
-      lesson.challenge.reference,
+      ...(lesson.challenge
+        ? [lesson.challenge.starter, lesson.challenge.reference]
+        : []),
     ]) {
       for (const line of source.split("\n")) {
         const instruction = line

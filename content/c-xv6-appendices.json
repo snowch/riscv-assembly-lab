@@ -920,6 +920,56 @@
     "language": "asm"
   },
   {
+    "id": "complete-assembly-program",
+    "module": "xv6",
+    "title": "Write and run a complete assembly program",
+    "summary": "Define the entry point, store your own data, call a helper, write to the console and exit.",
+    "objectives": [
+      "Explain how a complete xv6 program starts, calls a helper and exits.",
+      "Build, debug and run a standalone assembly source file."
+    ],
+    "before": [
+      "This editor contains a whole xv6 user program. The linker uses the global label `_start` as the entry point. The program defines its own message and explicitly exits.",
+      "Find `_start`, `announce` and `message`. Predict the console line, then choose Build & Run and look in Output. Open View complete program to compare the build source with the editor."
+    ],
+    "starter": ".section .rodata\nmessage:\n    .ascii \"Trip ready\\n\"\n.equ message_length, . - message\n\n.text\n.globl _start\n_start:\n    call announce\n\n    li a0, 0\n    li a7, 2\n    ecall\n\nannounce:\n    li a0, 1\n    la a1, message\n    li a2, message_length\n    li a7, 16\n    ecall\n    ret\n",
+    "expectedOutput": "Trip ready\n",
+    "observe": [
+      "a0",
+      "a1",
+      "a2",
+      "a7",
+      "ra"
+    ],
+    "result": "a0",
+    "explanation": [
+      "`.section .rodata` places the message bytes in a read-only section. `.ascii` stores the bytes, including the newline, without a terminator. At the end of the message, the assembler subtracts its start address from the current location (`.`) to compute the byte count.",
+      "`.text` switches to instructions. `call announce` saves the return address in `ra`. Inside the helper, `a0` selects standard output, `a1` holds the message address, `a2` holds its length and `a7` selects xv6 `write` (16). The kernel returns the number of bytes written in `a0` on success.",
+      "`ret` resumes after the call. Back in `_start`, the program sets `a0` to the exit status and `a7` to xv6 `exit` (2), then executes `ecall`. A process enters at `_start` and finishes through the exit syscall."
+    ],
+    "experiment": {
+      "task": "Change the message to a longer one and predict its new byte count. Set a breakpoint on the helper’s `ret` and choose Start debugging. Check `a0` in Registers for the number of bytes written. Step once to see control return to `_start`, then Continue and compare Output with your prediction.",
+      "hint": "Count the newline as one byte for an ASCII message. The assembler recalculates `message_length` when you build."
+    },
+    "independentTask": [
+      "Download the worked source if you want to keep it. Clear the editor and write a new program that prints `Trip complete` followed by a newline. Put the string and its calculated length in read-only data, call your own printing helper from `_start`, and exit with status zero.",
+      "Build & Run. Check that Output contains exactly one line reading `Trip complete`. Set a breakpoint on the exit `ecall` and run again with Start debugging. Confirm that `a0` is zero and `a7` is two before you Continue.",
+      "Before marking this lesson complete, explain where the bytes are stored, where `ret` goes, and how xv6 knows to terminate the process. Download your program as a single assembly file."
+    ],
+    "references": [
+      "assembler",
+      "xv6",
+      "abi"
+    ],
+    "sourceLessons": [
+      "from-function-to-executable",
+      "loading-and-startup"
+    ],
+    "originalityNote": "The complete xv6 program combines the course’s entry, call and system-call mechanisms in a standalone console exercise.",
+    "language": "asm",
+    "kind": "program"
+  },
+  {
     "id": "trip-computer",
     "module": "xv6",
     "title": "Build a checked trip calculation",
@@ -1045,6 +1095,62 @@
     ],
     "originalityNote": "The source course\u2019s trip-computer quantities become an integrated RISC-V/xv6 record-processing program with independently varied count, status mask and scale.",
     "language": "asm"
+  },
+  {
+    "id": "boot-trip-computer",
+    "module": "bare-metal",
+    "title": "Boot a bare-metal trip computer",
+    "summary": "Boot your own assembly image in the browser, then run the same ELF on QEMU’s RISC-V virtual board.",
+    "objectives": [
+      "Follow a bare-metal program from entry through stack setup, UART output and the final wait loop.",
+      "Transfer the same RISC-V ELF from the browser to QEMU and identify what depends on the board."
+    ],
+    "before": [
+      "This trip computer is the first code the browser’s WebAssembly machine runs. The emulator loads the ELF and sets the program counter to its entry. Your code sets the stack pointer and uses a memory-mapped serial device (UART) to print its result.",
+      "Add the three distances in `distances` by hand. Choose Build & Run and check the total in UART output. Then choose Start stepping. At `_start`, find `sp` in Registers. Step through both machine instructions emitted by `la sp, __stack_top` and check where the stack pointer now points."
+    ],
+    "starter": ".option norvc\n.equ UART_BASE, 0x10000000\n.equ UART_STATUS, 5\n.equ UART_TX_READY, 0x20\n\n.section .text.boot, \"ax\"\n.globl _start\n_start:\n    la sp, __stack_top\n    la a0, heading\n    call uart_puts\n\n    la t0, distances\n    la t1, distances_end\n    li a0, 0\nsum_distances:\n    beq t0, t1, print_total\n    lwu t2, 0(t0)\n    add a0, a0, t2\n    addi t0, t0, 4\n    j sum_distances\n\nprint_total:\n    call uart_number\n    la a0, units\n    call uart_puts\n\n# The transmit buffer is empty on return. Leave the hart here.\n.globl park\npark:\n    j park\n\n.text\n# a0 holds an unsigned total. Build decimal digits backwards on the stack.\nuart_number:\n    addi sp, sp, -32\n    sd ra, 24(sp)\n    addi t0, sp, 20\n    sb zero, 0(t0)\n    li t1, 10\ndecimal_digit:\n    remu t2, a0, t1\n    divu a0, a0, t1\n    addi t2, t2, '0'\n    addi t0, t0, -1\n    sb t2, 0(t0)\n    bne a0, zero, decimal_digit\n    mv a0, t0\n    call uart_puts\n    ld ra, 24(sp)\n    addi sp, sp, 32\n    ret\n\n# a0 points to a zero-terminated string. Access UART registers one byte at a time.\nuart_puts:\n    li t0, UART_BASE\nnext_byte:\n    lbu t1, 0(a0)\n    beq t1, zero, drain_uart\nwait_for_uart:\n    lbu t2, UART_STATUS(t0)\n    andi t2, t2, UART_TX_READY\n    beq t2, zero, wait_for_uart\n    sb t1, 0(t0)\n    addi a0, a0, 1\n    j next_byte\ndrain_uart:\n    lbu t2, UART_STATUS(t0)\n    andi t2, t2, UART_TX_READY\n    beq t2, zero, drain_uart\n    ret\n\n.section .rodata\nheading:\n    .asciz \"Trip total: \"\nunits:\n    .asciz \" km\\r\\n\"\n.balign 4\ndistances:\n    .word 12, 7, 23\ndistances_end:\n",
+    "expectedOutput": "Trip total: 42 km\n",
+    "observe": [
+      "sp",
+      "ra",
+      "a0",
+      "t0",
+      "t1",
+      "t2"
+    ],
+    "result": "sp",
+    "explanation": [
+      "The linker script places startup at `0x80000000` and reserves stack space in RAM. The distances are 32-bit words, so the loop reads them with `lwu` and advances the address by four bytes. The decimal helper saves `ra` before calling the printing helper.",
+      "The UART starts at `0x10000000`. The printing loop reads the line status byte at offset 5. When bit 5 is set, it writes one byte to offset 0. After the last byte leaves the holding register, the program reaches `park`. The browser ends the run there. On a machine that keeps running, the final jump sends the hart back to `park` repeatedly."
+    ],
+    "experiment": {
+      "task": "Replace the three distances with four values that add up to more than 99. Predict the total, then check the UART line. Add a breakpoint on the call to `uart_number` and confirm that `a0` holds the total before the call.",
+      "hint": "The loop stops when it reaches `distances_end`. Adding a word before that label makes it part of the calculation on the next build."
+    },
+    "independentTask": [
+      "Change the loop to count only readings of 10 km or more. Try 9, 10 and 11, then predict and verify the resulting total. The reading equal to 10 should count.",
+      "Keep that change for QEMU. Explain where the stack pointer comes from, why the UART status is polled, and where the program waits after printing."
+    ],
+    "bootTransfer": {
+      "qemuIntro": "Build your edited program and choose Download ELF. With QEMU’s RISC-V system emulator installed, run this command from the folder containing `trip.elf`.",
+      "qemuCommand": "qemu-system-riscv64 -machine virt -bios none -nographic -kernel trip.elf",
+      "qemuCheck": "Check that QEMU prints the same line as the browser. QEMU’s virtual reset code hands off to the image at `0x80000000`. The program then waits in `park`. To quit QEMU, press Ctrl+A and then x.",
+      "board": "The Raspberry Pi Pico 2 uses 32-bit RISC-V and has its own startup and USB serial path. Build the board version, then carry over your edited readings and compare its output with the emulator results."
+    },
+    "references": [
+      "assembler",
+      "abi",
+      "multiply",
+      "qemu-virt"
+    ],
+    "sourceLessons": [
+      "loading-and-startup"
+    ],
+    "originalityNote": "The trip calculation becomes an original RV64 program with a startup routine, a linker script and a memory-mapped UART for the lab emulator and QEMU’s virt machine.",
+    "language": "asm",
+    "kind": "program",
+    "target": "bare-metal"
   },
   {
     "id": "twos-complement",

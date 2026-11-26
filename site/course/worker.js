@@ -1,5 +1,5 @@
 // Copyright © 2026 Christopher Snow
-// Each job owns a fresh xv6 machine; the runner supplies prepared tool modules.
+// Each job owns a fresh machine; the runner supplies prepared tool modules.
 importScripts("../vendor/binutils/riscv64-linux-gnu-as.js");
 const createAssembler = Module;
 importScripts("../vendor/binutils/riscv64-linux-gnu-ld.js");
@@ -28,13 +28,13 @@ let vm,
 const decoder = new TextDecoder();
 const text = (value) =>
   "0x" + BigInt.asUintN(64, BigInt(value)).toString(16).padStart(16, "0");
-async function asset(path, plain = false) {
+async function loadLinkerScript(path) {
   const r = await fetch(path);
   if (!r.ok)
     throw new Error(
       `Could not load ${path} (HTTP ${r.status}). Retry Build & Run.`,
     );
-  return plain ? r.text() : new Uint8Array(await r.arrayBuffer());
+  return r.text();
 }
 function drain() {
   const bytes = [];
@@ -59,6 +59,10 @@ function consume() {
   if (outputBytes > 65536)
     throw new Error("Stopped at the 64 KiB console output limit.");
   send("serial", { text: chunk });
+  if (built.park !== undefined) {
+    send("output", { text: chunk.replaceAll("\r", "") });
+    return;
+  }
   pending += chunk.replaceAll("\r", "");
   if (stage === "boot" && pending.endsWith("$ ")) {
     pending = "";
@@ -142,7 +146,11 @@ function step() {
     vm.run_cycles(1);
     // A user ecall enters xv6. Returning to user text or completing exit can
     // take several chunks; neither is an execution fault or a new user step.
-    if (!insideText(vm.read_pc()) && /\becall\b/i.test(instruction)) {
+    if (
+      built.park === undefined &&
+      !insideText(vm.read_pc()) &&
+      /\becall\b/i.test(instruction)
+    ) {
       pendingStep = { before, instruction };
       mode = "step-system-call";
       activeStarted = performance.now();
@@ -150,11 +158,12 @@ function step() {
       schedule();
       return;
     }
-    if (!insideText(vm.read_pc()))
+    if (built.park === undefined && !insideText(vm.read_pc()))
       vm.run_until_breakpoints(new BigUint64Array(built.breakpoints), 1000000);
     consume();
     if (stopped) return;
-    observeStep(before, instruction);
+    if (built.park !== undefined && vm.read_pc() === BigInt(built.park)) finish();
+    else observeStep(before, instruction);
   } catch (error) {
     finish(error);
   }
@@ -163,7 +172,9 @@ function observeStep(before, instruction) {
   const after = vm.read_pc();
   if (!insideText(after))
     throw new Error(
-      "Execution left the user program before reaching another instruction. Inspect the serial log.",
+      built.park === undefined
+        ? "Execution left the user program before reaching another instruction. Inspect the serial log."
+        : "Execution left the program’s code. Check the startup, addresses and jumps.",
     );
   const trace = { from: text(before), to: text(after), instruction };
   if (lesson.kind !== "program" && after === BigInt(built.end)) {
@@ -232,6 +243,26 @@ function tick() {
             return;
           }
         }
+      }
+    } else if (built.park !== undefined) {
+      const park = BigInt(built.park);
+      const breakpoints = mode === "continue" ? selectedBreakpoints : [];
+      const found = vm.run_until_breakpoints(
+        new BigUint64Array([park, ...breakpoints]),
+        100000,
+      );
+      consume();
+      if (!insideText(vm.read_pc()))
+        throw new Error(
+          "Execution left the program’s code. Check the startup, addresses and jumps.",
+        );
+      if (vm.read_pc() === park) {
+        finish();
+        return;
+      }
+      if (found) {
+        paused("Breakpoint reached, before this instruction");
+        return;
       }
     } else if (mode === "continue") {
       const found = vm.run_until_breakpoints(
@@ -307,7 +338,11 @@ onmessage = async ({ data }) => {
     breakpointSelection = data.breakpoints ?? {};
     watches = Array.isArray(data.watches) ? data.watches.slice(0, 8) : [];
     startAtBreakpoint = !!data.startAtBreakpoint;
-    send("phase", { phase: "loading", message: "Loading tools and xv6…" });
+    const bareMetal = lesson.target === "bare-metal";
+    send("phase", {
+      phase: "loading",
+      message: bareMetal ? "Loading the RISC-V tools…" : "Loading tools and xv6…",
+    });
     const assets = data.prepared;
     if (!assets?.as) throw new Error("Prepared runner files are missing.");
     try {
@@ -372,7 +407,13 @@ onmessage = async ({ data }) => {
       data.source,
       lesson,
       data.fixture ?? {},
-      { as, ld, objdump, compiler, script },
+      {
+        as,
+        ld,
+        objdump,
+        compiler,
+        script: bareMetal ? await loadLinkerScript("./bare-metal.ld") : script,
+      },
       {
         as: cached(createAssembler, assets.modules.as),
         ld: cached(createLinker, assets.modules.ld),
@@ -386,6 +427,7 @@ onmessage = async ({ data }) => {
     );
     send("built", {
       bytes: built.elf.length,
+      ...(bareMetal ? { elf: built.elf } : {}),
       diagnostics: built.diagnostics,
       program: built.program,
       disassembly: built.disassembly,
@@ -402,14 +444,29 @@ onmessage = async ({ data }) => {
       module_or_path: assets.modules.runtime,
     });
     vm = runtime.WasmRiscv.new();
-    vm.setup_program(kernel);
-    vm.setup_filesystem(
-      filesystem.replaceGuestFile(disk, "workbench", built.elf),
-    );
-    token = "__COURSE_" + crypto.randomUUID().replaceAll("-", "") + "__";
     activeStarted = performance.now();
-    mode = "boot";
-    send("phase", { phase: "running", message: "Starting xv6…" });
+    if (bareMetal) {
+      vm.setup_program(built.elf);
+      if (
+        lesson.debug &&
+        (!startAtBreakpoint ||
+          !selectedBreakpoints.length ||
+          selectedBreakpoints.includes(vm.read_pc()))
+      ) {
+        paused("Before the first startup instruction");
+        return;
+      }
+      mode = lesson.debug ? "continue" : "fast";
+      send("phase", { phase: "running", message: "Booting the bare-metal ELF…" });
+    } else {
+      vm.setup_program(kernel);
+      vm.setup_filesystem(
+        filesystem.replaceGuestFile(disk, "workbench", built.elf),
+      );
+      token = "__COURSE_" + crypto.randomUUID().replaceAll("-", "") + "__";
+      mode = "boot";
+      send("phase", { phase: "running", message: "Starting xv6…" });
+    }
     schedule();
   } catch (error) {
     finish(error);
